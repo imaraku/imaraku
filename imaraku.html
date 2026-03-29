@@ -620,6 +620,49 @@
     .step-item.done .step-btn { display: none; }
     .step-item.done .step-done-badge { display: inline-flex; }
 
+    /* 完了確認ボタン */
+    .step-confirm-btn {
+      display: none;
+      background: linear-gradient(135deg, #27ae60, #1a7a43);
+      color: white;
+      border: none;
+      border-radius: 22px;
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      animation: pulse-green 1.4s ease-in-out infinite;
+      box-shadow: 0 3px 10px rgba(39,174,96,0.4);
+    }
+    .step-item.waiting .step-btn { display: none; }
+    .step-item.waiting .step-confirm-btn { display: inline-flex; align-items: center; gap: 4px; }
+    @keyframes pulse-green {
+      0%, 100% { box-shadow: 0 3px 10px rgba(39,174,96,0.4); }
+      50%       { box-shadow: 0 3px 18px rgba(39,174,96,0.8); }
+    }
+
+    /* 戻ってきてトースト */
+    #returnToast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: #27ae60;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 9999;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    #returnToast.show { transform: translateX(-50%) translateY(0); }
+
     /* ④グループ行スタイル */
     .step-grouped { background: var(--blue-light); border-radius: 8px; margin: 4px 0; }
     .step-grouped .step-num { background: var(--blue); }
@@ -1052,18 +1095,30 @@
   function markDone(idx) {
     const item = document.getElementById("step-" + idx);
     if (item && !item.classList.contains("done")) {
+      item.classList.remove("waiting");
       item.classList.add("done");
       doneCount++;
       updateProgress();
     }
   }
 
+  function openEntry(idx, url) {
+    window.open(url, "_blank", "noopener");
+    const item = document.getElementById("step-" + idx);
+    if (item && !item.classList.contains("done")) {
+      item.classList.add("waiting");
+    }
+    // Show return toast
+    const toast = document.getElementById("returnToast");
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3500);
+  }
+
   document.getElementById("stepList").innerHTML = prioritySteps.map((s, i) => {
-    const href   = s.isAnchor ? s.url : aff(s.url);
-    const target = s.isAnchor ? "" : 'target="_blank" rel="noopener"';
+    const href = s.isAnchor ? s.url : aff(s.url);
     const onclick = s.isAnchor
       ? `onclick="document.getElementById('otherCampaigns').scrollIntoView({behavior:'smooth'});setTimeout(()=>markDone(${i}),400)"`
-      : `onclick="setTimeout(()=>markDone(${i}), 800)"`;
+      : `onclick="openEntry(${i}, '${aff(s.url)}'); return false;"`;
     return `
     <div class="step-item step-grouped" id="step-${i}">
       <div class="step-num">${i + 1}</div>
@@ -1074,11 +1129,12 @@
         </div>
         <div class="step-point">${s.point}</div>
       </div>
-      <a href="${href}" ${target}
+      <a href="${href}"
          class="step-btn${s.gold ? " gold-btn" : ""}"
          ${onclick}>
         タップ！
       </a>
+      <button class="step-confirm-btn" onclick="markDone(${i})">✅ 完了！</button>
       <div class="step-done-badge">✅ 済！</div>
     </div>
   `}).join("");
@@ -1409,6 +1465,9 @@
     </div>
   `).join("");
 </script>
+
+<!-- 戻ってきてトースト -->
+<div id="returnToast">🔙 エントリー完了したら戻ってきて ✅ を押してね！</div>
 
 </body>
 </html>
