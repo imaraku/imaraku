@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>今楽 | 今買うならコレだけ押せばOK！楽天エントリーまとめ</title>
+  <meta name="description" content="急に楽天で買い物することになったら、まずここを開こう！今すぐエントリーすべきキャンペーンをまとめてチェック。ワンクリックでエントリー完了！">
+  <meta property="og:title" content="今楽 | 今買うならコレだけ押せばOK！">
+  <meta property="og:description" content="今日エントリーすべき楽天キャンペーンをまとめてチェック！ワンクリックでエントリーページへ">
+  <meta property="og:type" content="website">
+
+  <!-- ============================================================
+    ⚙️ 設定エリア（ここだけ変更すればOK）
+    楽天アフィリエイトの a_id を入力してください
+    取得方法: https://affiliate.rakuten.co.jp → ツール → リンク作成
+  ============================================================ -->
+  <script>
+    const RAKUTEN_AFFILIATE_ID = "YOUR_A_ID_HERE"; // 例: "12345678.abcdefgh"
+    // ↑ここに楽天アフィリエイトのIDを入力してください
+
+    // アフィリエイトURLを自動生成する関数
+    function aff(url) {
+      if (!RAKUTEN_AFFILIATE_ID || RAKUTEN_AFFILIATE_ID === "YOUR_A_ID_HERE") {
+        return url; // ID未設定の場合は直接リンク
+      }
+      return `https://hb.afl.rakuten.co.jp/hgc/${RAKUTEN_AFFILIATE_ID}/?pc=${encodeURIComponent(url)}&m=${encodeURIComponent(url)}`;
+    }
+  </script>
+
+  <style>
+    :root {
+      --rakuten-red: #BF0000;
+      --rakuten-red-dark: #8B0000;
+      --rakuten-red-light: #FFE8E8;
+      --gold: #D4A017;
+      --gold-light: #FFF8E7;
+      --green: #1A7F37;
+      --green-light: #E8F5E9;
+      --blue: #0969DA;
+      --blue-light: #E8F0FE;
+      --orange: #E05C1E;
+      --orange-light: #FFF3ED;
+      --gray-100: #F5F5F5;
+      --gray-200: #E8E8E8;
+      --gray-600: #666;
+      --gray-800: #333;
+      --shadow: 0 2px 12px rgba(0,0,0,0.10);
+      --shadow-hover: 0 4px 20px rgba(0,0,0,0.16);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      background: #F2F2F2;
+      color: var(--gray-800);
+      min-height: 100vh;
+    }
+
+    /* ─── ヘッダー ─── */
+    header {
+      background: linear-gradient(135deg, var(--rakuten-red) 0%, var(--rakuten-red-dark) 100%);
+      color: white;
+      padding: 20px 16px 24px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+
+    .header-logo {
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 2px;
+    }
+
+    .header-logo span {
+      font-size: 1rem;
+      font-weight: 600;
+      opacity: 0.9;
+      display: block;
+      letter-spacing: 0;
+    }
+
+    .header-date {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 4px;
+    }
+
+    .header-date .today-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.25);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    /* ─── お知らせバナー ─── */
+    .notice-bar {
+      background: var(--gold-light);
+      border-bottom: 2px solid var(--gold);
+      padding: 10px 16px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #6B4D00;
+    }
+
+    /* ─── メインコンテンツ ─── */
+    main {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 16px 12px 40px;
+    }
+
+    /* ─── セクション見出し ─── */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      font-weight: 800;
+      margin: 20px 0 10px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .section-title.daily   { background: var(--green); }
+    .section-title.spu     { background: var(--rakuten-red); }
+    .section-title.special { background: var(--gold); color: #5C3B00; }
+    .section-title.event   { background: var(--orange); }
+    .section-title.other        { background: #6B52AE; }
+    .section-title.event-detail { background: linear-gradient(135deg,#B71C1C,#880E4F); }
+    .section-title.time-entry   { background: #1565C0; }
+    .section-title.coupon       { background: #2E7D32; }
+
+    /* 更新注意バナー */
+    .update-notice {
+      background: #FFF9C4;
+      border: 1.5px solid #F9A825;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.76rem;
+      color: #5C3B00;
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+    .update-notice code {
+      background: rgba(0,0,0,0.08);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 0.75rem;
+    }
+
+    /* イベントサブ見出し */
+    .event-sub-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #B71C1C;
+      padding: 8px 4px 4px;
+      border-bottom: 2px dashed #FFCDD2;
+      margin: 14px 0 8px;
+    }
+
+    /* 時間ブロック */
+    .time-block {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .time-block-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      color: white;
+    }
+    .time-block-header.midnight { background: #1A237E; }
+    .time-block-header.evening  { background: #E65100; }
+    .time-block-body { padding: 8px 10px; }
+
+    /* コンパクトエントリー行（イベント詳細・時間帯別） */
+    .compact-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 6px;
+      border-bottom: 1px solid var(--gray-200);
+    }
+    .compact-row:last-child { border-bottom: none; }
+    .compact-info { flex: 1; }
+    .compact-name  { font-size: 0.85rem; font-weight: 700; line-height: 1.3; }
+    .compact-point { font-size: 0.72rem; color: var(--rakuten-red); font-weight: 700; }
+    .compact-btn {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 7px 12px;
+      border-radius: 50px;
+      text-decoration: none;
+      color: white;
+      background: var(--rakuten-red);
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(191,0,0,0.3);
+    }
+    .compact-btn.card-btn { background: #1565C0; box-shadow: 0 2px 6px rgba(21,101,192,0.3); }
+    .compact-btn.attr-btn { background: #7B1FA2; box-shadow: 0 2px 6px rgba(123,31,162,0.3); }
+    .compact-btn.brand-btn{ background: #E65100; box-shadow: 0 2px 6px rgba(230,81,0,0.3); }
+    .compact-btn.repeat-btn{background: #2E7D32; box-shadow: 0 2px 6px rgba(46,125,50,0.3); }
+    .compact-btn.coupon-btn{background: #2E7D32; box-shadow: 0 2px 6px rgba(46,125,50,0.3); }
+    .compact-btn.midnight-btn{background: #1A237E; box-shadow: 0 2px 6px rgba(26,35,126,0.3); }
+    .compact-btn.evening-btn {background: #E65100; box-shadow: 0 2px 6px rgba(230,81,0,0.3); }
+
+    .section-title .icon { font-size: 1.1rem; }
+
+    /* ─── キャンペーンカード ─── */
+    .campaign-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .campaign-card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-1px);
+    }
+
+    .card-body {
+      padding: 14px 14px 10px;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      line-height: 1.3;
+      flex: 1;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .badge.daily   { background: var(--green-light); color: var(--green); }
+    .badge.monthly { background: var(--rakuten-red-light); color: var(--rakuten-red); }
+    .badge.special { background: var(--gold-light); color: var(--gold); border: 1px solid var(--gold); }
+    .badge.event   { background: var(--orange-light); color: var(--orange); }
+    .badge.today   { background: var(--rakuten-red); color: white; animation: pulse 1.5s infinite; }
+    .badge.other   { background: #EDE7F6; color: #6B52AE; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    .card-point {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--rakuten-red-light);
+      color: var(--rakuten-red);
+      font-size: 0.82rem;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    .card-footer {
+      border-top: 1px solid var(--gray-200);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-note {
+      font-size: 0.72rem;
+      color: var(--gray-600);
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    /* ─── エントリーボタン ─── */
+    .entry-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: linear-gradient(135deg, var(--rakuten-red) 0%, var(--rakuten-red-dark) 100%);
+      color: white;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 10px 16px;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(191,0,0,0.4);
+      min-width: 130px;
+    }
+
+    .entry-btn:hover   { opacity: 0.9; }
+    .entry-btn:active  { transform: scale(0.97); }
+
+    .entry-btn.gold {
+      background: linear-gradient(135deg, #D4A017 0%, #A87800 100%);
+      box-shadow: 0 2px 8px rgba(212,160,23,0.4);
+    }
+
+    /* ─── 5・10のつく日ハイライト ─── */
+    .card-today-highlight {
+      border: 2px solid var(--gold);
+      background: var(--gold-light);
+    }
+
+    .card-today-highlight .card-body { background: var(--gold-light); }
+
+    /* ─── まとめてエントリーボタン ─── */
+    .bulk-entry-section {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .bulk-entry-section h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .bulk-entry-section p {
+      font-size: 0.8rem;
+      color: var(--gray-600);
+      margin-bottom: 12px;
+    }
+
+    .bulk-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .bulk-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 10px 8px;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 1px solid var(--gray-200);
+      transition: background 0.15s;
+      line-height: 1.3;
+    }
+
+    .bulk-btn:hover { background: var(--gray-200); }
+    .bulk-btn .bicon { font-size: 1.2rem; }
+
+    /* ─── 使い方 ─── */
+    .howto {
+      background: var(--blue-light);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.8rem;
+      color: #0A3D7A;
+    }
+
+    .howto h3 { font-size: 0.9rem; font-weight: 800; margin-bottom: 8px; }
+    .howto ol { padding-left: 18px; line-height: 2; }
+
+    /* ─── フッター ─── */
+    footer {
+      background: var(--gray-800);
+      color: #CCC;
+      font-size: 0.72rem;
+      padding: 20px 16px;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    footer a { color: #AAA; }
+
+    .pr-notice {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      padding: 2px 10px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-weight: 700;
+      color: #FFF;
+    }
+
+    /* ─── 今日コレだけ！ヒーロー ─── */
+    .hero-checklist {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 24px rgba(191,0,0,0.18);
+      border: 2.5px solid var(--rakuten-red);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .hero-head {
+      background: linear-gradient(135deg, var(--rakuten-red) 0%, var(--rakuten-red-dark) 100%);
+      color: white;
+      padding: 16px 16px 14px;
+      text-align: center;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      opacity: 0.85;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .hero-main {
+      display: block;
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .hero-main em {
+      font-style: normal;
+      background: #FFD700;
+      color: var(--rakuten-red-dark);
+      padding: 0 4px;
+      border-radius: 4px;
+    }
+
+    .hero-sub {
+      display: block;
+      font-size: 0.82rem;
+      opacity: 0.9;
+      margin-top: 6px;
+    }
+
+    /* プログレスバー */
+    .progress-wrap {
+      padding: 12px 16px 4px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+    }
+
+    .progress-count {
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--rakuten-red);
+    }
+
+    .progress-track {
+      height: 10px;
+      background: var(--gray-200);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--rakuten-red), var(--gold));
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ステップリスト */
+    .step-list {
+      padding: 6px 12px 12px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 6px;
+      border-bottom: 1px dashed var(--gray-200);
+      transition: opacity 0.4s;
+    }
+
+    .step-item:last-child { border-bottom: none; }
+    .step-item.done { opacity: 0.45; }
+
+    .step-num {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--rakuten-red);
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .step-item.done .step-num {
+      background: var(--green);
+    }
+
+    .step-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-name {
+      font-size: 0.88rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .step-point {
+      font-size: 0.72rem;
+      color: var(--rakuten-red);
+      font-weight: 700;
+      margin-top: 1px;
+    }
+
+    .step-item.done .step-point { color: var(--green); }
+
+    .step-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: linear-gradient(135deg, var(--rakuten-red), var(--rakuten-red-dark));
+      color: white;
+      font-size: 0.88rem;
+      font-weight: 900;
+      padding: 10px 16px;
+      border-radius: 50px;
+      text-decoration: none;
+      box-shadow: 0 3px 10px rgba(191,0,0,0.4);
+      transition: transform 0.1s, opacity 0.2s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      border: none;
+      cursor: pointer;
+    }
+
+    .step-btn.gold-btn {
+      background: linear-gradient(135deg, var(--gold), #A87800);
+      box-shadow: 0 3px 10px rgba(212,160,23,0.4);
+    }
+
+    .step-btn:active { transform: scale(0.95); }
+
+    .step-done-badge {
+      display: none;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--green);
+      white-space: nowrap;
+      flex-shrink: 0;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .step-item.done .step-btn { display: none; }
+    .step-item.done .step-done-badge { display: inline-flex; }
+
+    /* ④グループ行スタイル */
+    .step-grouped { background: var(--blue-light); border-radius: 8px; margin: 4px 0; }
+    .step-grouped .step-num { background: var(--blue); }
+    .step-grouped.done .step-num { background: var(--green); }
+
+    .step-tag {
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 700;
+      background: var(--blue);
+      color: white;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .step-tag-gold { background: var(--gold); color: #5C3B00; }
+
+    /* 完了バナー */
+    .completion-msg {
+      display: none;
+      background: linear-gradient(135deg, var(--green) 0%, #0D5C29 100%);
+      color: white;
+      text-align: center;
+      padding: 16px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── レスポンシブ ─── */
+    @media (max-width: 400px) {
+      .header-logo { font-size: 1.7rem; }
+      .bulk-grid { grid-template-columns: 1fr; }
+      .entry-btn { min-width: 110px; padding: 10px 12px; }
+      .hero-main { font-size: 1.35rem; }
+      .step-btn { padding: 9px 12px; font-size: 0.82rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header>
+  <div class="header-logo">
+    🛒 今楽
+    <span>今買うならコレだけ押せばOK！楽天エントリーまとめ</span>
+  </div>
+  <div class="header-date" id="headerDate">読み込み中…</div>
+</header>
+
+<!-- 注意バナー -->
+<div class="notice-bar" id="noticeBanner">
+  ⚠️ 各キャンペーンのエントリーは毎月リセットされます。毎月1日以降に再エントリーを忘れずに！
+</div>
+
+<main>
+
+  <!-- ★ 今買うならコレだけ！ヒーローチェックリスト -->
+  <div class="hero-checklist">
+    <div class="hero-head">
+      <div class="hero-eyebrow">🛒 急に楽天で買い物することになったら、まずここ！</div>
+      <span class="hero-main">今買うなら<em>コレだけ</em>押せばOK！</span>
+      <span class="hero-sub">順番にタップ → 各ページでエントリーボタンを押すだけ</span>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>エントリー進捗</span>
+        <span class="progress-count" id="progressCount">0 / <span id="totalCount">5</span> 完了</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div class="step-list" id="stepList">
+      <!-- JavaScriptで生成 -->
+    </div>
+
+    <div class="completion-msg" id="completionMsg">
+      🎉 全部完了！あとはお買い物するだけ！ポイントをがっちりゲットしよう 🛒
+    </div>
+  </div>
+
+  <!-- 区切り -->
+  <div style="text-align:center;margin:24px 0 8px;font-size:0.78rem;color:var(--gray-600);font-weight:700;letter-spacing:1px;">
+    ▼ 各キャンペーンの詳細はこちら
+  </div>
+
+  <!-- ① 毎日エントリー -->
+  <div class="section-title daily">
+    <span class="icon">✅</span> 毎日エントリー可能
+  </div>
+  <div id="dailyCampaigns"></div>
+
+  <!-- ② SPU（毎月エントリー） -->
+  <div class="section-title spu">
+    <span class="icon">⭐</span> SPU（毎月エントリーでポイント倍増）
+  </div>
+  <div id="spuCampaigns"></div>
+
+  <!-- ③ 5・10のつく日 -->
+  <div class="section-title special" id="specialTitle">
+    <span class="icon">📅</span> 5・10のつく日特典
+  </div>
+  <div id="specialCampaigns"></div>
+
+  <!-- ④ イベント（マラソン/スーパーSALE） -->
+  <div class="section-title event">
+    <span class="icon">🎉</span> イベント開催時にエントリー
+  </div>
+  <div id="eventCampaigns"></div>
+
+  <!-- ⑤ その他キャンペーン -->
+  <div class="section-title other" id="otherCampaigns">
+    <span class="icon">➕</span> その他キャンペーン（属性別・ポイ活系）
+  </div>
+  <p style="font-size:0.78rem;color:var(--gray-600);margin-bottom:10px;padding:0 4px;">
+    ポイントの積み上げに効く細かいキャンペーンです。該当するものをエントリーしましょう。
+  </p>
+  <div id="otherCampaignsCards"></div>
+
+  <!-- ⑥ イベント開催中：詳細エントリーまとめ -->
+  <div class="section-title event-detail">
+    <span class="icon">🏃</span> イベント開催中：詳細エントリーまとめ
+  </div>
+  <div class="update-notice">
+    ⚠️ 以下のURLはイベント（マラソン・スーパーSALE）ごとに変わります。<br>
+    開催前にHTMLの <code>eventDetailCampaigns</code> を最新URLに更新してください。
+  </div>
+
+  <div class="event-sub-title">📌 メイン・スペシャル系</div>
+  <div id="evMainCards"></div>
+
+  <div class="event-sub-title">💳 楽天カード特典（イベント時）</div>
+  <div id="evCardCards"></div>
+
+  <div class="event-sub-title">👨‍👩‍👧 属性別（ママ割・ペット・マイカー）</div>
+  <div id="evAttrCards"></div>
+
+  <div class="event-sub-title">🏷️ ブランド・ジャンル別</div>
+  <div id="evBrandCards"></div>
+
+  <div class="event-sub-title">🔄 リピート購入特典</div>
+  <div id="evRepeatCards"></div>
+
+  <!-- ⑦ 時間帯別エントリー -->
+  <div class="section-title time-entry">
+    <span class="icon">⏰</span> 時間帯別エントリー（イベント開催時）
+  </div>
+  <p style="font-size:0.78rem;color:var(--gray-600);margin-bottom:10px;padding:0 4px;">
+    イベント中、特定の時間になると解放されるキャンペーンです。時間帯ごとにまとめました。
+  </p>
+  <div id="timeEntrySection"></div>
+
+  <!-- ⑧ クーポン取得 -->
+  <div class="section-title coupon">
+    <span class="icon">🎫</span> クーポン取得まとめ
+  </div>
+  <p style="font-size:0.78rem;color:var(--gray-600);margin-bottom:10px;padding:0 4px;">
+    エントリー不要で取得できるクーポンです。お買い物前に取得しておきましょう。
+  </p>
+  <div id="couponCards"></div>
+
+</main>
+
+<footer>
+  <div class="pr-notice">#PR #広告</div><br>
+  ※ このページには楽天アフィリエイトリンクが含まれています。<br>
+  ※ キャンペーン内容・ポイント倍率は変更になる場合があります。<br>
+  ※ 最新情報は必ず<a href="https://event.rakuten.co.jp/" target="_blank">楽天市場公式</a>でご確認ください。<br><br>
+  <strong style="color:#FFF">今楽</strong> — 楽天お得エントリーまとめ
+</footer>
+
+<script>
+  // ─────────────────────────────────────────────
+  //  キャンペーンデータ（URLは定期的に確認・更新してください）
+  // ─────────────────────────────────────────────
+  const campaigns = {
+    daily: [
+      {
+        name: "楽天ポイントカード ポイントアップ",
+        desc: "お買い物前にエントリーするだけで対象店舗でのポイントがアップ。毎日エントリー可能！",
+        point: "+最大2倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/everyday/point/",
+        note: "毎日リセット・何度でもエントリー可"
+      },
+      {
+        name: "楽天Pasha レシートでポイント",
+        desc: "対象商品を購入してレシートを投稿するとポイントゲット。毎日チェックしよう！",
+        point: "商品ごとにポイント",
+        url: "https://pasha.rakuten.co.jp/",
+        note: "アプリからレシート投稿でポイント獲得"
+      }
+    ],
+
+    spu: [
+      {
+        name: "楽天カード 利用特典",
+        desc: "楽天カードを使って楽天市場でお買い物。毎月エントリーが必須！",
+        point: "+2倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/creditcard/",
+        note: "楽天カードをお持ちの方必須エントリー"
+      },
+      {
+        name: "楽天銀行×楽天市場",
+        desc: "楽天銀行口座を楽天市場と連携してエントリー。普通預金の金利もアップ！",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/bank/",
+        note: "銀行口座の連携設定も忘れずに"
+      },
+      {
+        name: "楽天証券 投資信託積立",
+        desc: "楽天証券で月1回以上投資信託を積立購入するとポイントアップ。",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/toushin/",
+        note: "100円積立でもOK"
+      },
+      {
+        name: "楽天モバイル キャリア利用",
+        desc: "楽天モバイルをご利用中の方はエントリーだけでポイント倍率が大幅アップ！",
+        point: "+4倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/mobile/",
+        note: "毎月エントリー必須・最大の倍率アップ"
+      },
+      {
+        name: "楽天ひかり 利用特典",
+        desc: "楽天ひかりをご利用の方は毎月エントリーで2倍に。",
+        point: "+2倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/hikari/",
+        note: "楽天ひかり契約者限定"
+      },
+      {
+        name: "楽天トラベル 旅行予約",
+        desc: "楽天トラベルで月1回以上の予約・宿泊でポイントアップ。旅行好きにお得！",
+        point: "+1倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/travel/",
+        note: "予約確定後にポイント付与"
+      },
+      {
+        name: "Rakuten Fashion 購入",
+        desc: "Rakuten Fashionで月1回以上ご購入でポイントアップ。ファッション好きに！",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/fashion/",
+        note: "毎月エントリー＋購入が条件"
+      },
+      {
+        name: "楽天ビューティー 予約利用",
+        desc: "楽天ビューティーで美容院・エステなどを予約・利用するとポイントアップ。",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/beauty/",
+        note: "予約・来店が条件"
+      },
+      {
+        name: "楽天Kobo 電子書籍購入",
+        desc: "楽天Koboで電子書籍を月1冊以上購入するとポイントアップ。1円でもOK！",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/kobo/",
+        note: "1冊の購入でOK"
+      },
+      {
+        name: "楽天TV 動画視聴・契約",
+        desc: "楽天TVで動画を視聴またはプラン契約するとポイントアップ。",
+        point: "+1倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/tv/",
+        note: "視聴または契約が条件"
+      },
+      {
+        name: "楽天ブックス 書籍購入",
+        desc: "楽天ブックスで月1冊以上購入するとポイントアップ。紙の本・CDもOK！",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/books/",
+        note: "1点購入でOK（1円以上）"
+      },
+      {
+        name: "Rakuten24 日用品購入",
+        desc: "Rakuten24で日用品を購入するとポイントアップ。まとめ買いがお得！",
+        point: "+0.5倍",
+        url: "https://event.rakuten.co.jp/campaign/point-up/r24/",
+        note: "対象ショップで購入が条件"
+      }
+    ],
+
+    special: [
+      {
+        name: "5・10のつく日 楽天カード特典",
+        desc: "毎月5日・10日・15日・20日・25日・30日は楽天カード利用でポイント+1倍！当日エントリーを忘れずに。",
+        point: "+1倍（当日限定）",
+        url: "https://event.rakuten.co.jp/campaign/point-up/rakutencard/",
+        note: "楽天カードでのお買い物が対象"
+      }
+    ],
+
+    event: [
+      {
+        name: "お買い物マラソン",
+        desc: "複数のショップで買い回るほどポイントが増える人気イベント！開催中はすぐエントリーを。10ショップ達成で最大+9倍！",
+        point: "最大+9倍",
+        url: "https://event.rakuten.co.jp/campaign/marathon/",
+        note: "開催期間中のみ（月1〜2回開催）"
+      },
+      {
+        name: "楽天スーパーSALE",
+        desc: "年4回（3・6・9・12月）開催の超大型セール。事前エントリーでポイントアップ！半額商品多数。",
+        point: "最大+46倍",
+        url: "https://event.rakuten.co.jp/superevent/supersale/",
+        note: "3月・6月・9月・12月開催"
+      },
+      {
+        name: "超ポイントバック祭",
+        desc: "不定期開催の超大型ポイントバックキャンペーン。開催時は必ずエントリー！",
+        point: "最大+46倍",
+        url: "https://event.rakuten.co.jp/campaign/pointback/",
+        note: "不定期開催・要チェック"
+      }
+    ]
+  };
+
+  // ─────────────────────────────────────────────
+  //  日付処理
+  // ─────────────────────────────────────────────
+  const today = new Date();
+  const day = today.getDate();
+  const month = today.getMonth() + 1;
+  const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
+  const weekDay = weekDays[today.getDay()];
+  const isSpecialDay = [5, 10, 15, 20, 25, 30].includes(day);
+
+  // ヘッダーに日付表示
+  const dateEl = document.getElementById("headerDate");
+  dateEl.innerHTML = `${month}月${day}日（${weekDay}）${isSpecialDay ? '<span class="today-badge">🎯 今日は5・10のつく日！</span>' : ''}`;
+
+  // 5・10のつく日ハイライト
+  if (isSpecialDay) {
+    document.getElementById("noticeBanner").innerHTML =
+      `🎯 今日は<strong>${day}日</strong>！5・10のつく日です！楽天カード特典のエントリーを忘れずに！`;
+    document.getElementById("noticeBanner").style.background = "#FFF8E7";
+    document.getElementById("noticeBanner").style.borderColor = "var(--gold)";
+    document.getElementById("noticeBanner").style.color = "#6B4D00";
+    const specialTitle = document.getElementById("specialTitle");
+    specialTitle.style.background = "#D4A017";
+    specialTitle.innerHTML = '<span class="icon">🎯</span> 今日！5・10のつく日特典（本日限定）';
+  }
+
+  // ─────────────────────────────────────────────
+  //  カード生成関数
+  // ─────────────────────────────────────────────
+  function badgeHTML(type, isToday = false) {
+    const labels = {
+      daily: "毎日", spu: "毎月", special: isToday ? "本日のみ" : "5・10のつく日", event: "イベント時"
+    };
+    const cls = isToday ? "today" : type;
+    return `<span class="badge ${cls}">${labels[type]}</span>`;
+  }
+
+  function createCard(c, type) {
+    const isToday = (type === "special") && isSpecialDay;
+    const extraClass = isToday ? "card-today-highlight" : "";
+    const btnClass = (type === "special") ? "gold" : "";
+    const entryUrl = aff(c.url);
+
+    return `
+      <div class="campaign-card ${extraClass}">
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-name">${c.name}</div>
+            ${badgeHTML(type, isToday)}
+          </div>
+          <div class="card-desc">${c.desc}</div>
+          <div class="card-point">🎁 ポイント ${c.point}</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-note">⏰ ${c.note}</div>
+          <a href="${entryUrl}" target="_blank" rel="noopener" class="entry-btn ${btnClass}">
+            ▶ エントリー
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  // ─────────────────────────────────────────────
+  //  今日コレだけ！ ステップリスト
+  // ─────────────────────────────────────────────
+  const prioritySteps = [
+    {
+      name: "① 毎日エントリー",
+      point: "毎日リセット・必ず最初にやろう ／ +最大2倍",
+      url: campaigns.daily[0].url,
+      gold: false
+    },
+    {
+      name: "② SPUをまとめてチェック",
+      point: "楽天カード・モバイル・銀行・証券など全SPUを一括確認",
+      url: "https://point.rakuten.co.jp/guidance/",
+      gold: false,
+      tag: "まとめて"
+    },
+    isSpecialDay
+      ? { name: "③ 5・10のつく日（本日限定！）", point: "当日のみ有効 ／ +1倍　← 今日必須！", url: campaigns.special[0].url, gold: true, tag: "今日限定" }
+      : { name: "③ マラソン・スーパーSALEエントリー", point: "開催中のイベントはすぐエントリー！", url: campaigns.event[0].url, gold: false, tag: "イベント" },
+    {
+      name: "④ その他キャンペーン",
+      point: "ママ割・楽天Pay・スポーツ応援・実店舗など細かいエントリーをチェック",
+      url: "#otherCampaigns",
+      gold: false,
+      tag: "その他",
+      isAnchor: true
+    }
+  ];
+
+  let doneCount = 0;
+  const total = prioritySteps.length;
+  document.getElementById("totalCount").textContent = total;
+
+  function updateProgress() {
+    const pct = Math.round((doneCount / total) * 100);
+    document.getElementById("progressFill").style.width = pct + "%";
+    document.getElementById("progressCount").innerHTML =
+      `<strong style="font-size:1rem;color:${doneCount===total?'var(--green)':'var(--rakuten-red)'}">${doneCount}</strong> / ${total} 完了`;
+    if (doneCount === total) {
+      document.getElementById("completionMsg").style.display = "block";
+    }
+  }
+
+  function markDone(idx) {
+    const item = document.getElementById("step-" + idx);
+    if (item && !item.classList.contains("done")) {
+      item.classList.add("done");
+      doneCount++;
+      updateProgress();
+    }
+  }
+
+  document.getElementById("stepList").innerHTML = prioritySteps.map((s, i) => {
+    const href   = s.isAnchor ? s.url : aff(s.url);
+    const target = s.isAnchor ? "" : 'target="_blank" rel="noopener"';
+    const onclick = s.isAnchor
+      ? `onclick="document.getElementById('otherCampaigns').scrollIntoView({behavior:'smooth'});setTimeout(()=>markDone(${i}),400)"`
+      : `onclick="setTimeout(()=>markDone(${i}), 800)"`;
+    return `
+    <div class="step-item step-grouped" id="step-${i}">
+      <div class="step-num">${i + 1}</div>
+      <div class="step-info">
+        <div class="step-name">
+          ${s.name}
+          ${s.tag ? `<span class="step-tag${s.gold ? " step-tag-gold" : ""}">${s.tag}</span>` : ""}
+        </div>
+        <div class="step-point">${s.point}</div>
+      </div>
+      <a href="${href}" ${target}
+         class="step-btn${s.gold ? " gold-btn" : ""}"
+         ${onclick}>
+        タップ！
+      </a>
+      <div class="step-done-badge">✅ 済！</div>
+    </div>
+  `}).join("");
+
+  // ─────────────────────────────────────────────
+  //  各セクションを描画
+  // ─────────────────────────────────────────────
+  document.getElementById("dailyCampaigns").innerHTML =
+    campaigns.daily.map(c => createCard(c, "daily")).join("");
+
+  document.getElementById("spuCampaigns").innerHTML =
+    campaigns.spu.map(c => createCard(c, "spu")).join("");
+
+  document.getElementById("specialCampaigns").innerHTML =
+    campaigns.special.map(c => createCard(c, "special")).join("");
+
+  document.getElementById("eventCampaigns").innerHTML =
+    campaigns.event.map(c => createCard(c, "event")).join("");
+
+  // ─────────────────────────────────────────────
+  //  その他キャンペーンデータ
+  // ─────────────────────────────────────────────
+  const otherCampaigns = [
+
+    // ─ ファミリー・属性 ─
+    {
+      name: "ママ割 メンバー登録＆エントリー",
+      desc: "楽天ママ割に登録してエントリーすると、対象商品でポイントアップ。妊娠中〜子育て中のママ・パパ向け。",
+      point: "最大+2倍",
+      url: "https://event.rakuten.co.jp/family/mama/",
+      note: "メンバー登録が必要（無料）"
+    },
+    {
+      name: "楽天シニア メンバー特典",
+      desc: "楽天シニアに登録してエントリー。シニア向けのポイントアップキャンペーン。",
+      point: "+1倍",
+      url: "https://senior.rakuten.co.jp/",
+      note: "50歳以上が対象目安"
+    },
+
+    // ─ スポーツ応援 ─
+    {
+      name: "楽天イーグルス 試合勝利でポイントアップ",
+      desc: "楽天イーグルスが勝利した翌日にエントリーページでポイントアップ！試合結果をチェックしよう。",
+      point: "勝利翌日 +1〜3倍",
+      url: "https://event.rakuten.co.jp/campaign/point-up/eagleswin/",
+      note: "勝利翌日のみ有効・エントリー必須"
+    },
+    {
+      name: "ヴィッセル神戸 試合勝利でポイントアップ",
+      desc: "ヴィッセル神戸が勝利した翌日にエントリーでポイントアップ。",
+      point: "勝利翌日 +1〜2倍",
+      url: "https://event.rakuten.co.jp/campaign/point-up/vissel/",
+      note: "勝利翌日のみ有効・エントリー必須"
+    },
+
+    // ─ 決済・サービス ─
+    {
+      name: "楽天Pay アプリ利用でポイントアップ",
+      desc: "楽天Payアプリを使ってエントリー後に対象店舗でお支払いするとポイントアップ。",
+      point: "+0.5〜2倍",
+      url: "https://pay.rakuten.co.jp/campaign/",
+      note: "楽天Payアプリが必要"
+    },
+    {
+      name: "楽天Edy チャージ＆利用でポイント",
+      desc: "楽天EdyにチャージしてEdyで支払うとポイントが貯まる。エントリーでさらにアップ。",
+      point: "+0.5倍",
+      url: "https://edy.rakuten.co.jp/campaign/",
+      note: "Edyカード・楽天カード（Edy付き）が対象"
+    },
+
+    // ─ ポイント活動系 ─
+    {
+      name: "楽天ポイントスクリーン（ポイ活アプリ）",
+      desc: "ロック画面の広告を見るだけでポイントが貯まる。エントリー後にアプリで設定するだけ！",
+      point: "毎日最大3pt",
+      url: "https://pointscreen.rakuten.co.jp/",
+      note: "スマホアプリのインストールが必要"
+    },
+    {
+      name: "楽天チェック 店舗チェックインでポイント",
+      desc: "スーパーやコンビニなど対象店舗でアプリをタップするとポイントゲット。毎日チェックを！",
+      point: "チェックインごとに1〜数pt",
+      url: "https://check.rakuten.co.jp/",
+      note: "専用アプリが必要"
+    },
+    {
+      name: "楽天ポイントモール 経由でお買い物",
+      desc: "楽天ポイントモールを経由して他社ショッピングサイトで買い物するとポイントが貯まる。",
+      point: "最大+30倍（サイト別）",
+      url: "https://point.rakuten.co.jp/mall/",
+      note: "楽天ポイントモールを経由してから購入"
+    },
+
+    // ─ 生活・レジャー系 ─
+    {
+      name: "楽天グルメ 食事予約でポイント",
+      desc: "楽天グルメ（旧楽天ぐるなび）でレストラン予約→来店するとポイントが貯まる。",
+      point: "+0.5〜1倍相当",
+      url: "https://gourmet.rakuten.co.jp/",
+      note: "予約・来店が条件"
+    },
+    {
+      name: "楽天ゴルフ ゴルフ場予約でポイント",
+      desc: "楽天ゴルフでゴルフ場を予約すると購入金額に応じてポイントが貯まる。",
+      point: "+1倍相当",
+      url: "https://golf.rakuten.co.jp/",
+      note: "予約・来場が条件"
+    },
+    {
+      name: "楽天Car 車関連サービスでポイント",
+      desc: "タイヤ交換・車検・洗車など楽天Carの各サービス利用でポイントが貯まる。",
+      point: "サービスごとにポイント",
+      url: "https://car.rakuten.co.jp/",
+      note: "各サービス利用が条件"
+    },
+
+    // ─ お買い物系 ─
+    {
+      name: "お気に入りショップからの購入でポイントアップ",
+      desc: "あらかじめお気に入り登録したショップから購入するとポイントアップ対象になるキャンペーン。",
+      point: "+0.5倍",
+      url: "https://event.rakuten.co.jp/campaign/favorite/",
+      note: "事前のお気に入り登録が必要"
+    },
+    {
+      name: "楽天スーパーDEAL 最大40%ポイントバック",
+      desc: "楽天スーパーDEALの対象商品は購入金額の一部が大量ポイントで還ってくる。エントリー不要なものも多い。",
+      point: "最大40%ポイントバック",
+      url: "https://deal.rakuten.co.jp/",
+      note: "商品ごとに還元率が異なる"
+    },
+    {
+      name: "楽天24 定期購入でポイントアップ",
+      desc: "日用品・食品を楽天24で定期購入すると毎回ポイントアップ。まとめ買いで節約にも。",
+      point: "定期購入で+2〜5%相当",
+      url: "https://www.rakuten24.co.jp/",
+      note: "定期購入コースへの申し込みが必要"
+    },
+
+    // ─ 保険・金融 ─
+    {
+      name: "楽天保険 加入・見直しでポイント",
+      desc: "楽天保険でがん保険・医療保険などに加入すると大量ポイントを獲得できることがある。",
+      point: "加入ごとに数千〜数万pt",
+      url: "https://hoken.rakuten.co.jp/",
+      note: "加入が条件（不要な保険は見送りを）"
+    },
+    {
+      name: "楽天ウォレット 暗号資産取引でポイント",
+      desc: "楽天ウォレットで暗号資産を少額購入するとSPU倍率がアップするキャンペーン。",
+      point: "+1倍",
+      url: "https://wallet.rakuten.co.jp/",
+      note: "毎月エントリー＋取引が必要"
+    }
+  ];
+
+  const badgeLabels = {
+    daily: "毎日", spu: "毎月", special: "5・10日", event: "イベント時", other: "その他"
+  };
+
+  function createOtherCard(c) {
+    return `
+      <div class="campaign-card">
+        <div class="card-body">
+          <div class="card-top">
+            <div class="card-name">${c.name}</div>
+            <span class="badge other">その他</span>
+          </div>
+          <div class="card-desc">${c.desc}</div>
+          <div class="card-point">🎁 ポイント ${c.point}</div>
+        </div>
+        <div class="card-footer">
+          <div class="card-note">⏰ ${c.note}</div>
+          <a href="${aff(c.url)}" target="_blank" rel="noopener" class="entry-btn" style="background:linear-gradient(135deg,#6B52AE,#4527A0)">
+            ▶ エントリー
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById("otherCampaignsCards").innerHTML =
+    otherCampaigns.map(c => createOtherCard(c)).join("");
+
+  // ─────────────────────────────────────────────
+  //  ⑥ イベント開催中：詳細エントリーデータ
+  //  ★ マラソン・スーパーSALE開催前にURLを更新してください
+  // ─────────────────────────────────────────────
+  const BASE = "https://event.rakuten.co.jp/campaign/marathon/"; // ← イベントURLに変更
+
+  const eventDetailCampaigns = {
+    main: [
+      { name:"マラソン/スーパーSALE メインエントリー", point:"開催中は必ずエントリー！", url: BASE },
+      { name:"スペシャルショッピング ＋4%",            point:"ショップへの条件達成でポイントアップ", url: BASE + "special/" },
+      { name:"スペシャルボーナス ＋6%",               point:"購入金額条件達成でボーナス", url: BASE + "bonus/" },
+      { name:"見逃せない ＋9%",                       point:"上限あり・早めにエントリーを", url: BASE + "miss/" },
+      { name:"ちょっと待った ＋9%",                   point:"再エントリーで追加ポイント", url: BASE + "wait/" },
+      { name:"お得にお買い物 ＋4%",                   point:"20:00〜解放されることが多い", url: BASE + "otoku/" },
+      { name:"ラッキーチャンス ＋6%",                 point:"抽選でポイントアップ", url: BASE + "lucky/" },
+      { name:"スペシャルイベント ＋9%",               point:"20:00〜解放・上限あり", url: BASE + "event/" },
+      { name:"感謝を込めて ＋9%",                     point:"20:00〜解放・上限あり", url: BASE + "thanks/" },
+      { name:"39ショップ ＋1%",                       point:"39ショップでの購入が対象", url: BASE + "39shop/" },
+    ],
+    card: [
+      { name:"楽天カード決済 ＋4%（0:00〜解放）",  point:"楽天カードでの購入が対象", url: "https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+      { name:"楽天カード決済 ＋7%（0:00〜解放）",  point:"楽天カードプレミアムなどで対象", url: "https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+      { name:"楽天カード決済 ＋9%（20:00〜解放）", point:"上限あり・早めにエントリー", url: "https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+      { name:"対象店舗買い回りカード特典",          point:"楽天カード利用×複数ショップで倍率アップ", url: "https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+    ],
+    attribute: [
+      { name:"ママ割＋マラソン ＋2%",    point:"ママ割メンバー限定・エントリー必須",      url: "https://event.rakuten.co.jp/family/mama/" },
+      { name:"ペット割 ＋2%",            point:"ペット商品購入が対象",                    url: "https://event.rakuten.co.jp/pet/" },
+      { name:"マイカー割 ＋2%",          point:"楽天Car経由の購入が対象",                url: "https://car.rakuten.co.jp/" },
+      { name:"ベビー・キッズ割 ＋2%",    point:"ベビー・キッズ関連商品が対象",           url: "https://event.rakuten.co.jp/baby/" },
+      { name:"楽天シニア特典 ＋1%",      point:"シニア会員限定キャンペーン",             url: "https://senior.rakuten.co.jp/" },
+    ],
+    brand: [
+      { name:"P&Gまとめ買い ＋14%",           point:"P&G対象商品をまとめ買いでポイントアップ",   url: "https://event.rakuten.co.jp/campaign/pg/" },
+      { name:"コスメ限定 300ポイント",         point:"コスメ・美容ジャンルでの購入が対象",        url: "https://event.rakuten.co.jp/beauty/cosmetics/" },
+      { name:"楽天ブックス ＋2%",             point:"楽天ブックスでの購入が対象",               url: "https://event.rakuten.co.jp/campaign/point-up/books/" },
+      { name:"三越・伊勢丹 ＋4%",            point:"三越・伊勢丹ショップでの購入が対象",        url: "https://event.rakuten.co.jp/isetan/" },
+      { name:"楽天24（日用品）＋2%",          point:"日用品まとめ買いでポイントアップ",          url: "https://event.rakuten.co.jp/campaign/point-up/r24/" },
+      { name:"ファッション・コスメ特典 ＋3%", point:"対象ジャンルでのお買い物が対象",           url: "https://event.rakuten.co.jp/fashion/" },
+    ],
+    repeat: [
+      { name:"リピート購入 600pt",       point:"同じショップで2回目購入でポイントプレゼント",  url: BASE + "repeat/" },
+      { name:"リピート購入 1,000pt（①）", point:"同じショップで複数回購入でさらにプレゼント", url: BASE + "repeat2/" },
+      { name:"リピート購入 1,000pt（②）", point:"別条件でも1,000ptプレゼントの場合あり",     url: BASE + "repeat3/" },
+    ]
+  };
+
+  // コンパクト行レンダリング
+  function compactRow(c, btnClass) {
+    return `
+      <div class="compact-row">
+        <div class="compact-info">
+          <div class="compact-name">${c.name}</div>
+          <div class="compact-point">${c.point}</div>
+        </div>
+        <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn ${btnClass}">▶ エントリー</a>
+      </div>`;
+  }
+
+  function compactBlock(list, btnClass) {
+    return `<div class="time-block"><div class="time-block-body">${list.map(c=>compactRow(c,btnClass)).join("")}</div></div>`;
+  }
+
+  document.getElementById("evMainCards").innerHTML   = compactBlock(eventDetailCampaigns.main,      "");
+  document.getElementById("evCardCards").innerHTML   = compactBlock(eventDetailCampaigns.card,      "card-btn");
+  document.getElementById("evAttrCards").innerHTML   = compactBlock(eventDetailCampaigns.attribute, "attr-btn");
+  document.getElementById("evBrandCards").innerHTML  = compactBlock(eventDetailCampaigns.brand,     "brand-btn");
+  document.getElementById("evRepeatCards").innerHTML = compactBlock(eventDetailCampaigns.repeat,    "repeat-btn");
+
+  // ─────────────────────────────────────────────
+  //  ⑦ 時間帯別エントリー
+  //  ★ イベントごとに内容が変わります。開催時に更新してください。
+  // ─────────────────────────────────────────────
+  const timeEntries = [
+    {
+      time: "🌙 0:00〜 エントリー可能",
+      style: "midnight",
+      btnClass: "midnight-btn",
+      items: [
+        { name:"楽天カード決済 ＋4%",   point:"0時ちょうどに解放",           url:"https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+        { name:"楽天カード決済 ＋7%",   point:"プレミアムカード等が対象",     url:"https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+        { name:"対象店舗買い回り特典",   point:"複数ショップ購入でポイントアップ", url: BASE },
+        { name:"5と0のつく日 ＋2%",     point:"5・10・15・20・25・30日のみ", url:"https://event.rakuten.co.jp/campaign/point-up/rakutencard/" },
+      ]
+    },
+    {
+      time: "🌆 20:00〜 エントリー可能",
+      style: "evening",
+      btnClass: "evening-btn",
+      items: [
+        { name:"お得にお買い物 ＋4%",     point:"上限あり・早めに",           url: BASE + "otoku/" },
+        { name:"ラッキーチャンス ＋6%",   point:"抽選ポイントアップ",         url: BASE + "lucky/" },
+        { name:"スペシャルイベント ＋9%", point:"上限あり・早めに",           url: BASE + "event/" },
+        { name:"感謝を込めて ＋9%",       point:"上限あり・早めに",           url: BASE + "thanks/" },
+        { name:"楽天カード決済 ＋9%",     point:"上限あり",                  url:"https://event.rakuten.co.jp/campaign/point-up/creditcard/" },
+        { name:"リピート購入 600pt",       point:"同じショップで2回目購入",    url: BASE + "repeat/" },
+        { name:"リピート購入 1,000pt（①）",point:"条件達成でプレゼント",       url: BASE + "repeat2/" },
+        { name:"リピート購入 1,000pt（②）",point:"別条件でプレゼントの場合あり",url: BASE + "repeat3/" },
+        { name:"39ショップ ＋1%",         point:"39ショップでの購入が対象",   url: BASE + "39shop/" },
+        { name:"見逃し厳禁 ＋9%",         point:"上限あり・早めに",           url: BASE + "miss/" },
+      ]
+    }
+  ];
+
+  document.getElementById("timeEntrySection").innerHTML = timeEntries.map(block => `
+    <div class="time-block">
+      <div class="time-block-header ${block.style}">${block.time}</div>
+      <div class="time-block-body">
+        ${block.items.map(c => compactRow(c, block.btnClass)).join("")}
+      </div>
+    </div>
+  `).join("");
+
+  // ─────────────────────────────────────────────
+  //  ⑧ クーポン取得データ
+  //  ★ クーポン内容はイベント・時期によって変わります
+  // ─────────────────────────────────────────────
+  const coupons = [
+    { name:"何度でも使えるクーポン 100〜2,000円",      point:"購入ジャンルを問わず使えることが多い",       url:"https://coupon.rakuten.co.jp/" },
+    { name:"ダイヤモンド・プラチナ会員 777円クーポン", point:"ランク会員限定クーポン",                     url:"https://coupon.rakuten.co.jp/getcp/?cp=diamond" },
+    { name:"アプリ通知クーポン 1,000円",               point:"楽天アプリの通知をオンにして取得",           url:"https://coupon.rakuten.co.jp/" },
+    { name:"メルマガ読者クーポン 100円",               point:"楽天メールマガジン登録者向け",               url:"https://coupon.rakuten.co.jp/" },
+    { name:"楽天ファッション 2,500円クーポン",         point:"ファッションジャンルで使えるクーポン",       url:"https://coupon.rakuten.co.jp/getcp/?cp=fashion" },
+    { name:"楽天ブックス 200円クーポン",               point:"楽天ブックスでの購入に使用可",               url:"https://coupon.rakuten.co.jp/getcp/?cp=books" },
+    { name:"家電フラッシュ 2,000円クーポン",           point:"家電ジャンル限定・枚数制限あり",             url:"https://coupon.rakuten.co.jp/getcp/?cp=kaden" },
+    { name:"満喫・快適サマー 500円クーポン",           point:"季節限定ジャンルクーポン",                   url:"https://coupon.rakuten.co.jp/" },
+    { name:"暮らしにプラス 450円クーポン",             point:"日用品・生活雑貨ジャンルに使用可",           url:"https://coupon.rakuten.co.jp/" },
+    { name:"ファッション・コスメ 300円クーポン",       point:"ファッション・コスメ購入時に使用可",         url:"https://coupon.rakuten.co.jp/" },
+    { name:"ヘアケア・ダイエット 300円クーポン",       point:"健康・美容ジャンルに使用可",                 url:"https://coupon.rakuten.co.jp/" },
+    { name:"日用品マーケット 15%OFFクーポン",          point:"日用品ジャンルで15%OFF",                    url:"https://coupon.rakuten.co.jp/" },
+    { name:"楽天ビック暑さ対策 2,000円クーポン",       point:"楽天ビックでのエアコン・扇風機等に使用可",   url:"https://coupon.rakuten.co.jp/" },
+    { name:"ペットの暑さ対策 200円クーポン",           point:"ペット用品ジャンルで使用可",                 url:"https://coupon.rakuten.co.jp/" },
+  ];
+
+  document.getElementById("couponCards").innerHTML = coupons.map(c => `
+    <div class="compact-row" style="background:white;border-radius:10px;margin-bottom:6px;padding:10px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+      <div class="compact-info">
+        <div class="compact-name">🎫 ${c.name}</div>
+        <div class="compact-point" style="color:var(--green)">${c.point}</div>
+      </div>
+      <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn coupon-btn">▶ 取得</a>
+    </div>
+  `).join("");
+</script>
+
+</body>
+</html>
