@@ -15,8 +15,18 @@
     取得方法: https://affiliate.rakuten.co.jp → ツール → リンク作成
   ============================================================ -->
   <script>
+    // ============================================================
+    //  ★★★ 設定エリア ★★★ ここだけ変更すればOK
+    // ============================================================
+
+    // 楽天アフィリエイト ID
     const RAKUTEN_AFFILIATE_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16";
-    // ↑ここに楽天アフィリエイトのIDを入力してください
+
+    // お買物マラソン / スーパーSALE 開催中？
+    //   開催中 → true   終了・通常日 → false
+    const MARATHON_ACTIVE = false;
+
+    // ============================================================
 
     // アフィリエイトURLを自動生成する関数
     function aff(url) {
@@ -1032,13 +1042,23 @@
   const dateEl = document.getElementById("headerDate");
   dateEl.innerHTML = `${month}月${day}日（${weekDay}）${isSpecialDay ? '<span class="today-badge">🎯 今日は5・10のつく日！</span>' : ''}`;
 
-  // 5・10のつく日ハイライト
-  if (isSpecialDay) {
-    document.getElementById("noticeBanner").innerHTML =
+  // お知らせバナー：マラソン中 > 5・10のつく日 > 通常
+  const noticeBanner = document.getElementById("noticeBanner");
+  if (MARATHON_ACTIVE) {
+    noticeBanner.innerHTML =
+      `🏃‍♂️ <strong>お買物マラソン開催中！</strong> マラソン・39ショップ・4時間DEALのエントリーを忘れずに！`;
+    noticeBanner.style.background = "#E8F5E9";
+    noticeBanner.style.borderColor = "#2E7D32";
+    noticeBanner.style.color = "#1B5E20";
+  } else if (isSpecialDay) {
+    noticeBanner.innerHTML =
       `🎯 今日は<strong>${day}日</strong>！5・10のつく日です！楽天カード特典のエントリーを忘れずに！`;
-    document.getElementById("noticeBanner").style.background = "#FFF8E7";
-    document.getElementById("noticeBanner").style.borderColor = "var(--gold)";
-    document.getElementById("noticeBanner").style.color = "#6B4D00";
+    noticeBanner.style.background = "#FFF8E7";
+    noticeBanner.style.borderColor = "var(--gold)";
+    noticeBanner.style.color = "#6B4D00";
+  } else {
+    noticeBanner.innerHTML =
+      `📋 各キャンペーンのエントリーは毎月リセットされます。毎月1日以降に再エントリーを忘れずに！`;
   }
 
   // ─────────────────────────────────────────────
@@ -1090,20 +1110,22 @@
       var isEssential = card.getAttribute('data-essential') === 'true';
       var showDaysAttr = card.getAttribute('data-show-days');
 
+      var isMarathonOnly = card.getAttribute('data-marathon-only') === 'true';
+
       if (mode === 'all') {
         card.classList.remove('mode-hidden');
       } else {
         // おすすめモード
         if (!isEssential) {
+          // essential:false → 常に非表示
+          card.classList.add('mode-hidden');
+        } else if (isMarathonOnly && !MARATHON_ACTIVE) {
+          // マラソン専用 × マラソン未開催 → 非表示
           card.classList.add('mode-hidden');
         } else if (showDaysAttr) {
           // 日付限定エントリー：今日が該当日のみ表示
           var showDays = showDaysAttr.split(',').map(Number);
-          if (showDays.includes(todayDay)) {
-            card.classList.remove('mode-hidden');
-          } else {
-            card.classList.add('mode-hidden');
-          }
+          card.classList.toggle('mode-hidden', !showDays.includes(todayDay));
         } else {
           card.classList.remove('mode-hidden');
         }
@@ -1298,18 +1320,22 @@
     const entryUrl = aff(c.url);
     const isEssential = c.essential !== false; // デフォルトtrue
     const showDaysAttr = c.showOnDays ? ` data-show-days="${c.showOnDays.join(',')}"` : '';
+    const marathonAttr = c.marathonOnly ? ' data-marathon-only="true"' : '';
     const dayBadge = c.showOnDays
       ? `<span style="font-size:0.65rem;background:var(--gold);color:#5C3B00;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">📅 今日限定</span>`
       : '';
+    const marathonBadge = c.marathonOnly
+      ? `<span style="font-size:0.65rem;background:#1A7F37;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">マラソン中</span>`
+      : '';
     return `
-      <div class="campaign-card" data-entry-url="${entryUrl}" data-essential="${isEssential}"${showDaysAttr}>
+      <div class="campaign-card" data-entry-url="${entryUrl}" data-essential="${isEssential}"${showDaysAttr}${marathonAttr}>
         <div class="card-body">
           <div class="card-check-area">
             <input type="checkbox" class="bulk-check bulk-check-${group}"
                    data-url="${entryUrl}" checked
                    onchange="updateBulkCount('${group}')">
             <div>
-              <div class="card-name">${c.name}${c.showOnDays ? dayBadge : ''}</div>
+              <div class="card-name">${c.name}${c.showOnDays ? dayBadge : ''}${c.marathonOnly ? marathonBadge : ''}</div>
               <div class="card-point">🎁 ${c.point}</div>
             </div>
             <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
@@ -1422,17 +1448,22 @@
   //  セクション A: エントリーまとめ
   // ─────────────────────────────────────────────
 
-  // 定番エントリー（いつでも）
-  // essential: true → おすすめモードで表示  false → 全部表示モードのみ
+  // 定番エントリー
+  // essential: true  → おすすめモードで表示
+  // marathonOnly: true → MARATHON_ACTIVE=true のときだけおすすめに出現
   const everydayEntries = [
-    { name: "お買物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true },
+    // ── 通常日・マラソン関係なくいつでも ──
     { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/", essential: true },
-    { name: "39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/", essential: true },
-    { name: "開始4時間DEAL（超高還元）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/", essential: true },
+    { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/", essential: true },
+    { name: "スーパーDEAL Days", point: "最大50%還元", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: true },
     { name: "楽天イーグルス勝利祈願 +1%", point: "+1%", url: "https://event.rakuten.co.jp/campaign/sports/", essential: true },
+    // ── マラソン・スーパーSALE期間中のみ ──
+    { name: "🏃 お買物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, marathonOnly: true },
+    { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/", essential: true, marathonOnly: true },
+    { name: "🏃 開始4時間DEAL（超高還元）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/", essential: true, marathonOnly: true },
+    // ── 全部表示のみ ──
     { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/", essential: false },
     { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/", essential: false },
-    { name: "スーパーDEAL Days", point: "+1%", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: false },
   ];
 
   document.getElementById("everydayEntries").innerHTML =
