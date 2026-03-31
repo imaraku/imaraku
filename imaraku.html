@@ -143,12 +143,13 @@
       background: var(--gray-100);
       border-radius: 20px;
       padding: 3px;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.10);
     }
 
     .mode-btn {
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 800;
-      padding: 5px 12px;
+      padding: 7px 14px;
       border-radius: 16px;
       border: none;
       background: transparent;
@@ -156,18 +157,43 @@
       color: var(--gray-600);
       transition: all 0.2s;
       white-space: nowrap;
+      letter-spacing: 0.2px;
     }
 
     .mode-btn.active {
       background: var(--rakuten-red);
       color: white;
-      box-shadow: 0 2px 6px rgba(191,0,0,0.3);
+      box-shadow: 0 2px 8px rgba(191,0,0,0.4);
+      transform: scale(1.04);
+    }
+
+    /* ─── モード説明バナー ─── */
+    .mode-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      border-bottom: 2px solid;
+      transition: background 0.3s, border-color 0.3s, color 0.3s;
+    }
+
+    .mode-banner.essential {
+      background: linear-gradient(135deg, #fff5f5, #fff);
+      border-color: var(--rakuten-red);
+      color: var(--rakuten-red);
+    }
+
+    .mode-banner.all-mode {
+      background: linear-gradient(135deg, #e8f0fe, #fff);
+      border-color: var(--blue);
+      color: var(--blue);
     }
 
     /* モードフィルタ用 */
     .mode-hidden { display: none !important; }
-
-    /* 「全部見るモード」のみ表示するラベル */
     .all-mode-only { display: none; }
     body.mode-all .all-mode-only { display: block; }
 
@@ -856,8 +882,8 @@
 </head>
 <body>
 
-<!-- ヘッダー -->
-<header>
+<!-- ヘッダー（タップでトップへ戻る） -->
+<header onclick="window.scrollTo({top:0, behavior:'smooth'})" style="cursor:pointer;" title="タップでトップへ戻る">
   <div class="header-logo">
     🛒 今楽
     <span>今買うならコレだけ押せばOK！楽天エントリーまとめ</span>
@@ -876,6 +902,12 @@
     <button class="mode-btn active" id="modeOsusume" onclick="setMode('essential')">⭐ おすすめ</button>
     <button class="mode-btn" id="modeAll" onclick="setMode('all')">全部表示</button>
   </div>
+</div>
+
+<!-- モード説明バナー -->
+<div class="mode-banner essential" id="modeBanner">
+  <span id="modeDescription">⭐ おすすめモード：今日すべき基本エントリーのみ表示</span>
+  <span style="font-size:0.72rem;opacity:0.75;">（右上で切り替え）</span>
 </div>
 
 <!-- 注意バナー -->
@@ -1034,6 +1066,18 @@
     document.getElementById('modeOsusume').classList.toggle('active', mode === 'essential');
     document.getElementById('modeAll').classList.toggle('active', mode === 'all');
     document.body.classList.toggle('mode-all', mode === 'all');
+    // モードバナーを更新
+    var banner = document.getElementById('modeBanner');
+    var desc   = document.getElementById('modeDescription');
+    if (banner && desc) {
+      if (mode === 'essential') {
+        banner.className = 'mode-banner essential';
+        desc.textContent = '⭐ おすすめモード：今日すべき基本エントリーのみ表示';
+      } else {
+        banner.className = 'mode-banner all-mode';
+        desc.textContent = '📋 全部表示モード：すべてのキャンペーンを表示中';
+      }
+    }
     applyFilter(mode);
   }
 
@@ -1220,12 +1264,25 @@
     if (countEl) countEl.textContent = checked + '/' + total + '件選択中';
   }
 
+  // ─────────────────────────────────────────────
+  //  スムーススクロール（sticky header 分を考慮）
+  // ─────────────────────────────────────────────
+  function scrollToWithOffset(targetId, stepIdx) {
+    var el = document.getElementById(targetId);
+    if (!el) return;
+    var HEADER_OFFSET = 170; // header + nav + modeBanner の合計高さ
+    var top = el.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    setTimeout(function() { markDone(stepIdx); }, 500);
+  }
+
   // セクション先頭に「まとめて開く」ボタンを差し込む（チェックボックス対応版）
   function insertBulkBtn(beforeElementId, group, label) {
     var target = document.getElementById(beforeElementId);
     if (!target) return;
     var bar = document.createElement('div');
     bar.className = 'bulk-bar';
+    bar.id = 'bulkBar_' + group; // ← ステップタップ後のスクロール先
     bar.innerHTML =
       '<button class="bulk-open-btn" onclick=\'openCheckedTabs("' + group + '", "' + label + '")\'>' +
       '🚀 選択した' + label + 'を開く' +
@@ -1273,16 +1330,18 @@
   const prioritySteps = [
     {
       name: "① エントリーする（定番 + 今日の限定）",
-      point: "定番キャンペーンを必ずチェック",
+      point: "↓ タップで「まとめて開く」ボタンへジャンプ！",
       url: "#entries",
+      scrollTarget: "bulkBar_entries",
       gold: false,
       tag: "必須",
       isAnchor: true
     },
     {
       name: "② クーポンをゲット",
-      point: "お買い物前にクーポン取得を忘れずに",
+      point: "↓ タップで「クーポンまとめ」へジャンプ！",
       url: "#coupons",
+      scrollTarget: "bulkBar_coupons",
       gold: false,
       tag: "推奨",
       isAnchor: true
@@ -1291,6 +1350,7 @@
       name: "③ 自分に当てはまるものをチェック",
       point: "ママ割・学割・ペット割など該当者特典",
       url: "#members",
+      scrollTarget: "members",
       gold: false,
       tag: "属性別",
       isAnchor: true
@@ -1336,7 +1396,7 @@
   document.getElementById("stepList").innerHTML = prioritySteps.map((s, i) => {
     const href = s.isAnchor ? s.url : aff(s.url);
     const onclick = s.isAnchor
-      ? `onclick="document.getElementById('${s.url.replace('#','')}').scrollIntoView({behavior:'smooth'});setTimeout(()=>markDone(${i}),400)"`
+      ? `onclick="scrollToWithOffset('${s.scrollTarget || s.url.replace('#','')}', ${i}); return false;"`
       : `onclick="openEntry(${i}, '${aff(s.url)}'); return false;"`;
     return `
     <div class="step-item step-grouped" id="step-${i}">
