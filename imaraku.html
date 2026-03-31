@@ -1676,7 +1676,7 @@
 
   // 学割（楽天学割）
   const gakuWariEntries = [
-    { name: "楽天学割×マラソン", point: "+1%", url: "https://event.rakuten.co.jp/young/campaign/marathon/" },
+    { name: "楽天学割×マラソン", point: "+1%", url: "https://event.rakuten.co.jp/young/campaign/marathon/", campaignKey: "marathon" },
     { name: "楽天学割(初回限定)", point: "+2%", url: "https://event.rakuten.co.jp/young/campaign/newpurchaser/" },
     { name: "楽天学割(全ショップ)", point: "+3%", url: "https://event.rakuten.co.jp/young/tieup/rakuma/" },
     { name: "楽天学割(水曜日)", point: "+9%", url: "https://event.rakuten.co.jp/young/rgw_benefit/" },
@@ -1686,43 +1686,55 @@
 
   document.getElementById("gakuWariSection").innerHTML =
     '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("gaku","学割")\'>🚀 選択した学割を開く<span class="bulk-count bulk-count-gaku">0/0件選択中</span></button></div>' +
-    gakuWariEntries.map(c => `
-    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true">
+    gakuWariEntries.map(function(c) {
+      var campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
+      var badge = c.campaignKey === 'marathon'
+        ? `<span style="font-size:0.62rem;background:#1A7F37;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">🏃 マラソン中</span>`
+        : '';
+      return `
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true"${campaignAttr}>
       <input type="checkbox" class="bulk-check bulk-check-gaku"
              data-url="${aff(c.url)}" checked
              onchange="updateBulkCount('gaku')">
       <div class="compact-info">
-        <div class="compact-name">${c.name}</div>
+        <div class="compact-name">${c.name}${badge}</div>
         <div class="compact-point">${c.point}</div>
       </div>
       <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn">▶ エントリー</a>
       <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
-  `).join("");
+  `;
+    }).join("");
   updateBulkCount("gaku");
 
   // ペット・マイカー割
   const petMycarEntries = [
     { name: "ペット割(新規)×DEAL", point: "+5%", url: "https://event.rakuten.co.jp/superdeal/campaign/petwari/" },
     { name: "マイカー割(新規)", point: "+2%", url: "https://event.rakuten.co.jp/auto/mycar/program/" },
-    { name: "マイカー割×マラソン", point: "+4%", url: "https://event.rakuten.co.jp/auto/mycar/program/marathon/" }
+    { name: "マイカー割×マラソン", point: "+4%", url: "https://event.rakuten.co.jp/auto/mycar/program/marathon/", campaignKey: "marathon" }
   ];
 
   document.getElementById("petMycarSection").innerHTML =
     '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("pet","ペット・マイカー割")\'>🚀 選択したペット・マイカー割を開く<span class="bulk-count bulk-count-pet">0/0件選択中</span></button></div>' +
-    petMycarEntries.map(c => `
-    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true">
+    petMycarEntries.map(function(c) {
+      var campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
+      var badge = c.campaignKey === 'marathon'
+        ? `<span style="font-size:0.62rem;background:#1A7F37;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">🏃 マラソン中</span>`
+        : '';
+      return `
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true"${campaignAttr}>
       <input type="checkbox" class="bulk-check bulk-check-pet"
              data-url="${aff(c.url)}" checked
              onchange="updateBulkCount('pet')">
       <div class="compact-info">
-        <div class="compact-name">${c.name}</div>
+        <div class="compact-name">${c.name}${badge}</div>
         <div class="compact-point">${c.point}</div>
       </div>
       <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn">▶ エントリー</a>
       <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
-  `).join("");
+  `;
+    }).join("");
   updateBulkCount("pet");
 
   // ─────────────────────────────────────────────
