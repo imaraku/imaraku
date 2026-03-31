@@ -1143,25 +1143,25 @@
 
       var campaignKey = card.getAttribute('data-campaign-key');
 
-      // モード共通：キャンペーン未開催なら常に非表示
+      // ── モード共通の非表示判定（両モードで適用）──────────────────────
+      // ① キャンペーン未開催
       var campaignInactive = campaignKey &&
         CAMPAIGN_STATUS.hasOwnProperty(campaignKey) &&
         !CAMPAIGN_STATUS[campaignKey];
+      // ② 日付限定エントリーで今日が対象日でない
+      var dateInactive = showDaysAttr &&
+        !showDaysAttr.split(',').map(Number).includes(todayDay);
 
-      if (campaignInactive) {
+      if (campaignInactive || dateInactive) {
+        // 非開催・対象外日 → 両モードで非表示
         card.classList.add('mode-hidden');
       } else if (mode === 'all') {
-        // 全部表示モード：開催中キャンペーンはすべて表示
+        // 全部表示モード：開催中・対象日のものはすべて表示
         card.classList.remove('mode-hidden');
       } else {
-        // おすすめモード
+        // おすすめモード：essential:true のみ表示
         if (!isEssential) {
-          // essential:false → 非表示
           card.classList.add('mode-hidden');
-        } else if (showDaysAttr) {
-          // 日付限定エントリー：今日が該当日のみ表示
-          var showDays = showDaysAttr.split(',').map(Number);
-          card.classList.toggle('mode-hidden', !showDays.includes(todayDay));
         } else {
           card.classList.remove('mode-hidden');
         }
