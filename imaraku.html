@@ -104,15 +104,22 @@
     .nav-bar {
       background: white;
       border-bottom: 1px solid var(--gray-200);
-      padding: 12px 16px;
+      padding: 10px 12px;
       display: flex;
-      justify-content: center;
-      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       font-size: 0.9rem;
       font-weight: 700;
       position: sticky;
       top: 100px;
       z-index: 99;
+      flex-wrap: wrap;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
     }
 
     .nav-link {
@@ -128,6 +135,44 @@
       color: var(--rakuten-red);
       border-bottom-color: var(--rakuten-red);
     }
+
+    /* モード切り替えトグル */
+    .mode-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--gray-100);
+      border-radius: 20px;
+      padding: 3px;
+    }
+
+    .mode-btn {
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 5px 12px;
+      border-radius: 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: var(--gray-600);
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .mode-btn.active {
+      background: var(--rakuten-red);
+      color: white;
+      box-shadow: 0 2px 6px rgba(191,0,0,0.3);
+    }
+
+    /* モードフィルタ用 */
+    .mode-hidden { display: none !important; }
+
+    /* 「全部見るモード」のみ表示するラベル */
+    .all-mode-only { display: none; }
+    body.mode-all .all-mode-only { display: block; }
+
+    /* おすすめに含まれないセクション小見出し非表示 */
+    .section-subtitle.section-empty { display: none; }
 
     /* ─── お知らせバナー ─── */
     .notice-bar {
@@ -673,6 +718,132 @@
       color: #FFF;
     }
 
+    /* ─── まとめて開くボタン ─── */
+    .bulk-bar {
+      padding: 10px 12px 4px;
+      text-align: center;
+    }
+
+    .bulk-open-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: linear-gradient(135deg, #D4A017 0%, #BF0000 100%);
+      color: white;
+      font-size: 0.95rem;
+      font-weight: 900;
+      padding: 14px 20px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(191,0,0,0.38);
+      transition: transform 0.15s, box-shadow 0.15s;
+      width: 100%;
+      max-width: 420px;
+      letter-spacing: 0.3px;
+    }
+
+    .bulk-open-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 8px rgba(191,0,0,0.28);
+    }
+
+    .bulk-open-btn .bulk-count {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    /* ─── チェックボックス選択 ─── */
+    .bulk-check {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--rakuten-red);
+      cursor: pointer;
+      flex-shrink: 0;
+      margin: 0;
+    }
+
+    .card-check-area {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card-check-area > div { flex: 1; min-width: 0; }
+
+    /* ─── 外すボタン ─── */
+    .dismiss-btn {
+      background: none;
+      border: none;
+      font-size: 1rem;
+      color: var(--gray-600);
+      cursor: pointer;
+      padding: 4px 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1;
+      align-self: center;
+    }
+    .dismiss-btn:hover, .dismiss-btn:active {
+      background: #FFE0E0;
+      color: var(--rakuten-red);
+    }
+
+    /* compact-rowの外すボタン */
+    .compact-row .dismiss-btn {
+      font-size: 0.85rem;
+      padding: 3px 6px;
+    }
+
+    /* ─── 非表示リセット フロートボタン ─── */
+    #resetBtn {
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      right: 14px;
+      background: white;
+      border: 2px solid var(--gray-200);
+      color: var(--gray-600);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 50px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+      cursor: pointer;
+      z-index: 9990;
+      white-space: nowrap;
+    }
+    #resetBtn.visible { display: block; }
+    #resetBtn:active { transform: scale(0.96); }
+
+    /* 一括開くトースト */
+    #bulkToast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(160px);
+      background: linear-gradient(135deg, #D4A017, #A87800);
+      color: white;
+      font-size: 0.88rem;
+      font-weight: 700;
+      padding: 12px 22px;
+      border-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 9998;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      white-space: pre-line;
+      pointer-events: none;
+      max-width: 88vw;
+      text-align: center;
+      line-height: 1.5;
+    }
+    #bulkToast.show { transform: translateX(-50%) translateY(0); }
+
     /* ─── レスポンシブ ─── */
     @media (max-width: 400px) {
       .header-logo { font-size: 1.7rem; }
@@ -696,9 +867,15 @@
 
 <!-- ナビゲーション -->
 <div class="nav-bar">
-  <a class="nav-link active" onclick="scrollToSection('entries')">エントリー</a>
-  <a class="nav-link" onclick="scrollToSection('coupons')">クーポン</a>
-  <a class="nav-link" onclick="scrollToSection('members')">該当者のみ</a>
+  <div class="nav-links">
+    <a class="nav-link active" onclick="scrollToSection('entries')">エントリー</a>
+    <a class="nav-link" onclick="scrollToSection('coupons')">クーポン</a>
+    <a class="nav-link" onclick="scrollToSection('members')">該当者のみ</a>
+  </div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="modeOsusume" onclick="setMode('essential')">⭐ おすすめ</button>
+    <button class="mode-btn" id="modeAll" onclick="setMode('all')">全部表示</button>
+  </div>
 </div>
 
 <!-- 注意バナー -->
@@ -744,19 +921,19 @@
   <div class="section-note">（※URLは毎回のイベントに合わせて更新されます）</div>
 
   <!-- 定番エントリー（いつでも） -->
-  <div class="section-subtitle">定番エントリー（いつでも）</div>
+  <div class="section-subtitle" data-section="everydayEntries">定番エントリー（いつでも）</div>
   <div id="everydayEntries"></div>
 
-  <!-- 5と0のつく日 -->
-  <div class="section-subtitle">5と0のつく日（5/10/15/20/25/30日のみ）</div>
+  <!-- 今日限定エントリー -->
+  <div class="section-subtitle" data-section="specialDayEntries">📅 今日限定のエントリー</div>
   <div id="specialDayEntries"></div>
 
   <!-- 楽天ブックス -->
-  <div class="section-subtitle">楽天ブックス</div>
+  <div class="section-subtitle" data-section="booksEntries">楽天ブックス</div>
   <div id="booksEntries"></div>
 
   <!-- ジャンル別エントリー -->
-  <div class="section-subtitle">ジャンル別エントリー</div>
+  <div class="section-subtitle" data-section="genreEntries">ジャンル別エントリー</div>
   <div id="genreEntries"></div>
 
   <!-- ========================================
@@ -848,6 +1025,64 @@
   }
 
   // ─────────────────────────────────────────────
+  //  おすすめ / 全部 モード切り替え
+  // ─────────────────────────────────────────────
+  var currentMode = 'essential'; // デフォルト：おすすめモード
+
+  function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('modeOsusume').classList.toggle('active', mode === 'essential');
+    document.getElementById('modeAll').classList.toggle('active', mode === 'all');
+    document.body.classList.toggle('mode-all', mode === 'all');
+    applyFilter(mode);
+  }
+
+  function applyFilter(mode) {
+    var todayDay = day; // 既に定義済みの日付変数
+    document.querySelectorAll('[data-essential]').forEach(function(card) {
+      // dismissedアイテムはそのまま非表示維持
+      if (card.style.display === 'none') return;
+
+      var isEssential = card.getAttribute('data-essential') === 'true';
+      var showDaysAttr = card.getAttribute('data-show-days');
+
+      if (mode === 'all') {
+        card.classList.remove('mode-hidden');
+      } else {
+        // おすすめモード
+        if (!isEssential) {
+          card.classList.add('mode-hidden');
+        } else if (showDaysAttr) {
+          // 日付限定エントリー：今日が該当日のみ表示
+          var showDays = showDaysAttr.split(',').map(Number);
+          if (showDays.includes(todayDay)) {
+            card.classList.remove('mode-hidden');
+          } else {
+            card.classList.add('mode-hidden');
+          }
+        } else {
+          card.classList.remove('mode-hidden');
+        }
+      }
+    });
+    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
+    updateSectionSubtitles();
+  }
+
+  // セクション小見出しを、配下に表示アイテムがなければ非表示
+  function updateSectionSubtitles() {
+    document.querySelectorAll('.section-subtitle[data-section]').forEach(function(subtitle) {
+      var sectionId = subtitle.getAttribute('data-section');
+      var container = document.getElementById(sectionId);
+      if (!container) return;
+      var visible = container.querySelectorAll(
+        '[data-essential]:not(.mode-hidden):not([style*="display: none"])'
+      );
+      subtitle.classList.toggle('section-empty', visible.length === 0);
+    });
+  }
+
+  // ─────────────────────────────────────────────
   //  コラプシブル機能
   // ─────────────────────────────────────────────
   function toggleCollapsible(header) {
@@ -857,15 +1092,171 @@
   }
 
   // ─────────────────────────────────────────────
+  //  全タブ一括で開く
+  // ─────────────────────────────────────────────
+  // 複数URLを順番に開く（ポップアップブロック対策付き）
+  function openAllTabs(urls, label) {
+    if (!urls || urls.length === 0) return;
+    window.open(urls[0], '_blank', 'noopener');
+    for (var i = 1; i < urls.length; i++) {
+      (function(u, delay) {
+        setTimeout(function() {
+          window.open(u, '_blank', 'noopener');
+        }, delay);
+      })(urls[i], i * 420);
+    }
+    var toast = document.getElementById('bulkToast');
+    toast.textContent = '🚀 ' + urls.length + '個のタブを開きました！\n各タブでエントリーボタンを押してください ✅';
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 5000);
+  }
+
+  // ─────────────────────────────────────────────
+  //  期間外・対象外を非表示にする機能
+  // ─────────────────────────────────────────────
+  const DISMISSED_KEY = 'imaraku_dismissed_v1';
+
+  function getDismissed() {
+    try { return JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]'); }
+    catch(e) { return []; }
+  }
+
+  // 「✕」ボタンを押したときに呼ばれる
+  function dismissEntry(btn) {
+    var card = btn.closest('[data-entry-url]');
+    if (!card) return;
+    var url = card.getAttribute('data-entry-url');
+    // localStorage に保存
+    var dismissed = getDismissed();
+    if (!dismissed.includes(url)) {
+      dismissed.push(url);
+      localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
+    }
+    // 非表示にしてチェックも外す
+    card.style.display = 'none';
+    card.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+      cb.checked = false;
+    });
+    // カウント更新
+    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
+    updateResetBtn();
+    // トースト
+    var toast = document.getElementById('bulkToast');
+    toast.textContent = '✕ リストから外しました\n🔄 右下のボタンで元に戻せます';
+    toast.classList.add('show');
+    setTimeout(function() { toast.classList.remove('show'); }, 3500);
+  }
+
+  // ページ読み込み時に非表示状態を復元
+  function restoreDismissed() {
+    var dismissed = getDismissed();
+    if (dismissed.length === 0) return;
+    dismissed.forEach(function(url) {
+      document.querySelectorAll('[data-entry-url]').forEach(function(el) {
+        if (el.getAttribute('data-entry-url') === url) {
+          el.style.display = 'none';
+          el.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+            cb.checked = false;
+          });
+        }
+      });
+    });
+    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
+    updateResetBtn();
+  }
+
+  // 「🔄 全部表示に戻す」ボタン
+  function resetDismissed() {
+    localStorage.removeItem(DISMISSED_KEY);
+    document.querySelectorAll('[data-entry-url]').forEach(function(el) {
+      el.style.display = '';
+      el.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+        cb.checked = true;
+      });
+    });
+    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
+    updateResetBtn();
+  }
+
+  // リセットボタンの表示/非表示
+  function updateResetBtn() {
+    var dismissed = getDismissed();
+    var btn = document.getElementById('resetBtn');
+    if (btn) {
+      btn.classList.toggle('visible', dismissed.length > 0);
+      if (dismissed.length > 0) btn.textContent = '🔄 非表示(' + dismissed.length + '件)を元に戻す';
+    }
+  }
+
+  // チェックされているもの（かつ表示中）だけ開く
+  function openCheckedTabs(group, label) {
+    var urls = [];
+    document.querySelectorAll('.bulk-check-' + group + ':checked').forEach(function(cb) {
+      var card = cb.closest('[data-entry-url]');
+      if (card && card.style.display !== 'none' && !card.classList.contains('mode-hidden')) {
+        urls.push(cb.getAttribute('data-url'));
+      }
+    });
+    if (urls.length === 0) {
+      var toast = document.getElementById('bulkToast');
+      toast.textContent = '⚠️ エントリーが1つも選択されていません\nチェックを入れてからもう一度タップ';
+      toast.classList.add('show');
+      setTimeout(function() { toast.classList.remove('show'); }, 3500);
+      return;
+    }
+    openAllTabs(urls, label);
+  }
+
+  // ボタンの「X/Y件」カウントを更新（非表示カードは除く）
+  function updateBulkCount(group) {
+    var total = 0, checked = 0;
+    document.querySelectorAll('.bulk-check-' + group).forEach(function(cb) {
+      var card = cb.closest('[data-entry-url]');
+      if (card && (card.style.display === 'none' || card.classList.contains('mode-hidden'))) return;
+      total++;
+      if (cb.checked) checked++;
+    });
+    var countEl = document.querySelector('.bulk-count-' + group);
+    if (countEl) countEl.textContent = checked + '/' + total + '件選択中';
+  }
+
+  // セクション先頭に「まとめて開く」ボタンを差し込む（チェックボックス対応版）
+  function insertBulkBtn(beforeElementId, group, label) {
+    var target = document.getElementById(beforeElementId);
+    if (!target) return;
+    var bar = document.createElement('div');
+    bar.className = 'bulk-bar';
+    bar.innerHTML =
+      '<button class="bulk-open-btn" onclick=\'openCheckedTabs("' + group + '", "' + label + '")\'>' +
+      '🚀 選択した' + label + 'を開く' +
+      '<span class="bulk-count bulk-count-' + group + '">0/0件選択中</span>' +
+      '</button>';
+    target.parentNode.insertBefore(bar, target);
+  }
+
+  // ─────────────────────────────────────────────
   //  カード生成関数
   // ─────────────────────────────────────────────
-  function createCard(c) {
+  function createCard(c, group) {
     const entryUrl = aff(c.url);
+    const isEssential = c.essential !== false; // デフォルトtrue
+    const showDaysAttr = c.showOnDays ? ` data-show-days="${c.showOnDays.join(',')}"` : '';
+    const dayBadge = c.showOnDays
+      ? `<span style="font-size:0.65rem;background:var(--gold);color:#5C3B00;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">📅 今日限定</span>`
+      : '';
     return `
-      <div class="campaign-card">
+      <div class="campaign-card" data-entry-url="${entryUrl}" data-essential="${isEssential}"${showDaysAttr}>
         <div class="card-body">
-          <div class="card-name">${c.name}</div>
-          <div class="card-point">🎁 ${c.point}</div>
+          <div class="card-check-area">
+            <input type="checkbox" class="bulk-check bulk-check-${group}"
+                   data-url="${entryUrl}" checked
+                   onchange="updateBulkCount('${group}')">
+            <div>
+              <div class="card-name">${c.name}${c.showOnDays ? dayBadge : ''}</div>
+              <div class="card-point">🎁 ${c.point}</div>
+            </div>
+            <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
+          </div>
         </div>
         <div class="card-footer">
           <a href="${entryUrl}" target="_blank" rel="noopener" class="entry-btn">
@@ -972,101 +1363,118 @@
   // ─────────────────────────────────────────────
 
   // 定番エントリー（いつでも）
+  // essential: true → おすすめモードで表示  false → 全部表示モードのみ
   const everydayEntries = [
-    { name: "マラソン買いまわり", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/" },
-    { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/" },
-    { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/" },
-    { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/" },
-    { name: "開始4時間DEAL", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/" },
-    { name: "39キャンペーン（送料無料ライン）", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/" },
-    { name: "スーパーDEAL Days", point: "+1%", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/" }
+    { name: "お買物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true },
+    { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/", essential: true },
+    { name: "39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/", essential: true },
+    { name: "開始4時間DEAL（超高還元）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/", essential: true },
+    { name: "楽天イーグルス勝利祈願 +1%", point: "+1%", url: "https://event.rakuten.co.jp/campaign/sports/", essential: true },
+    { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/", essential: false },
+    { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/", essential: false },
+    { name: "スーパーDEAL Days", point: "+1%", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: false },
   ];
 
   document.getElementById("everydayEntries").innerHTML =
-    everydayEntries.map(c => createCard(c)).join("");
+    everydayEntries.map(c => createCard(c, 'entries')).join("");
 
-  // 5と0のつく日
+  // エントリーまとめ全体用URL（全サブセクション分まとめる）
+  const allEntryUrls = [];
+
+  // 日付スマートエントリー（その日だけ表示 → おすすめモードで自動フィルタ）
   const specialDayEntries = [
     {
-      name: isSpecialDay ? "🎯 5と0のつく日 +1%（今日限定！）" : "5と0のつく日 +1%",
-      point: isSpecialDay ? "今日限定！" : "5・10・15・20・25・30日のみ",
-      url: "https://event.rakuten.co.jp/card/pointday/"
-    }
+      name: "5と0のつく日 +1%（楽天カード）",
+      point: "+1%", url: "https://event.rakuten.co.jp/card/pointday/",
+      essential: true, showOnDays: [5,10,15,20,25,30]
+    },
+    {
+      name: "ワンダフルデー（毎月1日）",
+      point: "+4%", url: "https://event.rakuten.co.jp/campaign/point-up/wonderful-day/",
+      essential: true, showOnDays: [1]
+    },
+    {
+      name: "18の日（楽天市場の日）",
+      point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/ichiba-day/",
+      essential: true, showOnDays: [18]
+    },
   ];
 
-  document.getElementById("specialDayEntries").innerHTML = `
-    <div class="campaign-card${isSpecialDay ? ' campaign-card-highlight' : ''}">
-      <div class="card-body">
-        <div class="card-name">${specialDayEntries[0].name}${isSpecialDay ? '<span class="badge today" style="margin-left:8px;">今日限定！</span>' : ''}</div>
-        <div class="card-point">🎁 ${specialDayEntries[0].point}</div>
-      </div>
-      <div class="card-footer">
-        <a href="${aff(specialDayEntries[0].url)}" target="_blank" rel="noopener" class="entry-btn">
-          ▶ エントリー
-        </a>
-      </div>
-    </div>
-  `;
+  document.getElementById("specialDayEntries").innerHTML =
+    specialDayEntries.map(c => createCard(c, 'entries')).join("");
 
-  // 楽天ブックス
+  // 楽天ブックス（本・電子書籍を買う人向け → 全部モードのみ表示）
   const booksEntries = [
-    { name: "楽天ブックス 条件達成", point: "+2%", url: "https://books.rakuten.co.jp/" },
-    { name: "楽天ブックス 初回利用", point: "+5%", url: "https://books.rakuten.co.jp/info/welcome-campaign/" },
-    { name: "kobo 初回購入", point: "+19%", url: "https://books.rakuten.co.jp/event/e-book/camp-bookscollab/" },
-    { name: "DVD・ブルーレイ", point: "+9%", url: "https://books.rakuten.co.jp/event/dvd-blu-ray/campaign/pointup/" }
+    { name: "楽天ブックス 条件達成", point: "+2%", url: "https://books.rakuten.co.jp/", essential: false },
+    { name: "楽天ブックス 初回利用", point: "+5%", url: "https://books.rakuten.co.jp/info/welcome-campaign/", essential: false },
+    { name: "kobo 初回購入", point: "+19%", url: "https://books.rakuten.co.jp/event/e-book/camp-bookscollab/", essential: false },
+    { name: "DVD・ブルーレイ", point: "+9%", url: "https://books.rakuten.co.jp/event/dvd-blu-ray/campaign/pointup/", essential: false }
   ];
 
   document.getElementById("booksEntries").innerHTML =
-    booksEntries.map(c => createCard(c)).join("");
+    booksEntries.map(c => createCard(c, 'entries')).join("");
 
-  // ジャンル別エントリー
+  // ジャンル別エントリー（詳しい人向け → 全部モードのみ）
   const genreEntries = [
-    { name: "日用品・ペット用品", point: "+4%", url: "https://event.rakuten.co.jp/genre/daily/" },
-    { name: "インテリア＆キッチン", point: "+4%", url: "https://event.rakuten.co.jp/brand/officialshop/interior/" },
-    { name: "水・ソフトドリンク", point: "+11%", url: "https://event.rakuten.co.jp/drink/point/" },
-    { name: "キッズ・ベビーファッション", point: "+9%", url: "https://event.rakuten.co.jp/fashion/kids/" },
-    { name: "コンタクト・カラコン", point: "+14%", url: "https://event.rakuten.co.jp/medicine/contactlens/coupon/new/" },
-    { name: "対象アイテム買いまわり", point: "+9%", url: "https://event.rakuten.co.jp/brand/cross-genre/" },
-    { name: "海外通販×DEAL", point: "+5%", url: "https://event.rakuten.co.jp/superdeal/campaign/overseas/" },
-    { name: "新生活フェア(抽選)1万pt", point: "抽選", url: "https://event.rakuten.co.jp/season/newlife/campaign/" },
-    { name: "MEGA DEAL(全額還元抽選)", point: "抽選", url: "https://event.rakuten.co.jp/superdeal/campaign/megadeal/" },
-    { name: "1等最大100%還元①", point: "抽選", url: "https://event.rakuten.co.jp/incentive/ichiba/lottery/event/20260320100/" },
-    { name: "勝ったら倍 +1%（スポーツ）", point: "+1%", url: "https://event.rakuten.co.jp/campaign/sports/" }
+    { name: "日用品・ペット用品", point: "+4%", url: "https://event.rakuten.co.jp/genre/daily/", essential: false },
+    { name: "インテリア＆キッチン", point: "+4%", url: "https://event.rakuten.co.jp/brand/officialshop/interior/", essential: false },
+    { name: "水・ソフトドリンク", point: "+11%", url: "https://event.rakuten.co.jp/drink/point/", essential: false },
+    { name: "キッズ・ベビーファッション", point: "+9%", url: "https://event.rakuten.co.jp/fashion/kids/", essential: false },
+    { name: "コンタクト・カラコン", point: "+14%", url: "https://event.rakuten.co.jp/medicine/contactlens/coupon/new/", essential: false },
+    { name: "対象アイテム買いまわり", point: "+9%", url: "https://event.rakuten.co.jp/brand/cross-genre/", essential: false },
+    { name: "海外通販×DEAL", point: "+5%", url: "https://event.rakuten.co.jp/superdeal/campaign/overseas/", essential: false },
+    { name: "新生活フェア(抽選)1万pt", point: "抽選", url: "https://event.rakuten.co.jp/season/newlife/campaign/", essential: false },
+    { name: "MEGA DEAL(全額還元抽選)", point: "抽選", url: "https://event.rakuten.co.jp/superdeal/campaign/megadeal/", essential: false },
+    { name: "1等最大100%還元①", point: "抽選", url: "https://event.rakuten.co.jp/incentive/ichiba/lottery/event/20260320100/", essential: false },
   ];
 
   document.getElementById("genreEntries").innerHTML =
-    genreEntries.map(c => createCard(c)).join("");
+    genreEntries.map(c => createCard(c, 'entries')).join("");
+
+  // エントリーまとめ 先頭に「選択したエントリーを開く」ボタンを追加
+  insertBulkBtn("everydayEntries", "entries", "エントリー");
+  updateBulkCount("entries");
 
   // ─────────────────────────────────────────────
   //  セクション B: クーポンまとめ
   // ─────────────────────────────────────────────
+  // essential: true → おすすめモードで表示（誰でも使えるクーポン）
   const coupons = [
-    { name: "何度でも使える2,000円クーポン（マラソン）", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/" },
-    { name: "ダイヤモンド・プラチナ777円クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/" },
-    { name: "開始2時間限定50%offクーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/" },
-    { name: "最大半額クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/" },
-    { name: "楽天Fashion 2,000円クーポン", url: "https://brandavenue.rakuten.co.jp/" },
-    { name: "ショップオープン記念2,000円クーポン", url: "https://event.rakuten.co.jp/coupon/newshop/" },
-    { name: "楽天初めての買い物2,000円クーポン", url: "https://event.rakuten.co.jp/campaign/newpurchaser/" },
-    { name: "楽天久しぶりの買い物1,000円クーポン", url: "https://event.rakuten.co.jp/campaign/returnpurchaser/" },
-    { name: "ダイヤモンド会員特典クーポン", url: "https://point.rakuten.co.jp/club/rank/reward/" },
-    { name: "グローバルフェスタ2,026円クーポン", url: "https://event.rakuten.co.jp/overseas/campaign/seasoncoupon/" },
-    { name: "BRAND BEAUTY 300円クーポン", url: "https://event.rakuten.co.jp/beauty/brand/official/" },
-    { name: "洗剤複数購入500円クーポン（楽天24）", url: "https://24.rakuten.co.jp/campaign/detergent/" },
-    { name: "在庫処分市30%offクーポン（楽天24）", url: "https://24.rakuten.co.jp/campaign/zaiko/" },
-    { name: "P&G商品30%offクーポン（楽天24）", url: "https://24.rakuten.co.jp/special/pg/daily/sale/" },
-    { name: "kobo金曜日100円クーポン", url: "https://books.rakuten.co.jp/event/e-book/camp-cpfriday/" },
-    { name: "koboまとめ買い15%offクーポン", url: "https://books.rakuten.co.jp/event/e-book/camp-bulkcoupons01/" }
+    { name: "何度でも使える2,000円クーポン（マラソン）", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true },
+    { name: "開始2時間限定50%offクーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true },
+    { name: "最大半額クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true },
+    { name: "楽天久しぶりの買い物1,000円クーポン", url: "https://event.rakuten.co.jp/campaign/returnpurchaser/", essential: true },
+    { name: "楽天初めての買い物2,000円クーポン", url: "https://event.rakuten.co.jp/campaign/newpurchaser/", essential: true },
+    { name: "ダイヤモンド・プラチナ777円クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: false },
+    { name: "楽天Fashion 2,000円クーポン", url: "https://brandavenue.rakuten.co.jp/", essential: false },
+    { name: "ショップオープン記念2,000円クーポン", url: "https://event.rakuten.co.jp/coupon/newshop/", essential: false },
+    { name: "ダイヤモンド会員特典クーポン", url: "https://point.rakuten.co.jp/club/rank/reward/", essential: false },
+    { name: "グローバルフェスタ2,026円クーポン", url: "https://event.rakuten.co.jp/overseas/campaign/seasoncoupon/", essential: false },
+    { name: "BRAND BEAUTY 300円クーポン", url: "https://event.rakuten.co.jp/beauty/brand/official/", essential: false },
+    { name: "洗剤複数購入500円クーポン（楽天24）", url: "https://24.rakuten.co.jp/campaign/detergent/", essential: false },
+    { name: "在庫処分市30%offクーポン（楽天24）", url: "https://24.rakuten.co.jp/campaign/zaiko/", essential: false },
+    { name: "P&G商品30%offクーポン（楽天24）", url: "https://24.rakuten.co.jp/special/pg/daily/sale/", essential: false },
+    { name: "kobo金曜日100円クーポン", url: "https://books.rakuten.co.jp/event/e-book/camp-cpfriday/", essential: false },
+    { name: "koboまとめ買い15%offクーポン", url: "https://books.rakuten.co.jp/event/e-book/camp-bulkcoupons01/", essential: false }
   ];
 
   document.getElementById("couponSection").innerHTML = coupons.map(c => `
-    <div class="compact-row" style="background:white;border-radius:10px;margin-bottom:6px;padding:10px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);">
+    <div class="compact-row" style="background:white;border-radius:10px;margin-bottom:6px;padding:10px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);"
+         data-entry-url="${aff(c.url)}" data-essential="${c.essential !== false}">
+      <input type="checkbox" class="bulk-check bulk-check-coupons"
+             data-url="${aff(c.url)}" checked
+             onchange="updateBulkCount('coupons')">
       <div class="compact-info">
         <div class="compact-name">🎫 ${c.name}</div>
       </div>
       <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn coupon-btn">▶ 取得</a>
+      <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
   `).join("");
+
+  // クーポンまとめ 先頭に「選択したクーポンを開く」ボタンを追加
+  insertBulkBtn("couponSection", "coupons", "クーポン");
+  updateBulkCount("coupons");
 
   // ─────────────────────────────────────────────
   //  セクション C: 該当者のみ
@@ -1082,15 +1490,22 @@
     { name: "楽天24×ママ割", point: "20%off", url: "https://event.rakuten.co.jp/young/campaign/homelife/" }
   ];
 
-  document.getElementById("mamaWariSection").innerHTML = mamaWariEntries.map(c => `
-    <div class="compact-row">
+  document.getElementById("mamaWariSection").innerHTML =
+    '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("mama","ママ割")\'>🚀 選択したママ割を開く<span class="bulk-count bulk-count-mama">0/0件選択中</span></button></div>' +
+    mamaWariEntries.map(c => `
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true">
+      <input type="checkbox" class="bulk-check bulk-check-mama"
+             data-url="${aff(c.url)}" checked
+             onchange="updateBulkCount('mama')">
       <div class="compact-info">
         <div class="compact-name">${c.name}</div>
         <div class="compact-point">${c.point}</div>
       </div>
       <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn">▶ エントリー</a>
+      <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
   `).join("");
+  updateBulkCount("mama");
 
   // 学割（楽天学割）
   const gakuWariEntries = [
@@ -1102,15 +1517,22 @@
     { name: "楽天24×学割", point: "20%off", url: "https://event.rakuten.co.jp/young/campaign/homelife/" }
   ];
 
-  document.getElementById("gakuWariSection").innerHTML = gakuWariEntries.map(c => `
-    <div class="compact-row">
+  document.getElementById("gakuWariSection").innerHTML =
+    '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("gaku","学割")\'>🚀 選択した学割を開く<span class="bulk-count bulk-count-gaku">0/0件選択中</span></button></div>' +
+    gakuWariEntries.map(c => `
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true">
+      <input type="checkbox" class="bulk-check bulk-check-gaku"
+             data-url="${aff(c.url)}" checked
+             onchange="updateBulkCount('gaku')">
       <div class="compact-info">
         <div class="compact-name">${c.name}</div>
         <div class="compact-point">${c.point}</div>
       </div>
       <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn">▶ エントリー</a>
+      <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
   `).join("");
+  updateBulkCount("gaku");
 
   // ペット・マイカー割
   const petMycarEntries = [
@@ -1119,20 +1541,37 @@
     { name: "マイカー割×マラソン", point: "+4%", url: "https://event.rakuten.co.jp/auto/mycar/program/marathon/" }
   ];
 
-  document.getElementById("petMycarSection").innerHTML = petMycarEntries.map(c => `
-    <div class="compact-row">
+  document.getElementById("petMycarSection").innerHTML =
+    '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("pet","ペット・マイカー割")\'>🚀 選択したペット・マイカー割を開く<span class="bulk-count bulk-count-pet">0/0件選択中</span></button></div>' +
+    petMycarEntries.map(c => `
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true">
+      <input type="checkbox" class="bulk-check bulk-check-pet"
+             data-url="${aff(c.url)}" checked
+             onchange="updateBulkCount('pet')">
       <div class="compact-info">
         <div class="compact-name">${c.name}</div>
         <div class="compact-point">${c.point}</div>
       </div>
       <a href="${aff(c.url)}" target="_blank" rel="noopener" class="compact-btn">▶ エントリー</a>
+      <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
   `).join("");
+  updateBulkCount("pet");
+
+  // ページ読み込み時：前回非表示にした項目を復元 → おすすめフィルタ適用
+  restoreDismissed();
+  applyFilter('essential'); // デフォルトはおすすめモード
 
 </script>
 
 <!-- 戻ってきてトースト -->
 <div id="returnToast">🔙 エントリー完了したら戻ってきて ✅ を押してね！</div>
+
+<!-- 一括開くトースト -->
+<div id="bulkToast"></div>
+
+<!-- 非表示リセットボタン（非表示アイテムがあるときだけ出現） -->
+<button id="resetBtn" onclick="resetDismissed()">🔄 非表示(0件)を元に戻す</button>
 
 </body>
 </html>
