@@ -1,1 +1,56 @@
-[]
+[
+  {
+    "name": "園児・小学生必須アイテム",
+    "url": "https://event.rakuten.co.jp/genre/school/formal",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "園児・小学生必須アイテム",
+    "url": "https://event.rakuten.co.jp/genre/school/nyuen",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "有名ブランドの人気アイテムが勢ぞろい",
+    "url": "https://event.rakuten.co.jp/genre/summer/mobilefan",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "楽天学割登録＆エントリーで、毎週水曜日がオトク！",
+    "url": "https://event.rakuten.co.jp/campaign/rank/point",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "の日ポイント",
+    "url": "https://event.rakuten.co.jp/campaign/card/pointday",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "学習机・インテリア",
+    "url": "https://event.rakuten.co.jp/genre/school/mamawari",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "親子のフォーマルウェア",
+    "url": "https://event.rakuten.co.jp/genre/school/studydesk",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "時間タイムセール",
+    "url": "https://event.rakuten.co.jp/campaign/sports",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  },
+  {
+    "name": "入園入学準備特集",
+    "url": "https://event.rakuten.co.jp/genre/school",
+    "point": "要確認",
+    "detected_at": "2026-03-31"
+  }
+]
