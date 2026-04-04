@@ -2,23 +2,23 @@
 """
 check_campaigns.py
 GitHub Actions から 2 時間ごとに実行。
- 
+
 【出力ファイル】
   imaraku/campaign_status.json   … 各キャンペーンの開催状況（true/false）
   imaraku/new_campaigns.json     … 既存リストにない新キャンペーン候補
- 
+
 HTML ファイルはこれらの JSON をページ読み込み時に動的取得するため、
 HTML 自体を書き換える必要がなくなりました。
 """
- 
+
 import json
 import os
 import re
 import sys
 from urllib.parse import urlparse
- 
+
 import requests
- 
+
 HEADERS = {
     "User-Agent": (
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
@@ -28,10 +28,10 @@ HEADERS = {
     "Accept-Language": "ja,en;q=0.9",
     "Accept": "text/html,application/xhtml+xml,*/*;q=0.8",
 }
- 
+
 STATUS_JSON  = "campaign_status.json"
 NEW_JSON     = "new_campaigns.json"
- 
+
 # ─── 既知キャンペーン定義 ─────────────────────────────────────────────────
 # key        : campaign_status.json のキー（HTML の CAMPAIGN_STATUS と一致）
 # url        : チェック対象ページ
@@ -95,8 +95,15 @@ CAMPAIGNS = [
         "active_kw": ["SALE", "セール", "60%", "50%", "40%", "30%", "OFF", "off"],
         "default": False,
     },
+    {
+        "key": "mobilebonus",
+        "url": "https://network.mobile.rakuten.co.jp/lp/link/event/20260404/",
+        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません", "404"],
+        "active_kw": ["エントリー", "ポイント", "+2倍", "2倍", "開催中", "キャンペーン"],
+        "default": False,
+    },
 ]
- 
+
 # ─── 新キャンペーン自動検出：スキャン対象ページ ──────────────────────────
 # これらのページから <a href="..."> を収集し、
 # KNOWN_URLS にない楽天キャンペーンURLを new_campaigns.json に追記する
@@ -105,7 +112,7 @@ SCAN_PAGES = [
     "https://event.rakuten.co.jp/",                    # イベントトップ
     "https://event.rakuten.co.jp/campaign/point-up/",  # ポイントアップ一覧
 ]
- 
+
 # 既知URLのパターン（これに含まれるURLは「新規」扱いしない）
 KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
     "toolbar.rakuten.co.jp",
@@ -135,18 +142,18 @@ KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
     "event.rakuten.co.jp/family/",
     "event.rakuten.co.jp/guide/",
 ]
- 
+
 # 新キャンペーンとして検出する URL パターン（楽天エントリー系）
 NEW_CAMPAIGN_URL_RE = re.compile(
     r'https://event\.rakuten\.co\.jp/(?:campaign|genre|coupon|superdeal/campaign)/[^"\'>\s]+'
 )
- 
+
 # キャンペーン名を URL から推定する
 ENTRY_KEYWORD_RE = re.compile(r'エントリー|ポイントアップ|クーポン|特典|キャンペーン')
- 
- 
+
+
 # ─── ユーティリティ ───────────────────────────────────────────────────────
- 
+
 def fetch(url: str, timeout: int = 15) -> str | None:
     try:
         r = requests.get(url, headers=HEADERS, timeout=timeout, allow_redirects=True)
@@ -155,8 +162,8 @@ def fetch(url: str, timeout: int = 15) -> str | None:
     except Exception as e:
         print(f"  ⚠️  取得失敗 {url}: {e}", file=sys.stderr)
         return None
- 
- 
+
+
 def check_campaign(camp: dict) -> bool:
     text = fetch(camp["url"])
     if text is None:
@@ -172,17 +179,17 @@ def check_campaign(camp: dict) -> bool:
             return True
     print(f"  [{camp['key']}] ? 判定不能 → {camp['default']}")
     return camp["default"]
- 
- 
+
+
 # ─── 新キャンペーン自動検出 ───────────────────────────────────────────────
- 
+
 def is_known(url: str) -> bool:
     for pattern in KNOWN_URL_PATTERNS:
         if pattern in url:
             return True
     return False
- 
- 
+
+
 def extract_title_near_link(html: str, url: str) -> str:
     """リンク周辺のテキストからキャンペーン名を推定する（ベストエフォート）。"""
     # URLをエスケープしてその周辺100文字を取得
@@ -197,13 +204,13 @@ def extract_title_near_link(html: str, url: str) -> str:
     if jp:
         return max(jp, key=len)[:30]
     return urlparse(url).path.strip('/').split('/')[-1]
- 
- 
+
+
 def detect_new_campaigns(existing_new: list) -> list:
     """スキャンページから新しいキャンペーンURLを検出して返す。"""
     existing_urls = {c["url"] for c in existing_new}
     found = []
- 
+
     for scan_url in SCAN_PAGES:
         print(f"  スキャン: {scan_url}")
         html = fetch(scan_url)
@@ -227,12 +234,12 @@ def detect_new_campaigns(existing_new: list) -> list:
                 print(f"  🆕 新キャンペーン候補: {name} → {url}")
                 found.append({"name": name, "url": url, "point": "要確認", "detected_at": __import__('datetime').date.today().isoformat()})
                 existing_urls.add(url)
- 
+
     return found
- 
- 
+
+
 # ─── JSON 読み書き ─────────────────────────────────────────────────────────
- 
+
 def load_json(path: str, default):
     if os.path.exists(path):
         try:
@@ -241,8 +248,8 @@ def load_json(path: str, default):
         except Exception:
             pass
     return default
- 
- 
+
+
 def save_json(path: str, data) -> bool:
     dir_name = os.path.dirname(path)
     if dir_name:
@@ -254,31 +261,31 @@ def save_json(path: str, data) -> bool:
     with open(path, "w", encoding="utf-8") as f:
         f.write(new_text)
     return True  # 変更あり
- 
- 
+
+
 # ─── メイン ───────────────────────────────────────────────────────────────
- 
+
 def main():
     print("=== キャンペーン状態チェック開始 ===\n")
- 
+
     # 1. 既知キャンペーンの開催状況チェック
     print("── 1. 開催状況チェック ──")
     results = {}
     for camp in CAMPAIGNS:
         results[camp["key"]] = check_campaign(camp)
- 
+
     print("\n── 結果まとめ ──")
     for key, val in results.items():
         print(f"  {key:<20} {'✓ 開催中' if val else '✗ 終了/非開催'}")
- 
+
     changed_status = save_json(STATUS_JSON, results)
     print(f"\n{'✅ campaign_status.json を更新' if changed_status else '変更なし（campaign_status.json）'}")
- 
+
     # 2. 新キャンペーンの自動検出
     print("\n── 2. 新キャンペーン自動検出 ──")
     existing_new = load_json(NEW_JSON, [])
     new_found = detect_new_campaigns(existing_new)
- 
+
     if new_found:
         all_new = existing_new + new_found
         changed_new = save_json(NEW_JSON, all_new)
@@ -286,17 +293,16 @@ def main():
     else:
         changed_new = False
         print("新規キャンペーンなし")
- 
+
     # 3. GitHub Actions の outputs に変更有無を出力
     changed = changed_status or changed_new
     env_file = os.environ.get("GITHUB_OUTPUT", "")
     if env_file:
         with open(env_file, "a") as f:
             f.write(f"changed={'true' if changed else 'false'}\n")
- 
+
     print("\n=== チェック完了 ===")
- 
- 
+
+
 if __name__ == "__main__":
     main()
- 
