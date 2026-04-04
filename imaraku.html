@@ -978,8 +978,8 @@
   </div>
   <div class="section-note">（※URLは毎回のイベントに合わせて更新されます）</div>
 
-  <!-- 定番エントリー（いつでも） -->
-  <div class="section-subtitle" data-section="everydayEntries">定番エントリー（いつでも）</div>
+  <!-- エントリー一覧 -->
+  <div class="section-subtitle" data-section="everydayEntries">⭐ エントリー一覧</div>
   <div id="everydayEntries"></div>
 
   <!-- 今日限定エントリー -->
@@ -1393,7 +1393,7 @@
   //  カード生成関数
   // ─────────────────────────────────────────────
   function createCard(c, group) {
-    const entryUrl = aff(c.url);
+    const entryUrl = c.noAffiliate ? c.url : aff(c.url);
     const isEssential = c.essential !== false; // デフォルトtrue
     const showDaysAttr = c.showOnDays ? ` data-show-days="${c.showOnDays.join(',')}"` : '';
     const campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
@@ -1532,20 +1532,21 @@
   // essential: true  → おすすめモードで表示
   // marathonOnly: true → MARATHON_ACTIVE=true のときだけおすすめに出現
   const everydayEntries = [
-    // ── 【高優先】マラソン・スーパーSALE期間中のみ・おすすめ表示 ──
-    { name: "🏃 お買物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
-    { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/", essential: true, campaignKey: "marathon" },
+    // ── ⭐ 優先エントリー（おすすめに上位表示） ──
+    { name: "🏃 お買物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/?l-id=top_normal_bigbnr_pc_JBEFGGIB_161861_1", essential: true, campaignKey: "marathon" },
+    { name: "⚾ 楽天勝利 勝ったら倍", point: "+1%〜", url: "https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160292_0_irrcp", essential: true, campaignKey: "eagles" },
+    { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/?l-id=top_normal_flashbnr_10_EECGIGEA_162459_0_irrcp", essential: true, campaignKey: "marathon" },
+    { name: "📅 0と5のつく日 +1%（楽天カード）", point: "+1%", url: "https://event.rakuten.co.jp/card/pointday/?scid=af_pc_etc&sc2id=af_101_0_0", essential: true, showOnDays: [5,10,15,20,25,30] },
+    { name: "📱 楽天モバイル限定：+２倍", point: "+2倍", url: "https://network.mobile.rakuten.co.jp/lp/link/event/20260404/?scid=wi_ich_rmb_jsbanner_pc_bt&l-id=top_normal_flashbnr_10_EFIGFBFC_162327_1", essential: true, noAffiliate: true, campaignKey: "mobilebonus" },
+    // ── 🏃 マラソン期間中のみ表示（おすすめ） ──
     { name: "🏃 リピート購入 +1倍", point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
     { name: "🏃 (ゲリラ)全店+1倍", point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
     { name: "🏃 スーパーDEAL（4時間限定）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/pointback10/", essential: true, campaignKey: "marathon" },
     { name: "📱 楽天モバイル×スーパーDEAL +10%", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260404/", essential: true, campaignKey: "marathon" },
-    // ── 【高優先】常時・おすすめ表示（マラソン中も表示） ──
-    { name: "⚾ 楽天勝利 勝ったら倍", point: "+1%〜", url: "https://event.rakuten.co.jp/campaign/sports/", essential: true, campaignKey: "eagles" },
-    // ── 【通常】マラソン中はおすすめ非表示、全部表示には出る ──
-    { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/", essential: true, demoteMarathon: true },
-    { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/", essential: true, campaignKey: "biccamera", demoteMarathon: true },
-    { name: "スーパーDEAL Days", point: "最大50%還元", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: true, campaignKey: "superdeal", demoteMarathon: true },
-    // ── 全部表示のみ ──
+    // ── 全部表示のみ（おすすめには出さない） ──
+    { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/?scid=af_pc_etc&sc2id=af_101_0_0", essential: false },
+    { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/?scid=af_pc_etc&sc2id=af_101_0_0", essential: false, campaignKey: "biccamera" },
+    { name: "スーパーDEAL Days", point: "最大50%還元", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: false, campaignKey: "superdeal" },
     { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/", essential: false },
     { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/", essential: false },
   ];
@@ -1557,12 +1558,8 @@
   const allEntryUrls = [];
 
   // 日付スマートエントリー（その日だけ表示 → おすすめモードで自動フィルタ）
+  // 0と5のつく日はeverydayEntriesの先頭に移動済み
   const specialDayEntries = [
-    {
-      name: "5と0のつく日 +1%（楽天カード）",
-      point: "+1%", url: "https://event.rakuten.co.jp/card/pointday/",
-      essential: true, showOnDays: [5,10,15,20,25,30]
-    },
     {
       name: "ワンダフルデー（毎月1日）",
       point: "+4%", url: "https://event.rakuten.co.jp/campaign/point-up/wonderful-day/",
