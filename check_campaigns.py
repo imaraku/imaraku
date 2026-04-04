@@ -81,6 +81,20 @@ CAMPAIGNS = [
         "active_kw": ["エントリーする", "クーポン", "はじめて"],
         "default": True,
     },
+    {
+        "key": "adidas",
+        "url": "https://www.rakuten.ne.jp/gold/adidas/adidasdays/",
+        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了", "セールは終了"],
+        "active_kw": ["SALE", "セール", "50%", "40%", "30%", "20%", "OFF", "off"],
+        "default": False,
+    },
+    {
+        "key": "nike",
+        "url": "https://item.rakuten.co.jp/nike-official/c/0000000172/",
+        "end_kw":    ["終了しました", "キャンペーンは終了", "セールは終了"],
+        "active_kw": ["SALE", "セール", "60%", "50%", "40%", "30%", "OFF", "off"],
+        "default": False,
+    },
 ]
  
 # ─── 新キャンペーン自動検出：スキャン対象ページ ──────────────────────────
@@ -285,3 +299,4 @@ def main():
  
 if __name__ == "__main__":
     main()
+ 
