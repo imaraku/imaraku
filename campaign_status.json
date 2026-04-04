@@ -1,10 +1,10 @@
 {
-  "marathon": false,
-  "eagles": false,
+  "marathon": true,
+  "eagles": true,
   "biccamera": true,
   "superdeal": true,
-  "returnpurchaser": true,
-  "newpurchaser": true,
-  "adidas": false,
+  "returnpurchaser": false,
+  "newpurchaser": false,
+  "adidas": true,
   "nike": false
 }
