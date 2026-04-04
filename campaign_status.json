@@ -2,10 +2,10 @@
   "marathon": true,
   "eagles": true,
   "biccamera": true,
-  "superdeal": false,
-  "returnpurchaser": true,
-  "newpurchaser": true,
-  "adidas": false,
+  "superdeal": true,
+  "returnpurchaser": false,
+  "newpurchaser": false,
+  "adidas": true,
   "nike": false,
-  "mobilebonus": true
+  "mobilebonus": false
 }
