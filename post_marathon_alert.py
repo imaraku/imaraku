@@ -8,6 +8,7 @@ post_marathon_alert.py
 import os
 import sys
 import json
+import datetime
 import requests
 from requests_oauthlib import OAuth1
  
@@ -18,7 +19,11 @@ ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
  
 CAMPAIGN_STATUS_FILE = "campaign_status.json"
-SITE_URL = "https://imaraku.github.io/imaraku/imaraku.html"
+SITE_URL  = "https://imaraku.github.io/imaraku/imaraku.html"
+RAKKEN_URL = "https://event.rakuten.co.jp/rakken/?l-id=top_normal_menu_scene69"
+APPLE_URL  = "https://event.rakuten.co.jp/computer/itunes/"
+ 
+JST = datetime.timezone(datetime.timedelta(hours=9))
  
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
@@ -42,11 +47,22 @@ def check_marathon_active() -> bool:
             return True
     except Exception as e:
         print(f"マラソン確認エラー: {e}", file=sys.stderr)
-        # ローカルの campaign_status.json をフォールバックとして参照
         if os.path.exists(CAMPAIGN_STATUS_FILE):
             with open(CAMPAIGN_STATUS_FILE) as f:
                 return json.load(f).get("marathon", False)
     return False
+ 
+ 
+def get_special_days(now: datetime.datetime) -> list:
+    """今日の特別なキャンペーン日を返す。"""
+    day = now.day
+    special = []
+    if day % 5 == 0:
+        special.append("0と5のつく日")
+    if day == 18:
+        special.append("ワンダフルデー")
+        special.append("楽天市場の日")
+    return special
  
  
 def post_tweet(text: str) -> bool:
@@ -67,6 +83,38 @@ def post_tweet(text: str) -> bool:
         return False
  
  
+def build_tweet(special_days: list) -> str:
+    """状況に応じたツイート文を生成する。"""
+ 
+    if special_days:
+        # マラソン × 特別日 → ビッグチャンス！
+        events = "・".join(special_days)
+        return (
+            f"🔥 今夜20時からマラソン開始 & {events}！\n"
+            "ポイントを最大限稼げるビッグチャンス🎯\n"
+            "\n"
+            "エントリーをまとめてチェック👇\n"
+            f"{SITE_URL}\n"
+            "\n"
+            "#楽天 #お買物マラソン #ポイ活"
+        )
+ 
+    # 通常のマラソン事前告知（SPU控えめ、eギフト追記）
+    return (
+        "🏃 今夜20時からお買物マラソン開始！\n"
+        "\n"
+        "注文前に必ずエントリーを✅\n"
+        "\n"
+        "買いたいものがない方も\n"
+        "楽券(eギフト)やAppleギフトカードで買い周りOK！\n"
+        "\n"
+        "20時になったら「今楽」でまとめてエントリー👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #お買物マラソン #ポイ活 #節約術"
+    )
+ 
+ 
 def main():
     print("=== マラソン事前告知チェック ===")
  
@@ -77,21 +125,12 @@ def main():
         print("マラソン非開催のため、投稿をスキップします。")
         return
  
-    tweet = (
-        "🏃‍♂️ 今日20時からお買物マラソン開始！\n"
-        "\n"
-        "注文前に必ずエントリーを✅\n"
-        "\n"
-        "エントリーなし→通常ポイント\n"
-        "エントリーあり→最大16倍以上！\n"
-        "\n"
-        "20時になったら「今楽」でまとめてエントリー👇\n"
-        f"{SITE_URL}\n"
-        "\n"
-        "#楽天 #お買物マラソン #ポイ活 #節約術"
-    )
+    now = datetime.datetime.now(JST)
+    special_days = get_special_days(now)
+    print(f"特別な日: {special_days if special_days else 'なし'}")
  
-    print(f"投稿内容:\n{tweet}\n")
+    tweet = build_tweet(special_days)
+    print(f"\n投稿内容:\n{tweet}\n")
     post_tweet(tweet)
  
  
