@@ -6,5 +6,6 @@
   "returnpurchaser": true,
   "newpurchaser": true,
   "adidas": false,
-  "nike": false
+  "nike": false,
+  "mobilebonus": true
 }
