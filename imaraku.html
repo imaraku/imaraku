@@ -17,7 +17,7 @@
   <meta name="twitter:title" content="今楽 | 今買うならコレだけ押せばOK！">
   <meta name="twitter:description" content="急に楽天でお買い物することになったら、まずここ！エントリーすべきキャンペーンをまとめてワンクリック。最大16倍以上のポイントをゲット！">
   <meta name="twitter:image" content="https://imaraku.github.io/imaraku/ogp.png">
- 
+
   <!-- ============================================================
     ⚙️ 設定エリア（ここだけ変更すればOK）
     楽天アフィリエイトの a_id を入力してください
@@ -27,10 +27,10 @@
     // ============================================================
     //  ★★★ 設定エリア ★★★ ここだけ変更すればOK
     // ============================================================
- 
+
     // 楽天アフィリエイト ID
     const RAKUTEN_AFFILIATE_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16";
- 
+
     // ── キャンペーン開催状況（GitHub Actionsが毎日自動更新） ──
     // true = 開催中・表示する  /  false = 終了・非表示にする
     const CAMPAIGN_STATUS = {
@@ -41,9 +41,9 @@
       returnpurchaser: true,   // 久しぶりの買い物クーポン
       newpurchaser:    true,   // 初めての買い物クーポン
     };
- 
+
     // ============================================================
- 
+
     // アフィリエイトURLを自動生成する関数
     function aff(url) {
       if (!RAKUTEN_AFFILIATE_ID || RAKUTEN_AFFILIATE_ID === "YOUR_A_ID_HERE") {
@@ -52,7 +52,7 @@
       return `https://hb.afl.rakuten.co.jp/hgc/${RAKUTEN_AFFILIATE_ID}/?pc=${encodeURIComponent(url)}&m=${encodeURIComponent(url)}`;
     }
   </script>
- 
+
   <style>
     :root {
       --rakuten-red: #BF0000;
@@ -74,16 +74,16 @@
       --shadow-hover: 0 4px 20px rgba(0,0,0,0.16);
       --radius: 14px;
     }
- 
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
       background: #F2F2F2;
       color: var(--gray-800);
       min-height: 100vh;
     }
- 
+
     /* ─── ヘッダー ─── */
     header {
       background: linear-gradient(135deg, var(--rakuten-red) 0%, var(--rakuten-red-dark) 100%);
@@ -95,14 +95,14 @@
       z-index: 100;
       box-shadow: 0 2px 12px rgba(0,0,0,0.25);
     }
- 
+
     .header-logo {
       font-size: 2rem;
       font-weight: 900;
       letter-spacing: -1px;
       margin-bottom: 2px;
     }
- 
+
     .header-logo span {
       font-size: 1rem;
       font-weight: 600;
@@ -110,13 +110,13 @@
       display: block;
       letter-spacing: 0;
     }
- 
+
     .header-date {
       font-size: 0.8rem;
       opacity: 0.85;
       margin-top: 4px;
     }
- 
+
     .header-date .today-badge {
       display: inline-block;
       background: rgba(255,255,255,0.25);
@@ -125,7 +125,7 @@
       font-weight: 700;
       margin-left: 6px;
     }
- 
+
     /* ─── ナビゲーション ─── */
     .nav-bar {
       background: white;
@@ -142,12 +142,12 @@
       z-index: 99;
       flex-wrap: wrap;
     }
- 
+
     .nav-links {
       display: flex;
       gap: 18px;
     }
- 
+
     .nav-link {
       color: var(--gray-600);
       text-decoration: none;
@@ -156,12 +156,12 @@
       border-bottom: 2px solid transparent;
       padding-bottom: 4px;
     }
- 
+
     .nav-link:hover, .nav-link.active {
       color: var(--rakuten-red);
       border-bottom-color: var(--rakuten-red);
     }
- 
+
     /* モード切り替えトグル */
     .mode-toggle {
       display: flex;
@@ -172,7 +172,7 @@
       box-shadow: inset 0 1px 4px rgba(0,0,0,0.10);
       margin-left: auto;
     }
- 
+
     .mode-btn {
       font-size: 0.8rem;
       font-weight: 800;
@@ -186,14 +186,14 @@
       white-space: nowrap;
       letter-spacing: 0.2px;
     }
- 
+
     .mode-btn.active {
       background: var(--rakuten-red);
       color: white;
       box-shadow: 0 2px 8px rgba(191,0,0,0.4);
       transform: scale(1.04);
     }
- 
+
     /* ─── モード説明バナー ─── */
     .mode-banner {
       display: flex;
@@ -206,27 +206,27 @@
       border-bottom: 2px solid;
       transition: background 0.3s, border-color 0.3s, color 0.3s;
     }
- 
+
     .mode-banner.essential {
       background: linear-gradient(135deg, #fff5f5, #fff);
       border-color: var(--rakuten-red);
       color: var(--rakuten-red);
     }
- 
+
     .mode-banner.all-mode {
       background: linear-gradient(135deg, #e8f0fe, #fff);
       border-color: var(--blue);
       color: var(--blue);
     }
- 
+
     /* モードフィルタ用 */
     .mode-hidden { display: none !important; }
     .all-mode-only { display: none; }
     body.mode-all .all-mode-only { display: block; }
- 
+
     /* おすすめに含まれないセクション小見出し非表示 */
     .section-subtitle.section-empty { display: none; }
- 
+
     /* ─── お知らせバナー ─── */
     .notice-bar {
       background: var(--gold-light);
@@ -237,14 +237,14 @@
       font-weight: 600;
       color: #6B4D00;
     }
- 
+
     /* ─── メインコンテンツ ─── */
     main {
       max-width: 600px;
       margin: 0 auto;
       padding: 16px 12px 40px;
     }
- 
+
     /* ─── セクション見出し ─── */
     .section-title {
       display: flex;
@@ -257,11 +257,11 @@
       border-radius: 10px;
       color: white;
     }
- 
+
     .section-title.entries   { background: var(--green); }
     .section-title.coupons   { background: #2E7D32; }
     .section-title.members   { background: var(--rakuten-red); }
- 
+
     .section-subtitle {
       font-size: 0.82rem;
       font-weight: 700;
@@ -269,14 +269,14 @@
       margin: 16px 0 10px;
       padding: 0 4px;
     }
- 
+
     .section-note {
       font-size: 0.78rem;
       color: var(--gray-600);
       margin-bottom: 10px;
       padding: 0 4px;
     }
- 
+
     /* 更新注意バナー */
     .update-notice {
       background: #FFF9C4;
@@ -288,7 +288,7 @@
       margin-bottom: 10px;
       line-height: 1.6;
     }
- 
+
     /* コンパクトエントリー行 */
     .compact-row {
       display: flex;
@@ -317,9 +317,9 @@
       box-shadow: 0 2px 6px rgba(191,0,0,0.3);
     }
     .compact-btn.coupon-btn{background: #2E7D32; box-shadow: 0 2px 6px rgba(46,125,50,0.3); }
- 
+
     .section-title .icon { font-size: 1.1rem; }
- 
+
     /* ─── キャンペーンカード ─── */
     .campaign-card {
       background: white;
@@ -329,16 +329,16 @@
       overflow: hidden;
       transition: box-shadow 0.2s, transform 0.2s;
     }
- 
+
     .campaign-card:hover {
       box-shadow: var(--shadow-hover);
       transform: translateY(-1px);
     }
- 
+
     .card-body {
       padding: 14px 14px 10px;
     }
- 
+
     .card-top {
       display: flex;
       justify-content: space-between;
@@ -346,14 +346,14 @@
       gap: 8px;
       margin-bottom: 6px;
     }
- 
+
     .card-name {
       font-size: 0.95rem;
       font-weight: 800;
       line-height: 1.3;
       flex: 1;
     }
- 
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -365,21 +365,21 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
- 
+
     .badge.today   { background: var(--rakuten-red); color: white; animation: pulse 1.5s infinite; }
- 
+
     @keyframes pulse {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.75; }
     }
- 
+
     .card-desc {
       font-size: 0.8rem;
       color: var(--gray-600);
       line-height: 1.5;
       margin-bottom: 8px;
     }
- 
+
     .card-point {
       display: inline-flex;
       align-items: center;
@@ -392,7 +392,7 @@
       border-radius: 6px;
       margin-bottom: 10px;
     }
- 
+
     .card-footer {
       border-top: 1px solid var(--gray-200);
       padding: 10px 14px;
@@ -401,14 +401,14 @@
       justify-content: space-between;
       gap: 8px;
     }
- 
+
     .card-note {
       font-size: 0.72rem;
       color: var(--gray-600);
       flex: 1;
       line-height: 1.4;
     }
- 
+
     /* ─── エントリーボタン ─── */
     .entry-btn {
       display: inline-flex;
@@ -427,10 +427,10 @@
       box-shadow: 0 2px 8px rgba(191,0,0,0.4);
       min-width: 130px;
     }
- 
+
     .entry-btn:hover   { opacity: 0.9; }
     .entry-btn:active  { transform: scale(0.97); }
- 
+
     /* ─── 時間ブロック ─── */
     .time-block {
       background: white;
@@ -439,9 +439,9 @@
       margin-bottom: 12px;
       overflow: hidden;
     }
- 
+
     .time-block-body { padding: 8px 10px; }
- 
+
     /* ─── 今日コレだけ！ヒーロー ─── */
     .hero-checklist {
       background: white;
@@ -451,14 +451,14 @@
       margin-bottom: 20px;
       overflow: hidden;
     }
- 
+
     .hero-head {
       background: linear-gradient(135deg, var(--rakuten-red) 0%, var(--rakuten-red-dark) 100%);
       color: white;
       padding: 16px 16px 14px;
       text-align: center;
     }
- 
+
     .hero-eyebrow {
       font-size: 0.72rem;
       font-weight: 700;
@@ -467,7 +467,7 @@
       text-transform: uppercase;
       margin-bottom: 4px;
     }
- 
+
     .hero-main {
       display: block;
       font-size: 1.6rem;
@@ -475,7 +475,7 @@
       letter-spacing: -0.5px;
       line-height: 1.1;
     }
- 
+
     .hero-main em {
       font-style: normal;
       background: #FFD700;
@@ -483,19 +483,19 @@
       padding: 0 4px;
       border-radius: 4px;
     }
- 
+
     .hero-sub {
       display: block;
       font-size: 0.82rem;
       opacity: 0.9;
       margin-top: 6px;
     }
- 
+
     /* プログレスバー */
     .progress-wrap {
       padding: 12px 16px 4px;
     }
- 
+
     .progress-label {
       display: flex;
       justify-content: space-between;
@@ -505,20 +505,20 @@
       color: var(--gray-600);
       margin-bottom: 6px;
     }
- 
+
     .progress-count {
       font-size: 1rem;
       font-weight: 900;
       color: var(--rakuten-red);
     }
- 
+
     .progress-track {
       height: 10px;
       background: var(--gray-200);
       border-radius: 99px;
       overflow: hidden;
     }
- 
+
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--rakuten-red), var(--gold));
@@ -526,12 +526,12 @@
       width: 0%;
       transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
- 
+
     /* ステップリスト */
     .step-list {
       padding: 6px 12px 12px;
     }
- 
+
     .step-item {
       display: flex;
       align-items: center;
@@ -540,10 +540,10 @@
       border-bottom: 1px dashed var(--gray-200);
       transition: opacity 0.4s;
     }
- 
+
     .step-item:last-child { border-bottom: none; }
     .step-item.done { opacity: 0.45; }
- 
+
     .step-num {
       width: 30px;
       height: 30px;
@@ -558,31 +558,31 @@
       flex-shrink: 0;
       transition: background 0.3s;
     }
- 
+
     .step-item.done .step-num {
       background: var(--green);
     }
- 
+
     .step-info {
       flex: 1;
       min-width: 0;
     }
- 
+
     .step-name {
       font-size: 0.88rem;
       font-weight: 800;
       line-height: 1.3;
     }
- 
+
     .step-point {
       font-size: 0.72rem;
       color: var(--rakuten-red);
       font-weight: 700;
       margin-top: 1px;
     }
- 
+
     .step-item.done .step-point { color: var(--green); }
- 
+
     .step-btn {
       display: inline-flex;
       align-items: center;
@@ -601,14 +601,14 @@
       border: none;
       cursor: pointer;
     }
- 
+
     .step-btn.gold-btn {
       background: linear-gradient(135deg, var(--gold), #A87800);
       box-shadow: 0 3px 10px rgba(212,160,23,0.4);
     }
- 
+
     .step-btn:active { transform: scale(0.95); }
- 
+
     .step-done-badge {
       display: none;
       font-size: 0.82rem;
@@ -619,10 +619,10 @@
       gap: 3px;
       align-items: center;
     }
- 
+
     .step-item.done .step-btn { display: none; }
     .step-item.done .step-done-badge { display: inline-flex; }
- 
+
     /* 完了確認ボタン */
     .step-confirm-btn {
       display: none;
@@ -645,7 +645,7 @@
       0%, 100% { box-shadow: 0 3px 10px rgba(39,174,96,0.4); }
       50%       { box-shadow: 0 3px 18px rgba(39,174,96,0.8); }
     }
- 
+
     /* 戻ってきてトースト */
     #returnToast {
       position: fixed;
@@ -665,12 +665,12 @@
       pointer-events: none;
     }
     #returnToast.show { transform: translateX(-50%) translateY(0); }
- 
+
     /* ステップグループ行スタイル */
     .step-grouped { background: var(--blue-light); border-radius: 8px; margin: 4px 0; }
     .step-grouped .step-num { background: var(--blue); }
     .step-grouped.done .step-num { background: var(--green); }
- 
+
     .step-tag {
       display: inline-block;
       font-size: 0.62rem;
@@ -682,9 +682,9 @@
       margin-left: 4px;
       vertical-align: middle;
     }
- 
+
     .step-tag-gold { background: var(--gold); color: #5C3B00; }
- 
+
     /* 完了バナー */
     .completion-msg {
       display: none;
@@ -696,9 +696,9 @@
       font-weight: 800;
       animation: fadeIn 0.5s ease;
     }
- 
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
- 
+
     /* ─── コラプシブルセクション（ママ割・学割・ペット） ─── */
     .collapsible-group {
       background: white;
@@ -707,7 +707,7 @@
       margin-bottom: 14px;
       overflow: hidden;
     }
- 
+
     .collapsible-header {
       display: flex;
       align-items: center;
@@ -720,35 +720,35 @@
       border: none;
       width: 100%;
     }
- 
+
     .collapsible-header:hover {
       background: var(--gray-200);
     }
- 
+
     .collapsible-toggle {
       display: inline-block;
       font-size: 0.88rem;
       transition: transform 0.3s;
     }
- 
+
     .collapsible-header.active .collapsible-toggle {
       transform: rotate(180deg);
     }
- 
+
     .collapsible-content {
       max-height: 0;
       overflow: hidden;
       transition: max-height 0.3s ease;
     }
- 
+
     .collapsible-content.active {
       max-height: 2000px;
     }
- 
+
     .collapsible-body {
       padding: 8px 10px;
     }
- 
+
     /* ─── フッター ─── */
     footer {
       background: var(--gray-800);
@@ -758,9 +758,9 @@
       text-align: center;
       line-height: 1.8;
     }
- 
+
     footer a { color: #AAA; }
- 
+
     .pr-notice {
       display: inline-block;
       background: rgba(255,255,255,0.15);
@@ -770,13 +770,13 @@
       font-weight: 700;
       color: #FFF;
     }
- 
+
     /* ─── まとめて開くボタン ─── */
     .bulk-bar {
       padding: 10px 12px 4px;
       text-align: center;
     }
- 
+
     .bulk-open-btn {
       display: inline-flex;
       align-items: center;
@@ -796,12 +796,12 @@
       max-width: 420px;
       letter-spacing: 0.3px;
     }
- 
+
     .bulk-open-btn:active {
       transform: scale(0.96);
       box-shadow: 0 2px 8px rgba(191,0,0,0.28);
     }
- 
+
     .bulk-open-btn .bulk-count {
       display: block;
       font-size: 0.75rem;
@@ -809,7 +809,7 @@
       opacity: 0.9;
       margin-top: 2px;
     }
- 
+
     /* ─── チェックボックス選択 ─── */
     .bulk-check {
       width: 22px;
@@ -819,15 +819,15 @@
       flex-shrink: 0;
       margin: 0;
     }
- 
+
     .card-check-area {
       display: flex;
       align-items: flex-start;
       gap: 10px;
     }
- 
+
     .card-check-area > div { flex: 1; min-width: 0; }
- 
+
     /* ─── 外すボタン ─── */
     .dismiss-btn {
       background: none;
@@ -846,13 +846,13 @@
       background: #FFE0E0;
       color: var(--rakuten-red);
     }
- 
+
     /* compact-rowの外すボタン */
     .compact-row .dismiss-btn {
       font-size: 0.85rem;
       padding: 3px 6px;
     }
- 
+
     /* ─── 非表示リセット フロートボタン ─── */
     #resetBtn {
       display: none;
@@ -873,7 +873,7 @@
     }
     #resetBtn.visible { display: block; }
     #resetBtn:active { transform: scale(0.96); }
- 
+
     /* 一括開くトースト */
     #bulkToast {
       position: fixed;
@@ -896,7 +896,7 @@
       line-height: 1.5;
     }
     #bulkToast.show { transform: translateX(-50%) translateY(0); }
- 
+
     /* ─── レスポンシブ ─── */
     @media (max-width: 400px) {
       .header-logo { font-size: 1.7rem; }
@@ -908,7 +908,7 @@
   </style>
 </head>
 <body>
- 
+
 <!-- ヘッダー（タップでトップへ戻る） -->
 <header onclick="window.scrollTo({top:0, behavior:'smooth'})" style="cursor:pointer;" title="タップでトップへ戻る">
   <div class="header-logo">
@@ -917,7 +917,7 @@
   </div>
   <div class="header-date" id="headerDate">読み込み中…</div>
 </header>
- 
+
 <!-- ナビゲーション -->
 <div class="nav-bar">
   <div class="nav-links">
@@ -930,19 +930,19 @@
     <button class="mode-btn" id="modeAll" onclick="setMode('all')">全部表示</button>
   </div>
 </div>
- 
+
 <!-- モード説明バナー -->
 <div class="mode-banner essential" id="modeBanner">
   <span id="modeDescription">⭐ おすすめモード：今日すべき基本エントリーのみ表示</span>
 </div>
- 
+
 <!-- 注意バナー -->
 <div class="notice-bar" id="noticeBanner">
   ⚠️ 各キャンペーンのエントリーは毎月リセットされます。毎月1日以降に再エントリーを忘れずに！
 </div>
- 
+
 <main>
- 
+
   <!-- ★ 今買うならコレだけ！ヒーローチェックリスト -->
   <div class="hero-checklist">
     <div class="hero-head">
@@ -950,7 +950,7 @@
       <span class="hero-main">今買うなら<em>コレだけ</em>押せばOK！</span>
       <span class="hero-sub">順番にタップ → 各ページでエントリーボタンを押すだけ</span>
     </div>
- 
+
     <div class="progress-wrap">
       <div class="progress-label">
         <span>エントリー進捗</span>
@@ -960,16 +960,16 @@
         <div class="progress-fill" id="progressFill"></div>
       </div>
     </div>
- 
+
     <div class="step-list" id="stepList">
       <!-- JavaScriptで生成 -->
     </div>
- 
+
     <div class="completion-msg" id="completionMsg">
       🎉 全部完了！あとはお買い物するだけ！ポイントをがっちりゲットしよう 🛒
     </div>
   </div>
- 
+
   <!-- ========================================
     セクション A: エントリーまとめ
     ======================================== -->
@@ -977,23 +977,23 @@
     <span class="icon">🗓️</span> エントリーまとめ
   </div>
   <div class="section-note">（※URLは毎回のイベントに合わせて更新されます）</div>
- 
+
   <!-- 定番エントリー（いつでも） -->
   <div class="section-subtitle" data-section="everydayEntries">定番エントリー（いつでも）</div>
   <div id="everydayEntries"></div>
- 
+
   <!-- 今日限定エントリー -->
   <div class="section-subtitle" data-section="specialDayEntries">📅 今日限定のエントリー</div>
   <div id="specialDayEntries"></div>
- 
+
   <!-- 楽天ブックス -->
   <div class="section-subtitle" data-section="booksEntries">楽天ブックス</div>
   <div id="booksEntries"></div>
- 
+
   <!-- ジャンル別エントリー -->
   <div class="section-subtitle" data-section="genreEntries">ジャンル別エントリー</div>
   <div id="genreEntries"></div>
- 
+
   <!-- ========================================
     セクション B: クーポンまとめ
     ======================================== -->
@@ -1001,7 +1001,7 @@
     <span class="icon">🎟️</span> クーポンまとめ
   </div>
   <div id="couponSection"></div>
- 
+
   <!-- ========================================
     セクション NEW: 🆕 自動検出キャンペーン
     GitHub Actions が発見した未登録キャンペーンを自動表示
@@ -1011,14 +1011,14 @@
     <span style="font-size:0.7rem;font-weight:400;opacity:0.85;margin-left:6px;">AIが楽天から自動発見</span>
   </div>
   <div id="newCampaignSection" style="display:none;"></div>
- 
+
   <!-- ========================================
     セクション C: 該当者のみ
     ======================================== -->
   <div class="section-title members" id="members">
     <span class="icon">👥</span> 該当者のみ
   </div>
- 
+
   <!-- ママ割 -->
   <button class="collapsible-header" onclick="toggleCollapsible(this)">
     👩‍👧 ママ割 <span class="collapsible-toggle">▼</span>
@@ -1026,7 +1026,7 @@
   <div class="collapsible-content">
     <div class="collapsible-body" id="mamaWariSection"></div>
   </div>
- 
+
   <!-- 学割 -->
   <button class="collapsible-header" onclick="toggleCollapsible(this)">
     🎓 学割（楽天学割）<span class="collapsible-toggle">▼</span>
@@ -1034,7 +1034,7 @@
   <div class="collapsible-content">
     <div class="collapsible-body" id="gakuWariSection"></div>
   </div>
- 
+
   <!-- ペット・マイカー割 -->
   <button class="collapsible-header" onclick="toggleCollapsible(this)">
     🐾 ペット・マイカー割<span class="collapsible-toggle">▼</span>
@@ -1042,9 +1042,9 @@
   <div class="collapsible-content">
     <div class="collapsible-body" id="petMycarSection"></div>
   </div>
- 
+
 </main>
- 
+
 <footer>
   <div class="pr-notice">#PR #広告</div><br>
   ※ このページには楽天アフィリエイトリンクが含まれています。<br>
@@ -1052,7 +1052,7 @@
   ※ 最新情報は必ず<a href="https://event.rakuten.co.jp/" target="_blank">楽天市場公式</a>でご確認ください。<br><br>
   <strong style="color:#FFF">今楽</strong> — 楽天お得エントリーまとめ
 </footer>
- 
+
 <script>
   // ─────────────────────────────────────────────
   //  日付処理
@@ -1063,11 +1063,11 @@
   const weekDays = ["日", "月", "火", "水", "木", "金", "土"];
   const weekDay = weekDays[today.getDay()];
   const isSpecialDay = [5, 10, 15, 20, 25, 30].includes(day);
- 
+
   // ヘッダーに日付表示
   const dateEl = document.getElementById("headerDate");
   dateEl.innerHTML = `${month}月${day}日（${weekDay}）${isSpecialDay ? '<span class="today-badge">🎯 今日は5・10のつく日！</span>' : ''}`;
- 
+
   // お知らせバナー（campaign_status.json 取得後にも再呼び出し可能な関数）
   function updateNoticeBanner() {
     var nb = document.getElementById("noticeBanner");
@@ -1100,7 +1100,7 @@
     }
   }
   updateNoticeBanner();
- 
+
   // ─────────────────────────────────────────────
   //  ナビゲーション
   // ─────────────────────────────────────────────
@@ -1115,12 +1115,12 @@
       event.target.classList.add('active');
     }
   }
- 
+
   // ─────────────────────────────────────────────
   //  おすすめ / 全部 モード切り替え
   // ─────────────────────────────────────────────
   var currentMode = 'essential'; // デフォルト：おすすめモード
- 
+
   function setMode(mode) {
     currentMode = mode;
     document.getElementById('modeOsusume').classList.toggle('active', mode === 'essential');
@@ -1140,18 +1140,18 @@
     }
     applyFilter(mode);
   }
- 
+
   function applyFilter(mode) {
     var todayDay = day; // 既に定義済みの日付変数
     document.querySelectorAll('[data-essential]').forEach(function(card) {
       // dismissedアイテムはそのまま非表示維持
       if (card.style.display === 'none') return;
- 
+
       var isEssential = card.getAttribute('data-essential') === 'true';
       var showDaysAttr = card.getAttribute('data-show-days');
- 
+
       var campaignKey = card.getAttribute('data-campaign-key');
- 
+
       // ── モード共通の非表示判定（両モードで適用）──────────────────────
       // ① キャンペーン未開催
       var campaignInactive = campaignKey &&
@@ -1160,7 +1160,7 @@
       // ② 日付限定エントリーで今日が対象日でない
       var dateInactive = showDaysAttr &&
         !showDaysAttr.split(',').map(Number).includes(todayDay);
- 
+
       if (campaignInactive || dateInactive) {
         // 非開催・対象外日 → 両モードで非表示
         card.classList.add('mode-hidden');
@@ -1169,7 +1169,9 @@
         card.classList.remove('mode-hidden');
       } else {
         // おすすめモード：essential:true のみ表示
-        if (!isEssential) {
+        // ただし data-demote-marathon 付きのアイテムはマラソン中は非表示
+        var demoteInMarathon = card.hasAttribute('data-demote-marathon') && CAMPAIGN_STATUS.marathon;
+        if (!isEssential || demoteInMarathon) {
           card.classList.add('mode-hidden');
         } else {
           card.classList.remove('mode-hidden');
@@ -1179,7 +1181,7 @@
     ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateSectionSubtitles();
   }
- 
+
   // セクション小見出しを、配下に表示アイテムがなければ非表示
   function updateSectionSubtitles() {
     document.querySelectorAll('.section-subtitle[data-section]').forEach(function(subtitle) {
@@ -1192,7 +1194,7 @@
       subtitle.classList.toggle('section-empty', visible.length === 0);
     });
   }
- 
+
   // ─────────────────────────────────────────────
   //  コラプシブル機能
   // ─────────────────────────────────────────────
@@ -1203,7 +1205,7 @@
     var section = document.getElementById("newCampaignSection");
     var title   = document.getElementById("newCampaigns");
     if (!section || !items || !items.length) return;
- 
+
     section.innerHTML = items.map(function(c) {
       var entryUrl = aff(c.url);
       return `
@@ -1220,17 +1222,17 @@
         </div>
       `;
     }).join('');
- 
+
     section.style.display = 'block';
     title.style.display   = '';
   }
- 
+
   function toggleCollapsible(header) {
     header.classList.toggle('active');
     const content = header.nextElementSibling;
     content.classList.toggle('active');
   }
- 
+
   // ─────────────────────────────────────────────
   //  全タブ一括で開く
   // ─────────────────────────────────────────────
@@ -1250,17 +1252,17 @@
     toast.classList.add('show');
     setTimeout(function() { toast.classList.remove('show'); }, 5000);
   }
- 
+
   // ─────────────────────────────────────────────
   //  期間外・対象外を非表示にする機能
   // ─────────────────────────────────────────────
   const DISMISSED_KEY = 'imaraku_dismissed_v1';
- 
+
   function getDismissed() {
     try { return JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]'); }
     catch(e) { return []; }
   }
- 
+
   // 「✕」ボタンを押したときに呼ばれる
   function dismissEntry(btn) {
     var card = btn.closest('[data-entry-url]');
@@ -1286,7 +1288,7 @@
     toast.classList.add('show');
     setTimeout(function() { toast.classList.remove('show'); }, 3500);
   }
- 
+
   // ページ読み込み時に非表示状態を復元
   function restoreDismissed() {
     var dismissed = getDismissed();
@@ -1304,7 +1306,7 @@
     ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateResetBtn();
   }
- 
+
   // 「🔄 全部表示に戻す」ボタン
   function resetDismissed() {
     localStorage.removeItem(DISMISSED_KEY);
@@ -1317,7 +1319,7 @@
     ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateResetBtn();
   }
- 
+
   // リセットボタンの表示/非表示
   function updateResetBtn() {
     var dismissed = getDismissed();
@@ -1327,7 +1329,7 @@
       if (dismissed.length > 0) btn.textContent = '🔄 非表示(' + dismissed.length + '件)を元に戻す';
     }
   }
- 
+
   // チェックされているもの（かつ表示中）だけ開く
   function openCheckedTabs(group, label) {
     var urls = [];
@@ -1346,7 +1348,7 @@
     }
     openAllTabs(urls, label);
   }
- 
+
   // ボタンの「X/Y件」カウントを更新（非表示カードは除く）
   function updateBulkCount(group) {
     var total = 0, checked = 0;
@@ -1359,7 +1361,7 @@
     var countEl = document.querySelector('.bulk-count-' + group);
     if (countEl) countEl.textContent = checked + '/' + total + '件選択中';
   }
- 
+
   // ─────────────────────────────────────────────
   //  スムーススクロール（sticky header 分を考慮）
   // ─────────────────────────────────────────────
@@ -1371,7 +1373,7 @@
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     setTimeout(function() { markDone(stepIdx); }, 500);
   }
- 
+
   // セクション先頭に「まとめて開く」ボタンを差し込む（チェックボックス対応版）
   function insertBulkBtn(beforeElementId, group, label) {
     var target = document.getElementById(beforeElementId);
@@ -1386,7 +1388,7 @@
       '</button>';
     target.parentNode.insertBefore(bar, target);
   }
- 
+
   // ─────────────────────────────────────────────
   //  カード生成関数
   // ─────────────────────────────────────────────
@@ -1395,6 +1397,7 @@
     const isEssential = c.essential !== false; // デフォルトtrue
     const showDaysAttr = c.showOnDays ? ` data-show-days="${c.showOnDays.join(',')}"` : '';
     const campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
+    const demoteAttr = c.demoteMarathon ? ' data-demote-marathon' : '';
     const dayBadge = c.showOnDays
       ? `<span style="font-size:0.65rem;background:var(--gold);color:#5C3B00;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">📅 今日限定</span>`
       : '';
@@ -1405,7 +1408,7 @@
     };
     const campaignBadge = c.campaignKey ? (campaignBadgeMap[c.campaignKey] || '') : '';
     return `
-      <div class="campaign-card" data-entry-url="${entryUrl}" data-essential="${isEssential}"${showDaysAttr}${campaignAttr}>
+      <div class="campaign-card" data-entry-url="${entryUrl}" data-essential="${isEssential}"${showDaysAttr}${campaignAttr}${demoteAttr}>
         <div class="card-body">
           <div class="card-check-area">
             <input type="checkbox" class="bulk-check bulk-check-${group}"
@@ -1426,7 +1429,7 @@
       </div>
     `;
   }
- 
+
   // ─────────────────────────────────────────────
   //  今日コレだけ！ ステップリスト（3ステップ）
   // ─────────────────────────────────────────────
@@ -1459,11 +1462,11 @@
       isAnchor: true
     }
   ];
- 
+
   let doneCount = 0;
   const total = prioritySteps.length;
   document.getElementById("totalCount").textContent = total;
- 
+
   function updateProgress() {
     const pct = Math.round((doneCount / total) * 100);
     document.getElementById("progressFill").style.width = pct + "%";
@@ -1473,7 +1476,7 @@
       document.getElementById("completionMsg").style.display = "block";
     }
   }
- 
+
   function markDone(idx) {
     const item = document.getElementById("step-" + idx);
     if (item && !item.classList.contains("done")) {
@@ -1483,7 +1486,7 @@
       updateProgress();
     }
   }
- 
+
   function openEntry(idx, url) {
     window.open(url, "_blank", "noopener");
     const item = document.getElementById("step-" + idx);
@@ -1495,7 +1498,7 @@
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 3500);
   }
- 
+
   document.getElementById("stepList").innerHTML = prioritySteps.map((s, i) => {
     const href = s.isAnchor ? s.url : aff(s.url);
     const onclick = s.isAnchor
@@ -1520,35 +1523,39 @@
       <div class="step-done-badge">✅ 済！</div>
     </div>
   `}).join("");
- 
+
   // ─────────────────────────────────────────────
   //  セクション A: エントリーまとめ
   // ─────────────────────────────────────────────
- 
+
   // 定番エントリー
   // essential: true  → おすすめモードで表示
   // marathonOnly: true → MARATHON_ACTIVE=true のときだけおすすめに出現
   const everydayEntries = [
-    // ── 通常日・いつでも（URLチェックで自動表示切り替え）──
-    { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/", essential: true },
-    { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/", essential: true, campaignKey: "biccamera" },
-    { name: "スーパーDEAL Days", point: "最大50%還元", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: true, campaignKey: "superdeal" },
-    { name: "⚾ 楽天勝利 勝ったら倍", point: "+1%〜", url: "https://event.rakuten.co.jp/campaign/sports/", essential: true, campaignKey: "eagles" },
-    // ── マラソン・スーパーSALE期間中のみ ──
+    // ── 【高優先】マラソン・スーパーSALE期間中のみ・おすすめ表示 ──
     { name: "🏃 お買物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
     { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/", essential: true, campaignKey: "marathon" },
-    { name: "🏃 開始4時間DEAL（超高還元）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/", essential: true, campaignKey: "marathon" },
+    { name: "🏃 リピート購入 +1倍", point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
+    { name: "🏃 (ゲリラ)全店+1倍", point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
+    { name: "🏃 スーパーDEAL（4時間限定）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/pointback10/", essential: true, campaignKey: "marathon" },
+    { name: "📱 楽天モバイル×スーパーDEAL +10%", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260404/", essential: true, campaignKey: "marathon" },
+    // ── 【高優先】常時・おすすめ表示（マラソン中も表示） ──
+    { name: "⚾ 楽天勝利 勝ったら倍", point: "+1%〜", url: "https://event.rakuten.co.jp/campaign/sports/", essential: true, campaignKey: "eagles" },
+    // ── 【通常】マラソン中はおすすめ非表示、全部表示には出る ──
+    { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/", essential: true, demoteMarathon: true },
+    { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/", essential: true, campaignKey: "biccamera", demoteMarathon: true },
+    { name: "スーパーDEAL Days", point: "最大50%還元", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: true, campaignKey: "superdeal", demoteMarathon: true },
     // ── 全部表示のみ ──
     { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/", essential: false },
     { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/", essential: false },
   ];
- 
+
   document.getElementById("everydayEntries").innerHTML =
     everydayEntries.map(c => createCard(c, 'entries')).join("");
- 
+
   // エントリーまとめ全体用URL（全サブセクション分まとめる）
   const allEntryUrls = [];
- 
+
   // 日付スマートエントリー（その日だけ表示 → おすすめモードで自動フィルタ）
   const specialDayEntries = [
     {
@@ -1567,10 +1574,10 @@
       essential: true, showOnDays: [18]
     },
   ];
- 
+
   document.getElementById("specialDayEntries").innerHTML =
     specialDayEntries.map(c => createCard(c, 'entries')).join("");
- 
+
   // 楽天ブックス（本・電子書籍を買う人向け → 全部モードのみ表示）
   const booksEntries = [
     { name: "楽天ブックス 条件達成", point: "+2%", url: "https://books.rakuten.co.jp/", essential: false },
@@ -1578,10 +1585,10 @@
     { name: "kobo 初回購入", point: "+19%", url: "https://books.rakuten.co.jp/event/e-book/camp-bookscollab/", essential: false },
     { name: "DVD・ブルーレイ", point: "+9%", url: "https://books.rakuten.co.jp/event/dvd-blu-ray/campaign/pointup/", essential: false }
   ];
- 
+
   document.getElementById("booksEntries").innerHTML =
     booksEntries.map(c => createCard(c, 'entries')).join("");
- 
+
   // ジャンル別エントリー（詳しい人向け → 全部モードのみ）
   const genreEntries = [
     { name: "日用品・ペット用品", point: "+4%", url: "https://event.rakuten.co.jp/genre/daily/", essential: false },
@@ -1595,14 +1602,14 @@
     { name: "MEGA DEAL(全額還元抽選)", point: "抽選", url: "https://event.rakuten.co.jp/superdeal/campaign/megadeal/", essential: false },
     { name: "1等最大100%還元①", point: "抽選", url: "https://event.rakuten.co.jp/incentive/ichiba/lottery/event/20260320100/", essential: false },
   ];
- 
+
   document.getElementById("genreEntries").innerHTML =
     genreEntries.map(c => createCard(c, 'entries')).join("");
- 
+
   // エントリーまとめ 先頭に「選択したエントリーを開く」ボタンを追加
   insertBulkBtn("everydayEntries", "entries", "エントリー");
   updateBulkCount("entries");
- 
+
   // ─────────────────────────────────────────────
   //  セクション B: クーポンまとめ
   // ─────────────────────────────────────────────
@@ -1625,7 +1632,7 @@
     { name: "kobo金曜日100円クーポン", url: "https://books.rakuten.co.jp/event/e-book/camp-cpfriday/", essential: false },
     { name: "koboまとめ買い15%offクーポン", url: "https://books.rakuten.co.jp/event/e-book/camp-bulkcoupons01/", essential: false }
   ];
- 
+
   document.getElementById("couponSection").innerHTML = coupons.map(c => {
     const isEssential = c.essential !== false;
     const campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
@@ -1647,15 +1654,15 @@
     </div>
   `;
   }).join("");
- 
+
   // クーポンまとめ 先頭に「選択したクーポンを開く」ボタンを追加
   insertBulkBtn("couponSection", "coupons", "クーポン");
   updateBulkCount("coupons");
- 
+
   // ─────────────────────────────────────────────
   //  セクション C: 該当者のみ
   // ─────────────────────────────────────────────
- 
+
   // ママ割
   const mamaWariEntries = [
     { name: "ママ割×楽天ビューティ", point: "+1%", url: "https://beauty.rakuten.co.jp/cnt/topics/campaign/mama_grpcpn/" },
@@ -1665,7 +1672,7 @@
     { name: "入園・入学特集", point: "+2%", url: "https://event.rakuten.co.jp/genre/school/mamawari/" },
     { name: "楽天24×ママ割", point: "20%off", url: "https://event.rakuten.co.jp/young/campaign/homelife/" }
   ];
- 
+
   document.getElementById("mamaWariSection").innerHTML =
     '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("mama","ママ割")\'>🚀 選択したママ割を開く<span class="bulk-count bulk-count-mama">0/0件選択中</span></button></div>' +
     mamaWariEntries.map(c => `
@@ -1682,7 +1689,7 @@
     </div>
   `).join("");
   updateBulkCount("mama");
- 
+
   // 学割（楽天学割）
   const gakuWariEntries = [
     { name: "楽天学割×マラソン", point: "+1%", url: "https://event.rakuten.co.jp/young/campaign/marathon/", campaignKey: "marathon" },
@@ -1692,7 +1699,7 @@
     { name: "楽天BIC×学割", point: "+1%", url: "https://biccamera.rakuten.co.jp/c/campaign/gakuwari/" },
     { name: "楽天24×学割", point: "20%off", url: "https://event.rakuten.co.jp/young/campaign/homelife/" }
   ];
- 
+
   document.getElementById("gakuWariSection").innerHTML =
     '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("gaku","学割")\'>🚀 選択した学割を開く<span class="bulk-count bulk-count-gaku">0/0件選択中</span></button></div>' +
     gakuWariEntries.map(function(c) {
@@ -1715,14 +1722,14 @@
   `;
     }).join("");
   updateBulkCount("gaku");
- 
+
   // ペット・マイカー割
   const petMycarEntries = [
     { name: "ペット割(新規)×DEAL", point: "+5%", url: "https://event.rakuten.co.jp/superdeal/campaign/petwari/" },
     { name: "マイカー割(新規)", point: "+2%", url: "https://event.rakuten.co.jp/auto/mycar/program/" },
     { name: "マイカー割×マラソン", point: "+4%", url: "https://event.rakuten.co.jp/auto/mycar/program/marathon/", campaignKey: "marathon" }
   ];
- 
+
   document.getElementById("petMycarSection").innerHTML =
     '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("pet","ペット・マイカー割")\'>🚀 選択したペット・マイカー割を開く<span class="bulk-count bulk-count-pet">0/0件選択中</span></button></div>' +
     petMycarEntries.map(function(c) {
@@ -1745,13 +1752,13 @@
   `;
     }).join("");
   updateBulkCount("pet");
- 
+
   // ─────────────────────────────────────────────
   //  ページ初期化：まずデフォルト値で描画 → 直後にJSONで最新状態に更新
   // ─────────────────────────────────────────────
   restoreDismissed();
   applyFilter('essential'); // デフォルト値で即時表示
- 
+
   // campaign_status.json を取得して最新キャンペーン状態に更新
   // （ページを開くたびに実行 → GitHub Actions の実行タイミングに依存しない）
   fetch('./campaign_status.json?v=' + Date.now())
@@ -1770,17 +1777,17 @@
       renderNewCampaigns(newItems);
     })
     .catch(function() { /* ネット接続なし等のフォールバック：デフォルト値のまま */ });
- 
+
 </script>
- 
+
 <!-- 戻ってきてトースト -->
 <div id="returnToast">🔙 エントリー完了したら戻ってきて ✅ を押してね！</div>
- 
+
 <!-- 一括開くトースト -->
 <div id="bulkToast"></div>
- 
+
 <!-- 非表示リセットボタン（非表示アイテムがあるときだけ出現） -->
 <button id="resetBtn" onclick="resetDismissed()">🔄 非表示(0件)を元に戻す</button>
- 
+
 </body>
 </html>
