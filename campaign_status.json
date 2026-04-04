@@ -1,6 +1,6 @@
 {
-  "marathon": false,
-  "eagles": false,
+  "marathon": true,
+  "eagles": true,
   "biccamera": true,
   "superdeal": false,
   "returnpurchaser": true,
