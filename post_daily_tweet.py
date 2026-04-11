@@ -32,9 +32,9 @@ CAMPAIGN_STATUS_FILE = "campaign_status.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
 SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"
-RAKKEN_URL    = "https://event.rakuten.co.jp/rakken/?l-id=top_normal_menu_scene69"
-APPLE_URL     = "https://event.rakuten.co.jp/computer/itunes/"
-POINTDAY_URL  = "https://event.rakuten.co.jp/card/pointday/"
+RAKKEN_URL    = "https://event.rakuten.co.jp/rakken/?scid=af_pc_etc&sc2id=af_101_0_0"
+APPLE_URL     = "https://event.rakuten.co.jp/computer/itunes/?scid=af_pc_etc&sc2id=af_101_0_0"
+POINTDAY_URL  = "https://event.rakuten.co.jp/card/pointday/?scid=af_pc_etc&sc2id=af_101_0_0"
 
 # adidas（アフィリエイト込み短縮URL）
 ADIDAS_50   = "https://a.r10.to/h5AdfJ"
