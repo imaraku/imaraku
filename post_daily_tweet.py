@@ -32,8 +32,9 @@ CAMPAIGN_STATUS_FILE = "campaign_status.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
 SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"
-RAKKEN_URL  = "https://event.rakuten.co.jp/rakken/?l-id=top_normal_menu_scene69"
-APPLE_URL   = "https://event.rakuten.co.jp/computer/itunes/"
+RAKKEN_URL    = "https://event.rakuten.co.jp/rakken/?l-id=top_normal_menu_scene69"
+APPLE_URL     = "https://event.rakuten.co.jp/computer/itunes/"
+POINTDAY_URL  = "https://event.rakuten.co.jp/card/pointday/"
 
 # adidas（アフィリエイト込み短縮URL）
 ADIDAS_50   = "https://a.r10.to/h5AdfJ"
@@ -140,14 +141,20 @@ def tweet_wonderful_day() -> str:
 def tweet_zero_five_day() -> str:
     return (
         "📅 今日は0と5のつく日！\n"
+        "楽天カード利用で【ふるさと納税】もポイント+1倍💳\n"
         "\n"
-        "楽天カード・楽天Pay利用でポイントがいつもよりお得💳\n"
-        "39ショップ・リピートボーナスとも組み合わせ可能！\n"
+        "💡 物価高の今こそ、早めのふるさと納税がお得！\n"
+        "・年末より今のほうが品数が圧倒的に豊富\n"
+        "・年末の駆け込みは人気返礼品が売り切れ続出😰\n"
+        "・今なら選び放題でじっくり検討できます✨\n"
         "\n"
-        "エントリーはこちら👇\n"
+        "ふるさと納税キャンペーンはこちら👇\n"
+        f"{POINTDAY_URL}\n"
+        "\n"
+        "エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #ポイ活 #節約術"
+        "#楽天 #ふるさと納税 #0と5のつく日 #ポイ活 #節約術"
     )
 
 
