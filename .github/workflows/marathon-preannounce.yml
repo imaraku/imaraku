@@ -1,28 +1,31 @@
 name: マラソン事前告知ツイート
- 
+
 on:
   schedule:
     # 19:50 JST（= UTC 10:50）に毎日実行
     - cron: '50 10 * * *'
   # 手動テスト用
   workflow_dispatch:
- 
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Node.js 24 を使用（将来の廃止に対応）
+
 jobs:
   post-alert:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
- 
+
       - name: Python セットアップ
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
- 
+
       - name: 依存パッケージをインストール
         run: pip install requests requests-oauthlib
- 
+
       - name: マラソン状態を確認して事前告知ツイート
         env:
           TWITTER_API_KEY:             ${{ secrets.TWITTER_API_KEY }}
