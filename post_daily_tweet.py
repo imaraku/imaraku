@@ -107,6 +107,27 @@ def tweet_marathon_big_chance(special_days: list) -> str:
     )
 
 
+def tweet_marathon_entry_only() -> str:
+    """エントリー期間中だがポイントアップ期間まだ開始していない場合"""
+    return (
+        "🏃 お買物マラソン、エントリー受付中！\n"
+        "\n"
+        "⚠️ ただし今はまだ「エントリー期間」です\n"
+        "ポイントアップが始まるのはもう少し後。\n"
+        "\n"
+        "✅ でも今のうちに【エントリーだけ】はしておこう！\n"
+        "エントリーしないとポイントアップ対象外になります。\n"
+        "\n"
+        "ポイントアップ期間が始まったら\n"
+        "一気に複数ショップで買いまわりがお得🛒\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #お買物マラソン #ポイ活 #節約術"
+    )
+
+
 def tweet_marathon_normal() -> str:
     return (
         "🏃 お買物マラソン開催中！\n"
@@ -268,24 +289,32 @@ def main():
     weekday = now.weekday()   # 0=月 … 5=土 6=日
     print(f"=== 日次ツイート {now.strftime('%Y-%m-%d %H:%M JST')} ===")
 
-    status       = load_status()
-    marathon     = status.get("marathon", False)
-    eagles       = status.get("eagles",   False)
-    vissel       = status.get("vissel",   False)
-    adidas_on    = status.get("adidas",   False)
-    nike_on      = status.get("nike",     False)
-    special_days = get_special_days(now)
+    status           = load_status()
+    marathon         = status.get("marathon",         False)
+    marathon_pointup = status.get("marathon_pointup", False)
+    eagles           = status.get("eagles",           False)
+    vissel           = status.get("vissel",           False)
+    adidas_on        = status.get("adidas",           False)
+    nike_on          = status.get("nike",             False)
+    special_days     = get_special_days(now)
 
-    print(f"  marathon={marathon}, eagles={eagles}, vissel={vissel}, adidas={adidas_on}, nike={nike_on}, special={special_days}, weekday={weekday}")
+    print(f"  marathon={marathon}, marathon_pointup={marathon_pointup}, eagles={eagles}, vissel={vissel}, adidas={adidas_on}, nike={nike_on}, special={special_days}, weekday={weekday}")
 
     # 優先度順に判定
-    if marathon and special_days:
+    if marathon and marathon_pointup and special_days:
+        # ポイントアップ期間中 × 特別日 → 最大のビッグチャンス
         tweet = tweet_marathon_big_chance(special_days)
-        label = "マラソン×特別日（ビッグチャンス）"
+        label = "マラソン（ポイントアップ中）×特別日（ビッグチャンス）"
 
-    elif marathon:
+    elif marathon and marathon_pointup:
+        # ポイントアップ期間中 → 今すぐ買いまわりを促す
         tweet = tweet_marathon_normal()
-        label = "マラソン開催中"
+        label = "マラソン（ポイントアップ期間中）"
+
+    elif marathon and not marathon_pointup:
+        # エントリー期間のみ → まずエントリーを促す（まだ買わなくてOK）
+        tweet = tweet_marathon_entry_only()
+        label = "マラソン（エントリー期間のみ・ポイントアップ未開始）"
 
     elif 18 == now.day:          # ワンダフルデー / 市場の日
         tweet = tweet_wonderful_day()
