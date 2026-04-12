@@ -34,8 +34,10 @@
     // ── キャンペーン開催状況（GitHub Actionsが毎日自動更新） ──
     // true = 開催中・表示する  /  false = 終了・非表示にする
     const CAMPAIGN_STATUS = {
-      marathon:        false,  // お買物マラソン / スーパーSALE
+      marathon:        false,  // お買物マラソン（エントリー期間含む）
+      marathon_pointup: false, // お買物マラソン（ポイントアップ期間中のみ true）
       eagles:          false,  // 楽天イーグルス勝利ボーナス
+      vissel:          false,  // ヴィッセル神戸勝利ボーナス
       biccamera:       true,   // 楽天BIC MegaBIC
       superdeal:       true,   // スーパーDEAL Days
       returnpurchaser: true,   // 久しぶりの買い物クーポン
@@ -1076,15 +1078,31 @@
     nb.style.background = '';
     nb.style.borderColor = '';
     nb.style.color = '';
-    if (CAMPAIGN_STATUS.marathon) {
+    if (CAMPAIGN_STATUS.marathon && CAMPAIGN_STATUS.marathon_pointup) {
+      // ポイントアップ期間中
       nb.innerHTML =
-        `🏃‍♂️ <strong>お買物マラソン開催中！</strong> マラソン・39ショップ・4時間DEALのエントリーを忘れずに！`;
+        `🏃 <strong>お買物マラソン開催中！</strong> 今すぐ複数ショップで買いまわってポイントアップ！エントリーを忘れずに！`;
       nb.style.background = "#E8F5E9";
       nb.style.borderColor = "#2E7D32";
       nb.style.color = "#1B5E20";
-    } else if (CAMPAIGN_STATUS.eagles) {
+    } else if (CAMPAIGN_STATUS.marathon && !CAMPAIGN_STATUS.marathon_pointup) {
+      // エントリー期間のみ（ポイントアップ未開始）
       nb.innerHTML =
-        `⚾ <strong>楽天イーグルス勝利ボーナス開催中！</strong> 今日は「勝ったら倍」エントリーをお忘れなく！`;
+        `📋 <strong>マラソン エントリー受付中！</strong>（ポイントアップはまだ始まっていません）<br>` +
+        `⚠️ 今のうちに<strong>エントリーだけ</strong>しておこう！エントリーしないとポイントアップ対象外になります。`;
+      nb.style.background = "#FFF3CD";
+      nb.style.borderColor = "#E6A800";
+      nb.style.color = "#5C3D00";
+    } else if (CAMPAIGN_STATUS.eagles && CAMPAIGN_STATUS.vissel) {
+      nb.innerHTML =
+        `🎉 <strong>W勝利！ポイント3倍！</strong> イーグルス⚾ × ヴィッセル神戸⚽ 両チーム勝利！「勝ったら倍」エントリーをお忘れなく！`;
+      nb.style.background = "#FCE4EC";
+      nb.style.borderColor = "#C62828";
+      nb.style.color = "#7B0000";
+    } else if (CAMPAIGN_STATUS.eagles || CAMPAIGN_STATUS.vissel) {
+      var team = CAMPAIGN_STATUS.eagles ? "楽天イーグルス⚾" : "ヴィッセル神戸⚽";
+      nb.innerHTML =
+        `🎉 <strong>${team} 勝利！ポイント2倍！</strong> 「勝ったら倍」エントリーをお忘れなく！`;
       nb.style.background = "#E8EFF8";
       nb.style.borderColor = "#004B8D";
       nb.style.color = "#003166";
