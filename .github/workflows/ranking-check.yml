@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write   # ranking_cache.json をコミット・プッシュするために必要
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Node.js 24 を使用（将来の廃止に対応）
+
 jobs:
   check-ranking:
     runs-on: ubuntu-latest
