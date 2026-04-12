@@ -1,5 +1,5 @@
 name: キャンペーン状態の自動チェック
- 
+
 on:
   schedule:
     # 2時間ごとに実行（JST = UTC+9 で計算）
@@ -27,33 +27,36 @@ on:
     - cron: '0 11 * * *'
     # 22:00 JST → UTC 13:00
     - cron: '0 13 * * *'
- 
+
   # 手動実行（緊急時の即時更新）
   workflow_dispatch:
- 
+
 permissions:
   contents: write
- 
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Node.js 24 を使用（将来の廃止に対応）
+
 jobs:
   check-campaigns:
     runs-on: ubuntu-latest
- 
+
     steps:
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4
- 
+
       - name: Python セットアップ
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
- 
+
       - name: 依存パッケージをインストール
         run: pip install requests
- 
+
       - name: キャンペーン状態をチェック
         id: check
         run: python check_campaigns.py
- 
+
       - name: 変更があればコミット & プッシュ
         if: steps.check.outputs.changed == 'true'
         run: |
@@ -62,4 +65,3 @@ jobs:
           git add campaign_status.json new_campaigns.json
           git commit -m "chore: キャンペーン状態を自動更新 [skip ci]"
           git push
- 
