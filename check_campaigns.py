@@ -49,8 +49,15 @@ CAMPAIGNS = [
     {
         "key": "eagles",
         "url": "https://event.rakuten.co.jp/campaign/sports/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了", "試合はありません"],
-        "active_kw": ["エントリーする", "エントリー受付中", "勝利", "勝ったら"],
+        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
+        "active_kw": ["EAGLES", "イーグルス"],
+        "default": False,
+    },
+    {
+        "key": "vissel",
+        "url": "https://event.rakuten.co.jp/campaign/sports/",
+        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
+        "active_kw": ["VISSEL", "ヴィッセル"],
         "default": False,
     },
     {
