@@ -32,6 +32,7 @@ CAMPAIGN_STATUS_FILE = "campaign_status.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
 SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"
+SPORTS_URL    = "https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160268_0&scid=af_pc_etc&sc2id=af_101_0_0"
 RAKKEN_URL    = "https://event.rakuten.co.jp/rakken/?scid=af_pc_etc&sc2id=af_101_0_0"
 APPLE_URL     = "https://event.rakuten.co.jp/computer/itunes/?scid=af_pc_etc&sc2id=af_101_0_0"
 POINTDAY_URL  = "https://event.rakuten.co.jp/card/pointday/?scid=af_pc_etc&sc2id=af_101_0_0"
@@ -158,16 +159,59 @@ def tweet_zero_five_day() -> str:
     )
 
 
-def tweet_eagles() -> str:
+def tweet_w_victory() -> str:
+    """イーグルス＆ヴィッセル神戸W勝利 → ポイント3倍"""
     return (
-        "⚾ 楽天イーグルス勝利！\n"
-        "今日のお買い物でポイント2倍に！\n"
+        "🎉🎉 W勝利でポイント3倍！！\n"
+        "楽天イーグルス⚾ × ヴィッセル神戸⚽ 両チーム勝利！\n"
         "\n"
-        "勝利ボーナスはエントリーが必須✅\n"
-        "期間中の購入が対象なので早めにエントリーを👇\n"
+        "今日は「勝ったら倍」キャンペーンが\n"
+        "なんとポイント3倍になっています🔥\n"
+        "\n"
+        "エントリーしてからお買い物すると\n"
+        "いつもより大幅にポイントが貯まります💰\n"
+        "\n"
+        "エントリーはこちら👇\n"
+        f"{SPORTS_URL}\n"
+        "\n"
+        "その他エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天イーグルス #楽天 #ポイ活"
+        "#楽天 #楽天イーグルス #ヴィッセル神戸 #勝ったら倍 #ポイ活 #節約術"
+    )
+
+
+def tweet_eagles() -> str:
+    """イーグルスのみ勝利 → ポイント2倍"""
+    return (
+        "⚾ 楽天イーグルス勝利！\n"
+        "「勝ったら倍」キャンペーンでポイント2倍🎉\n"
+        "\n"
+        "エントリーしてからお買い物するだけでOK✅\n"
+        "忘れずにエントリーを👇\n"
+        f"{SPORTS_URL}\n"
+        "\n"
+        "その他エントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #楽天イーグルス #勝ったら倍 #ポイ活"
+    )
+
+
+def tweet_vissel() -> str:
+    """ヴィッセル神戸のみ勝利 → ポイント2倍"""
+    return (
+        "⚽ ヴィッセル神戸勝利！\n"
+        "「勝ったら倍」キャンペーンでポイント2倍🎉\n"
+        "\n"
+        "エントリーしてからお買い物するだけでOK✅\n"
+        "忘れずにエントリーを👇\n"
+        f"{SPORTS_URL}\n"
+        "\n"
+        "その他エントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #ヴィッセル神戸 #勝ったら倍 #ポイ活"
     )
 
 
@@ -227,11 +271,12 @@ def main():
     status       = load_status()
     marathon     = status.get("marathon", False)
     eagles       = status.get("eagles",   False)
+    vissel       = status.get("vissel",   False)
     adidas_on    = status.get("adidas",   False)
     nike_on      = status.get("nike",     False)
     special_days = get_special_days(now)
 
-    print(f"  marathon={marathon}, eagles={eagles}, adidas={adidas_on}, nike={nike_on}, special={special_days}, weekday={weekday}")
+    print(f"  marathon={marathon}, eagles={eagles}, vissel={vissel}, adidas={adidas_on}, nike={nike_on}, special={special_days}, weekday={weekday}")
 
     # 優先度順に判定
     if marathon and special_days:
@@ -250,9 +295,17 @@ def main():
         tweet = tweet_zero_five_day()
         label = "0と5のつく日"
 
-    elif eagles:
+    elif eagles and vissel:      # W勝利 → 3倍（最優先）
+        tweet = tweet_w_victory()
+        label = "W勝利（イーグルス＆ヴィッセル）ポイント3倍"
+
+    elif eagles:                 # イーグルスのみ勝利 → 2倍
         tweet = tweet_eagles()
-        label = "イーグルス勝利ボーナス"
+        label = "イーグルス勝利 ポイント2倍"
+
+    elif vissel:                 # ヴィッセルのみ勝利 → 2倍
+        tweet = tweet_vissel()
+        label = "ヴィッセル神戸勝利 ポイント2倍"
 
     elif weekday == 5 and adidas_on:   # 土曜 かつ adidas開催中のみ
         tweet = tweet_adidas()
