@@ -42,8 +42,17 @@ CAMPAIGNS = [
     {
         "key": "marathon",
         "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了", "開催前"],
-        "active_kw": ["エントリーする", "エントリー受付中", "買いまわり", "マラソン開催中"],
+        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
+        "active_kw": ["エントリーする", "エントリー受付中", "買いまわり", "マラソン開催中", "もうすぐスタート", "事前エントリー"],
+        "default": False,
+    },
+    {
+        # ポイントアップ期間（実際に買いまわりでポイントが上がる期間）
+        # エントリー期間のみのときは false、ポイントアップ開始後は true
+        "key": "marathon_pointup",
+        "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/",
+        "end_kw":    ["もうすぐスタート", "事前エントリー", "終了しました", "受付終了"],
+        "active_kw": ["開催中", "買いまわり中", "ポイントアップ期間"],
         "default": False,
     },
     {
