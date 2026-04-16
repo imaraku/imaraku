@@ -12,6 +12,6 @@
   "mobilebonus": false,
   "repeat_purchase": false,
   "guerrilla": false,
-  "superdeal_4h": false,
-  "mobiledeal": false
+  "superdeal_4h": true,
+  "mobiledeal": true
 }
