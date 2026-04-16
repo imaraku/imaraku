@@ -266,6 +266,39 @@ def extract_title_near_link(html: str, url: str) -> str:
     return urlparse(url).path.strip('/').split('/')[-1]
 
 
+END_KEYWORDS   = ["終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"]
+ACTIVE_KEYWORDS = ["エントリーする", "エントリー受付中", "ポイントアップ", "クーポン", "開催中"]
+
+
+def is_campaign_active(url: str) -> bool:
+    """URLにアクセスして、キャンペーンがまだ開催中かを判定する。"""
+    page = fetch(url)
+    if page is None:
+        return True   # 取得失敗時は消さない（安全側）
+    if any(kw in page for kw in END_KEYWORDS):
+        return False
+    if any(kw in page for kw in ACTIVE_KEYWORDS):
+        return True
+    return True       # 判定不能時も消さない
+
+
+def purge_ended_campaigns(existing_new: list) -> tuple[list, int]:
+    """new_campaigns.json の既存エントリーのうち、終了済みを除去して返す。"""
+    active = []
+    removed = 0
+    for c in existing_new:
+        url = c.get("url", "")
+        if not url:
+            active.append(c)
+            continue
+        if is_campaign_active(url):
+            active.append(c)
+        else:
+            print(f"  🗑️  終了済みを削除: {c.get('name', url)}")
+            removed += 1
+    return active, removed
+
+
 def detect_new_campaigns(existing_new: list) -> list:
     """スキャンページから新しいキャンペーンURLを検出して返す。"""
     existing_urls = {c["url"] for c in existing_new}
@@ -286,9 +319,9 @@ def detect_new_campaigns(existing_new: list) -> list:
                 continue
             # エントリーページかチェック
             page = fetch(url)
-            if page and any(kw in page for kw in ["エントリーする", "エントリー受付中", "ポイントアップ"]):
+            if page and any(kw in page for kw in ACTIVE_KEYWORDS):
                 # 終了済みは除外
-                if any(kw in page for kw in ["終了しました", "キャンペーンは終了"]):
+                if any(kw in page for kw in END_KEYWORDS):
                     continue
                 name = extract_title_near_link(html, url)
                 print(f"  🆕 新キャンペーン候補: {name} → {url}")
@@ -341,18 +374,29 @@ def main():
     changed_status = save_json(STATUS_JSON, results)
     print(f"\n{'✅ campaign_status.json を更新' if changed_status else '変更なし（campaign_status.json）'}")
 
-    # 2. 新キャンペーンの自動検出
-    print("\n── 2. 新キャンペーン自動検出 ──")
+    # 2. 既存の自動検出キャンペーンの終了チェック → 終了済みを削除
+    print("\n── 2. 自動検出キャンペーンの終了チェック ──")
     existing_new = load_json(NEW_JSON, [])
+    if existing_new:
+        existing_new, removed_count = purge_ended_campaigns(existing_new)
+        print(f"  終了済み削除: {removed_count} 件 / 残り: {len(existing_new)} 件")
+    else:
+        removed_count = 0
+        print("  自動検出キャンペーンなし")
+
+    # 3. 新キャンペーンの自動検出
+    print("\n── 3. 新キャンペーン自動検出 ──")
     new_found = detect_new_campaigns(existing_new)
 
+    all_new = existing_new + new_found
+    changed_new = save_json(NEW_JSON, all_new)
+
     if new_found:
-        all_new = existing_new + new_found
-        changed_new = save_json(NEW_JSON, all_new)
         print(f"✅ new_campaigns.json に {len(new_found)} 件追加")
+    elif removed_count > 0:
+        print(f"✅ new_campaigns.json から終了済み {removed_count} 件を削除")
     else:
-        changed_new = False
-        print("新規キャンペーンなし")
+        print("変更なし（new_campaigns.json）")
 
     # 3. GitHub Actions の outputs に変更有無を出力
     changed = changed_status or changed_new
