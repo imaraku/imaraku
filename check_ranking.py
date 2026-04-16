@@ -56,31 +56,76 @@ REGULAR_TWEETS = [
         "\n"
         "#楽天 #コンタクトレンズ #ポイ活 #節約術"
     ),
-    # お水・飲料
+    # お水・炭酸水
     (
-        "💧 重いものこそ楽天で！\n"
+        "💧 重い飲料こそ楽天で！\n"
         "\n"
-        "お水・ミネラルウォーターは\n"
+        "お水・炭酸水を箱買いしても\n"
         "玄関まで届けてくれるので体への負担ゼロ✨\n"
         "\n"
         "スーパーで運ぶより安くてポイントも貯まる👍\n"
-        "お米・洗剤なども同様におすすめです！\n"
         "\n"
         f"ランキングをチェック👇\n{RANKING_URL}\n"
         "\n"
         f"エントリーを忘れずに👇\n{SITE_URL}\n"
         "\n"
-        "#楽天 #ポイ活 #節約術 #時短 #宅配"
+        "#楽天 #ミネラルウォーター #炭酸水 #ポイ活 #宅配"
+    ),
+    # ティッシュ・トイレットペーパー
+    (
+        "🧻 かさばる日用品も楽天にお任せ！\n"
+        "\n"
+        "ティッシュ・トイレットペーパーは\n"
+        "重くてかさばってスーパーで買うのが大変…😅\n"
+        "楽天なら玄関まで届けてくれます✨\n"
+        "\n"
+        "まとめ買いでさらにお得＆ポイントも貯まる💡\n"
+        "\n"
+        f"ランキングをチェック👇\n{RANKING_URL}\n"
+        "\n"
+        f"エントリーを忘れずに👇\n{SITE_URL}\n"
+        "\n"
+        "#楽天 #日用品 #ポイ活 #宅配 #節約術"
+    ),
+    # お米
+    (
+        "🍚 重いお米も楽天でお得に！\n"
+        "\n"
+        "5kg・10kgのお米をスーパーで運ぶのは重労働…\n"
+        "楽天なら玄関まで届けてくれます🏠\n"
+        "\n"
+        "ポイントも貯まってさらにお得💡\n"
+        "定期購入でさらに割引になるショップも！\n"
+        "\n"
+        f"ランキングをチェック👇\n{RANKING_URL}\n"
+        "\n"
+        f"エントリーを忘れずに👇\n{SITE_URL}\n"
+        "\n"
+        "#楽天 #お米 #ポイ活 #宅配 #節約術"
+    ),
+    # 洗剤・柔軟剤
+    (
+        "🫧 洗剤・柔軟剤も楽天でまとめ買い！\n"
+        "\n"
+        "重くてかさばる洗剤類こそ宅配が便利✨\n"
+        "楽天市場ならポイントが貯まって\n"
+        "スーパーよりお得なことも💡\n"
+        "\n"
+        f"ランキングをチェック👇\n{RANKING_URL}\n"
+        "\n"
+        f"エントリーを忘れずに👇\n{SITE_URL}\n"
+        "\n"
+        "#楽天 #日用品 #洗剤 #ポイ活 #節約術"
     ),
     # ランキング全般
     (
         "🏆 楽天ランキング、チェックしてますか？\n"
         "\n"
         "毎日リアルタイムで更新されるランキングは\n"
-        "トレンド把握にも買い物のヒントにもなります🛒\n"
+        "買い物のヒントにもなります🛒\n"
         "\n"
-        "ランキング上位をエントリーと合わせて\n"
-        "ポイント最大化で購入するのがコツ💡\n"
+        "エントリーと合わせてポイント最大化で\n"
+        "賢くお買い物しよう💡\n"
         "\n"
         f"今日のランキングはこちら👇\n{RANKING_URL}\n"
         "\n"
@@ -210,7 +255,7 @@ def tweet_rare_item(items: list[dict]) -> str:
     """レアアイテム新規ランクインのツイートを生成する。"""
     top = items[0]
     name = top['name']
-    url  = top['url'] or RANKING_URL
+    item_url = top['url'] or RANKING_URL
 
     return (
         f"🚨 楽天ランキングに「{name}」が急上昇！\n"
@@ -218,10 +263,10 @@ def tweet_rare_item(items: list[dict]) -> str:
         "人気アイテムはすぐ売り切れることも😰\n"
         "気になる方はお早めに✨\n"
         "\n"
-        "ポイントアップのエントリーを忘れずに👇\n"
-        f"{SITE_URL}\n"
+        f"▶ 商品を見る\n{item_url}\n"
         "\n"
-        f"ランキングをチェック👇\n{RANKING_URL}\n"
+        "エントリーしてからお買い物でポイントお得👇\n"
+        f"{SITE_URL}\n"
         "\n"
         "#楽天 #楽天市場 #ポイ活 #ランキング"
     )
@@ -241,34 +286,34 @@ def main():
     regular_index = cache.get("regular_index", 0)
     last_regular_date = cache.get("last_regular_date", "")
 
-    # ランキング取得
+    # ① ランキング取得 → レアアイテム検出（失敗しても定期ツイートは続行）
     ranking_items = fetch_ranking()
-    if not ranking_items:
-        print("⚠️ ランキングアイテム取得できず、終了します")
-        return
-
-    print(f"  取得アイテム数: {len(ranking_items)}")
-    for i, item in enumerate(ranking_items[:5]):
-        print(f"  {i+1}. {item['name']}")
-
     current_names = [item['name'] for item in ranking_items]
 
-    # ① 新規ランクイン（レアアイテム）検出 → 即ツイート
-    new_items = [i for i in ranking_items if i['name'] not in prev_names]
-    rare_new = [
-        i for i in new_items
-        if any(kw in i['name'] for kw in RARE_KEYWORDS)
-    ]
-
-    if rare_new:
-        print(f"  🚨 レアアイテム新規ランクイン: {[i['name'] for i in rare_new]}")
-        tweet = tweet_rare_item(rare_new)
-        print(f"\n投稿内容（レアアイテム）:\n{tweet}\n")
-        post_tweet(tweet)
+    if not ranking_items:
+        print("⚠️ ランキングアイテム取得できず、レアアイテムチェックをスキップ")
     else:
-        print("  新規レアアイテムなし")
+        print(f"  取得アイテム数: {len(ranking_items)}")
+        for i, item in enumerate(ranking_items[:5]):
+            print(f"  {i+1}. {item['name']}")
+
+        # 新規ランクイン（レアアイテム）検出 → 即ツイート
+        new_items = [i for i in ranking_items if i['name'] not in prev_names]
+        rare_new = [
+            i for i in new_items
+            if any(kw in i['name'] for kw in RARE_KEYWORDS)
+        ]
+
+        if rare_new:
+            print(f"  🚨 レアアイテム新規ランクイン: {[i['name'] for i in rare_new]}")
+            tweet = tweet_rare_item(rare_new)
+            print(f"\n投稿内容（レアアイテム）:\n{tweet}\n")
+            post_tweet(tweet)
+        else:
+            print("  新規レアアイテムなし")
 
     # ② 定期ツイート（月・水・金 かつ 今日まだ投稿していない場合）
+    # ※ ランキング取得の成否に関わらず実行する
     if weekday in [0, 2, 4] and last_regular_date != today_str:
         tweet = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
         print(f"\n投稿内容（定期・常連アイテム）:\n{tweet}\n")
@@ -279,8 +324,9 @@ def main():
     else:
         print(f"  定期ツイートはスキップ（weekday={weekday}, last={last_regular_date}）")
 
-    # キャッシュ更新
-    cache["items"] = current_names
+    # キャッシュ更新（ランキング取得できた場合のみアイテムリストを更新）
+    if current_names:
+        cache["items"] = current_names
     save_cache(cache)
     print("✅ キャッシュを更新しました")
 

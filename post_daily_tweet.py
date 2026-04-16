@@ -62,15 +62,45 @@ def load_status() -> dict:
 
 
 def get_special_days(now: datetime.datetime) -> list:
-    """今日の特別なキャンペーン日を返す。"""
+    """今日の特別なキャンペーン日を返す（マラソン×特別日の判定に使用）。"""
     day = now.day
     special = []
     if day % 5 == 0:          # 5, 10, 15, 20, 25, 30日
         special.append("0と5のつく日")
-    if day == 18:
+    if day == 1:
         special.append("ワンダフルデー")
+    if day == 18:
         special.append("楽天市場の日")
     return special
+
+
+def get_season_event(now: datetime.datetime) -> str | None:
+    """今日の季節イベントを返す（なければNone）。"""
+    year, month, day = now.year, now.month, now.day
+    weekday = now.weekday()   # 0=月 … 6=日
+    today = datetime.date(year, month, day)
+
+    if month == 1 and 1 <= day <= 3:
+        return "年始"
+    if month == 2 and day == 14:
+        return "バレンタイン"
+    if month == 3 and day == 14:
+        return "ホワイトデー"
+    if month == 5 and weekday == 6:   # 5月の日曜
+        first = datetime.date(year, 5, 1)
+        offset = (6 - first.weekday()) % 7
+        if today == first + datetime.timedelta(days=offset + 7):
+            return "母の日"
+    if month == 6 and weekday == 6:   # 6月の日曜
+        first = datetime.date(year, 6, 1)
+        offset = (6 - first.weekday()) % 7
+        if today == first + datetime.timedelta(days=offset + 14):
+            return "父の日"
+    if month == 12 and day == 24:
+        return "クリスマスイブ"
+    if month == 12 and day == 25:
+        return "クリスマス"
+    return None
 
 
 def post_tweet(text: str) -> bool:
@@ -90,8 +120,8 @@ def post_tweet(text: str) -> bool:
 
 # ── ツイート文 生成 ────────────────────────────────────────────────────────
 
-def tweet_marathon_big_chance(special_days: list) -> str:
-    events = "・".join(special_days)
+def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> str:
+    events = season_event if season_event else "・".join(special_days)
     return (
         f"🔥 今日はビッグチャンス！\n"
         f"マラソン × {events} が重なってます✨\n"
@@ -147,16 +177,133 @@ def tweet_marathon_normal() -> str:
 
 def tweet_wonderful_day() -> str:
     return (
-        "🎉 今日はワンダフルデー＆楽天市場の日！\n"
-        "（毎月18日限定のお得な日です）\n"
+        "🎉 今日はワンダフルデー！（毎月1日）\n"
         "\n"
-        "39ショップなど定番エントリーも忘れずに✨\n"
-        "エントリーするだけでポイントがお得に！\n"
+        "楽天カードで+4%ポイントUPの特別な日✨\n"
+        "エントリーするだけでOK！今月もお得に始めよう🛒\n"
         "\n"
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #ワンダフルデー #楽天市場の日 #ポイ活"
+        "#楽天 #ワンダフルデー #ポイ活"
+    )
+
+
+def tweet_ichiba_day() -> str:
+    return (
+        "🏪 今日は楽天市場の日！（毎月18日）\n"
+        "\n"
+        "楽天カードで+1%ポイントUP✨\n"
+        "エントリーするだけでOK！\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #楽天市場の日 #ポイ活"
+    )
+
+
+def tweet_new_year() -> str:
+    return (
+        "🎍 あけましておめでとうございます！\n"
+        "\n"
+        "今年も楽天でポイントを賢く貯めよう💡\n"
+        "新年のお買い物は必ずエントリーから✅\n"
+        "\n"
+        "今日のエントリーをチェック👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #新年 #ポイ活 #節約術"
+    )
+
+
+def tweet_valentine() -> str:
+    return (
+        "🍫 今日はバレンタイン！\n"
+        "\n"
+        "楽天市場でチョコレートを買うなら\n"
+        "エントリーしてからがお得💡\n"
+        "ポイントも貯まってさらに嬉しい✨\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #バレンタイン #ポイ活"
+    )
+
+
+def tweet_white_day() -> str:
+    return (
+        "🍬 今日はホワイトデー！\n"
+        "\n"
+        "楽天市場でお返しギフトを探そう🎁\n"
+        "エントリーしてお買い物すれば\n"
+        "ポイントもしっかり貯まります✨\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #ホワイトデー #ポイ活"
+    )
+
+
+def tweet_mothers_day() -> str:
+    return (
+        "🌸 今日は母の日！\n"
+        "\n"
+        "楽天市場で感謝の気持ちをプレゼントしよう🎁\n"
+        "エントリーしてからお買い物すれば\n"
+        "ポイントもたっぷり貯まります✨\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #母の日 #ポイ活"
+    )
+
+
+def tweet_fathers_day() -> str:
+    return (
+        "👔 今日は父の日！\n"
+        "\n"
+        "楽天市場で日頃の感謝をプレゼント🎁\n"
+        "エントリーしてからお買い物で\n"
+        "ポイントもたっぷり貯まります✨\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #父の日 #ポイ活"
+    )
+
+
+def tweet_christmas_eve() -> str:
+    return (
+        "🎄 今日はクリスマスイブ！\n"
+        "\n"
+        "楽天市場でクリスマスギフトを探すなら\n"
+        "エントリーしてからがお得💡\n"
+        "ポイントをしっかり貯めてプレゼントしよう🎁\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #クリスマス #ポイ活"
+    )
+
+
+def tweet_christmas() -> str:
+    return (
+        "🎅 メリークリスマス！\n"
+        "\n"
+        "楽天市場でのお買い物は\n"
+        "エントリーしてからがポイントお得✨\n"
+        "今日も忘れずにエントリーを！\n"
+        "\n"
+        "まとめてエントリーはこちら👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        "#楽天 #クリスマス #ポイ活"
     )
 
 
@@ -295,14 +442,26 @@ def main():
     adidas_on        = status.get("adidas",           False)
     nike_on          = status.get("nike",             False)
     special_days     = get_special_days(now)
+    season_event     = get_season_event(now)
 
-    print(f"  marathon={marathon}, marathon_pointup={marathon_pointup}, eagles={eagles}, vissel={vissel}, adidas={adidas_on}, nike={nike_on}, special={special_days}, weekday={weekday}")
+    print(f"  marathon={marathon}, marathon_pointup={marathon_pointup}, eagles={eagles}, vissel={vissel}")
+    print(f"  adidas={adidas_on}, nike={nike_on}, special={special_days}, season={season_event}, weekday={weekday}")
 
-    # 優先度順に判定
-    if marathon and marathon_pointup and special_days:
-        # ポイントアップ期間中 × 特別日 → 最大のビッグチャンス
-        tweet = tweet_marathon_big_chance(special_days)
-        label = "マラソン（ポイントアップ中）×特別日（ビッグチャンス）"
+    SEASON_TWEET_MAP = {
+        "年始":         tweet_new_year,
+        "バレンタイン": tweet_valentine,
+        "ホワイトデー": tweet_white_day,
+        "母の日":       tweet_mothers_day,
+        "父の日":       tweet_fathers_day,
+        "クリスマスイブ": tweet_christmas_eve,
+        "クリスマス":   tweet_christmas,
+    }
+
+    # ── 優先度順に判定 ──────────────────────────────────────────────────────
+    if marathon and marathon_pointup and (special_days or season_event):
+        # ポイントアップ期間中 × 特別日 or 季節イベント → 最大のビッグチャンス
+        tweet = tweet_marathon_big_chance(special_days, season_event)
+        label = f"マラソン×{'・'.join(special_days) if special_days else season_event}（ビッグチャンス）"
 
     elif marathon and marathon_pointup:
         # ポイントアップ期間中 → 今すぐ買いまわりを促す
@@ -314,15 +473,23 @@ def main():
         tweet = tweet_marathon_entry_only()
         label = "マラソン（エントリー期間のみ・ポイントアップ未開始）"
 
-    elif 18 == now.day:          # ワンダフルデー / 市場の日
+    elif season_event:           # 季節イベント（母の日・父の日・クリスマス等）
+        tweet = SEASON_TWEET_MAP[season_event]()
+        label = f"季節イベント（{season_event}）"
+
+    elif now.day == 1:           # ワンダフルデー（毎月1日）
         tweet = tweet_wonderful_day()
-        label = "ワンダフルデー"
+        label = "ワンダフルデー（1日）"
+
+    elif now.day == 18:          # 楽天市場の日（毎月18日）
+        tweet = tweet_ichiba_day()
+        label = "楽天市場の日（18日）"
 
     elif now.day % 5 == 0:       # 0と5のつく日
         tweet = tweet_zero_five_day()
         label = "0と5のつく日"
 
-    elif eagles and vissel:      # W勝利 → 3倍（最優先）
+    elif eagles and vissel:      # W勝利 → 3倍
         tweet = tweet_w_victory()
         label = "W勝利（イーグルス＆ヴィッセル）ポイント3倍"
 
