@@ -15,8 +15,7 @@ API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
 
-AFF_ID   = "1c52abea.36641b1e.1c52abeb.f5f67f16"
-SITE_URL = "https://imaraku.github.io/imaraku/imaraku.html"
+AFF_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16"
 
 def aff(url: str) -> str:
     encoded = quote(url, safe="")
@@ -53,9 +52,8 @@ def build_thread() -> list[str]:
         "🛒 購入: 4/27(月)〜5/1(金)\n"
         "🚛 発送: 4月下旬予定\n"
         "\n"
-        "新弾・人気パック17種がラインナップ✨\n"
-        "エントリーでポイントも上乗せ👇\n"
-        f"{SITE_URL}\n"
+        f"新弾・人気パック{len(PRODUCTS)}種がラインナップ✨\n"
+        "各商品の抽選エントリーは続くツイートをチェック👇\n"
         "\n"
         "#楽天ブックス #ポケモンカード #ポイ活"
     )
