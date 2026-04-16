@@ -9,5 +9,9 @@
   "newpurchaser": false,
   "adidas": true,
   "nike": false,
-  "mobilebonus": false
+  "mobilebonus": false,
+  "repeat_purchase": false,
+  "guerrilla": false,
+  "superdeal_4h": false,
+  "mobiledeal": false
 }
