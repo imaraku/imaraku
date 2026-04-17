@@ -179,6 +179,14 @@ KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
     "superdeal/campaign/superdealdays",
     "superdeal/campaign/overseas",
     "event.rakuten.co.jp/card/pointday",
+    "event.rakuten.co.jp/campaign/card/pointday",   # 0と5のつく日と重複
+    "event.rakuten.co.jp/campaign/sports",          # eagles/vissel と重複
+    "event.rakuten.co.jp/campaign/rank",            # ランク特典系（今楽の対象外）
+    "event.rakuten.co.jp/genre/school",             # 入園入学シーズン物（恒常的でない）
+    "event.rakuten.co.jp/genre/summer",             # シーズン物
+    "event.rakuten.co.jp/genre/winter",             # シーズン物
+    "event.rakuten.co.jp/genre/spring",             # シーズン物
+    "event.rakuten.co.jp/genre/autumn",             # シーズン物
     "event.rakuten.co.jp/campaign/point-up/wonderful-day",
     "event.rakuten.co.jp/campaign/point-up/ichiba-day",
     "books.rakuten.co.jp",
@@ -429,17 +437,26 @@ def extract_title_near_link(html: str, url: str) -> str:
     return urlparse(url).path.strip('/').split('/')[-1]
 
 
-END_KEYWORDS   = ["終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"]
+END_KEYWORDS   = [
+    "終了しました", "キャンペーンは終了", "受付終了",
+    "エントリー期間は終了", "エントリーは終了", "開催期間は終了",
+    "開催していません", "次回の", "次回開催",
+    "ページが見つかりません", "お探しのページは",
+]
 ACTIVE_KEYWORDS = ["エントリーする", "エントリー受付中", "ポイントアップ", "クーポン", "開催中"]
 
 
 def is_campaign_active(url: str) -> bool:
-    """URLにアクセスして、キャンペーンがまだ開催中かを判定する。"""
+    """URLにアクセスして、キャンペーンがまだ開催中かを判定する。
+    終了キーワードを優先的にチェックし、曖昧な場合のみアクティブ扱い。"""
     page = fetch(url)
     if page is None:
         return True   # 取得失敗時は消さない（安全側）
-    if any(kw in page for kw in END_KEYWORDS):
-        return False
+    # 終了キーワードが見つかれば即 false
+    for kw in END_KEYWORDS:
+        if kw in page:
+            return False
+    # アクティブキーワードが見つかれば true
     if any(kw in page for kw in ACTIVE_KEYWORDS):
         return True
     return True       # 判定不能時も消さない
