@@ -22,6 +22,8 @@ import datetime
 import requests
 from requests_oauthlib import OAuth1
 
+from hashtag_helper import hashtags
+
 # ── 認証情報（GitHub Secrets から取得）──────────────────────────────────
 API_KEY             = os.environ["TWITTER_API_KEY"]
 API_SECRET          = os.environ["TWITTER_API_SECRET"]
@@ -133,7 +135,7 @@ def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> s
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #お買物マラソン #ポイ活 #節約術"
+        f"{hashtags(['core', 'marathon', 'poikatsu', 'saving'])}"
     )
 
 
@@ -154,7 +156,7 @@ def tweet_marathon_entry_only() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #お買物マラソン #ポイ活 #節約術"
+        f"{hashtags(['core', 'marathon', 'entry', 'poikatsu'])}"
     )
 
 
@@ -171,7 +173,7 @@ def tweet_marathon_normal() -> str:
         "エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #お買物マラソン #ポイ活"
+        f"{hashtags(['core', 'marathon', 'poikatsu', 'saving'])}"
     )
 
 
@@ -185,7 +187,7 @@ def tweet_wonderful_day() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #ワンダフルデー #ポイ活"
+        f"{hashtags(['core', 'wonderful', 'poikatsu', 'saving'])}"
     )
 
 
@@ -199,7 +201,7 @@ def tweet_ichiba_day() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #楽天市場の日 #ポイ活"
+        f"{hashtags(['core', 'ichibaday', 'poikatsu', 'saving'])}"
     )
 
 
@@ -213,7 +215,7 @@ def tweet_new_year() -> str:
         "今日のエントリーをチェック👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #新年 #ポイ活 #節約術"
+        f"{hashtags(['core', 'newyear', 'poikatsu', 'saving'])}"
     )
 
 
@@ -228,7 +230,7 @@ def tweet_valentine() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #バレンタイン #ポイ活"
+        f"{hashtags(['core', 'valentine', 'poikatsu', 'saving'])}"
     )
 
 
@@ -243,7 +245,7 @@ def tweet_white_day() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #ホワイトデー #ポイ活"
+        f"{hashtags(['core', 'whiteday', 'poikatsu', 'saving'])}"
     )
 
 
@@ -258,7 +260,7 @@ def tweet_mothers_day() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #母の日 #ポイ活"
+        f"{hashtags(['core', 'mothers', 'poikatsu', 'saving'])}"
     )
 
 
@@ -273,7 +275,7 @@ def tweet_fathers_day() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #父の日 #ポイ活"
+        f"{hashtags(['core', 'fathers', 'poikatsu', 'saving'])}"
     )
 
 
@@ -288,7 +290,7 @@ def tweet_christmas_eve() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #クリスマス #ポイ活"
+        f"{hashtags(['core', 'christmas', 'poikatsu', 'saving'])}"
     )
 
 
@@ -303,7 +305,7 @@ def tweet_christmas() -> str:
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #クリスマス #ポイ活"
+        f"{hashtags(['core', 'christmas', 'poikatsu', 'saving'])}"
     )
 
 
@@ -323,7 +325,7 @@ def tweet_zero_five_day() -> str:
         "エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #ふるさと納税 #0と5のつく日 #ポイ活 #節約術"
+        f"{hashtags(['core', 'zerogo', 'furusato', 'poikatsu', 'saving'])}"
     )
 
 
@@ -345,7 +347,7 @@ def tweet_w_victory() -> str:
         "その他エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #楽天イーグルス #ヴィッセル神戸 #勝ったら倍 #ポイ活 #節約術"
+        f"{hashtags(['core', 'eagles', 'vissel', 'poikatsu'])}"
     )
 
 
@@ -362,7 +364,7 @@ def tweet_eagles() -> str:
         "その他エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #楽天イーグルス #勝ったら倍 #ポイ活"
+        f"{hashtags(['core', 'eagles', 'poikatsu', 'saving'])}"
     )
 
 
@@ -379,7 +381,7 @@ def tweet_vissel() -> str:
         "その他エントリーまとめ👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #ヴィッセル神戸 #勝ったら倍 #ポイ活"
+        f"{hashtags(['core', 'vissel', 'poikatsu', 'saving'])}"
     )
 
 
@@ -395,7 +397,7 @@ def tweet_adidas() -> str:
         "お買物マラソンと組み合わせてさらにお得🔥\n"
         f"エントリーはこちら👇 {SITE_URL}\n"
         "\n"
-        "#楽天 #adidas #ポイ活"
+        f"{hashtags(['core', 'adidas', 'poikatsu', 'saving'])}"
     )
 
 
@@ -409,7 +411,7 @@ def tweet_nike() -> str:
         "エントリー忘れずに👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #NIKE #ポイ活"
+        f"{hashtags(['core', 'nike', 'poikatsu', 'saving'])}"
     )
 
 
@@ -423,7 +425,7 @@ def tweet_normal() -> str:
         "\n"
         "クーポンも忘れずに！\n"
         "\n"
-        "#楽天 #ポイ活 #節約術"
+        f"{hashtags(['core', 'poikatsu', 'saving', 'coupon'])}"
     )
 
 

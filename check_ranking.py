@@ -18,6 +18,8 @@ import requests
 from bs4 import BeautifulSoup
 from requests_oauthlib import OAuth1
 
+from hashtag_helper import hashtags
+
 # ── 認証情報 ─────────────────────────────────────────────────────────────────
 API_KEY             = os.environ["TWITTER_API_KEY"]
 API_SECRET          = os.environ["TWITTER_API_SECRET"]
@@ -47,6 +49,7 @@ RARE_KEYWORDS = [
 ]
 
 # 常連アイテムのツイートテンプレート（月・水・金でローテーション）
+# (本文, ハッシュタグカテゴリ) のタプルで持ち、投稿時にタグを動的生成する
 REGULAR_TWEETS = [
     # コンタクトレンズ
     (
@@ -60,9 +63,8 @@ REGULAR_TWEETS = [
         "\n"
         f"今日のランキングはこちら👇\n{RANKING_URL}\n"
         "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}\n"
-        "\n"
-        "#楽天 #コンタクトレンズ #ポイ活 #節約術"
+        f"エントリーを忘れずに👇\n{SITE_URL}",
+        ["core", "contact", "poikatsu", "saving"],
     ),
     # お水・炭酸水
     (
@@ -75,9 +77,8 @@ REGULAR_TWEETS = [
         "\n"
         f"ランキングをチェック👇\n{RANKING_URL}\n"
         "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}\n"
-        "\n"
-        "#楽天 #ミネラルウォーター #炭酸水 #ポイ活 #宅配"
+        f"エントリーを忘れずに👇\n{SITE_URL}",
+        ["core", "water", "poikatsu", "saving"],
     ),
     # ティッシュ・トイレットペーパー
     (
@@ -91,9 +92,8 @@ REGULAR_TWEETS = [
         "\n"
         f"ランキングをチェック👇\n{RANKING_URL}\n"
         "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}\n"
-        "\n"
-        "#楽天 #日用品 #ポイ活 #宅配 #節約術"
+        f"エントリーを忘れずに👇\n{SITE_URL}",
+        ["core", "daily", "poikatsu", "saving"],
     ),
     # お米
     (
@@ -107,9 +107,8 @@ REGULAR_TWEETS = [
         "\n"
         f"ランキングをチェック👇\n{RANKING_URL}\n"
         "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}\n"
-        "\n"
-        "#楽天 #お米 #ポイ活 #宅配 #節約術"
+        f"エントリーを忘れずに👇\n{SITE_URL}",
+        ["core", "rice", "poikatsu", "saving"],
     ),
     # 洗剤・柔軟剤
     (
@@ -121,9 +120,8 @@ REGULAR_TWEETS = [
         "\n"
         f"ランキングをチェック👇\n{RANKING_URL}\n"
         "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}\n"
-        "\n"
-        "#楽天 #日用品 #洗剤 #ポイ活 #節約術"
+        f"エントリーを忘れずに👇\n{SITE_URL}",
+        ["core", "detergent", "daily", "poikatsu"],
     ),
     # ランキング全般
     (
@@ -137,9 +135,8 @@ REGULAR_TWEETS = [
         "\n"
         f"今日のランキングはこちら👇\n{RANKING_URL}\n"
         "\n"
-        f"エントリーまとめ👇\n{SITE_URL}\n"
-        "\n"
-        "#楽天 #楽天市場 #ポイ活 #節約術"
+        f"エントリーまとめ👇\n{SITE_URL}",
+        ["core", "ranking", "poikatsu", "saving"],
     ),
 ]
 
@@ -276,7 +273,7 @@ def tweet_rare_item(items: list[dict]) -> str:
         "エントリーしてからお買い物でポイントお得👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #楽天市場 #ポイ活 #ランキング"
+        f"{hashtags(['core', 'ranking', 'poikatsu', 'saving'])}"
     )
 
 
@@ -327,7 +324,8 @@ def main():
     # ② 定期ツイート（月・水・金 かつ 今日まだ投稿していない場合）
     # ※ ランキング取得の成否に関わらず実行する
     if weekday in [0, 2, 4] and last_regular_date != today_str:
-        tweet = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
+        body, tag_categories = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
+        tweet = body + "\n\n" + hashtags(tag_categories)
         print(f"\n投稿内容（定期・常連アイテム）:\n{tweet}\n")
         post_tweet(tweet)
         regular_index += 1

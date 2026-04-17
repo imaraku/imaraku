@@ -11,7 +11,9 @@ import json
 import datetime
 import requests
 from requests_oauthlib import OAuth1
- 
+
+from hashtag_helper import hashtags
+
 # ── 認証情報（GitHub Secrets から取得）──────────────────────────────────
 API_KEY             = os.environ["TWITTER_API_KEY"]
 API_SECRET          = os.environ["TWITTER_API_SECRET"]
@@ -97,7 +99,7 @@ def build_tweet(special_days: list) -> str:
             "エントリーをまとめてチェック👇\n"
             f"{SITE_URL}\n"
             "\n"
-            "#楽天 #お買物マラソン #ポイ活"
+            f"{hashtags(['core', 'marathon', 'poikatsu', 'saving'])}"
         )
  
     # 通常のマラソン事前告知（SPU控えめ、eギフト追記）
@@ -112,7 +114,7 @@ def build_tweet(special_days: list) -> str:
         "20時になったら「今楽」でまとめてエントリー👇\n"
         f"{SITE_URL}\n"
         "\n"
-        "#楽天 #お買物マラソン #ポイ活 #節約術"
+        f"{hashtags(['core', 'marathon', 'entry', 'poikatsu', 'saving'])}"
     )
  
  
