@@ -1075,7 +1075,7 @@
 
   // ヘッダーに日付表示
   const dateEl = document.getElementById("headerDate");
-  dateEl.innerHTML = `${month}月${day}日（${weekDay}）${isSpecialDay ? '<span class="today-badge">🎯 今日は5・10のつく日！</span>' : ''}`;
+  dateEl.innerHTML = `${month}月${day}日（${weekDay}）${isSpecialDay ? '<span class="today-badge">🎯 今日は0と5のつく日！</span>' : ''}`;
 
   // お知らせバナー（campaign_status.json 取得後にも再呼び出し可能な関数）
   function updateNoticeBanner() {
@@ -1115,7 +1115,7 @@
       nb.style.color = "#003166";
     } else if (isSpecialDay) {
       nb.innerHTML =
-        `🎯 今日は<strong>${day}日</strong>！5・10のつく日です！楽天カード特典のエントリーを忘れずに！`;
+        `🎯 今日は<strong>${day}日</strong>！0と5のつく日です！楽天カード特典のエントリーを忘れずに！`;
       nb.style.background = "#FFF8E7";
       nb.style.borderColor = "var(--gold)";
       nb.style.color = "#6B4D00";

@@ -59,8 +59,9 @@ def get_special_days(now: datetime.datetime) -> list:
     special = []
     if day % 5 == 0:
         special.append("0と5のつく日")
-    if day == 18:
+    if day == 1:
         special.append("ワンダフルデー")
+    if day == 18:
         special.append("楽天市場の日")
     return special
  

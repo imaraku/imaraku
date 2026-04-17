@@ -7,7 +7,6 @@ post_pokemon_lottery.py
 import os
 import sys
 import requests
-from urllib.parse import quote
 from requests_oauthlib import OAuth1
 
 API_KEY             = os.environ["TWITTER_API_KEY"]
@@ -15,11 +14,10 @@ API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
 
-AFF_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16"
-
 def aff(url: str) -> str:
-    encoded = quote(url, safe="")
-    return f"https://hb.afl.rakuten.co.jp/hgc/{AFF_ID}/?pc={encoded}&m={encoded}"
+    """楽天ブックスURLにアフィリエイトパラメータを付与する。"""
+    sep = "&" if "?" in url else "?"
+    return url + sep + "scid=af_pc_etc&sc2id=af_101_0_0"
 
 # ── 対象商品リスト ────────────────────────────────────────────────────────────
 PRODUCTS = [

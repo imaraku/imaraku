@@ -32,10 +32,18 @@ SITE_URL     = "https://imaraku.github.io/imaraku/imaraku.html"
 CACHE_FILE   = "ranking_cache.json"
 
 # レアアイテム検出キーワード（新規ランクインしたら即ツイート）
+# 注: 「カード」「グッズ」「限定」などの一般名詞は誤検出を招くため、
+# 固有名詞・プラットフォーム名に絞り込んでいる
 RARE_KEYWORDS = [
-    "ゲーム", "ソフト", "Switch", "PlayStation", "PS5", "Xbox",
-    "シール", "ステッカー", "ドロップシール", "ボンボン",
-    "グッズ", "限定", "新発売", "入荷", "フィギュア", "カード",
+    # ゲーム機・ソフト関連
+    "Nintendo Switch", "Switch2", "PlayStation", "PS5", "Xbox",
+    # ポケモン・鬼滅・ジャンプ系人気IP
+    "ポケモン", "ポケットモンスター", "鬼滅", "ワンピース", "推しの子",
+    "Apple", "iPhone", "iPad", "AirPods", "Meta Quest",
+    # トレカ系（ポケカ・遊戯王・MTG 等）
+    "ポケカ", "遊戯王", "マジック：ザ・ギャザリング",
+    # イベント・抽選系
+    "抽選販売", "予約受付", "先行予約",
 ]
 
 # 常連アイテムのツイートテンプレート（月・水・金でローテーション）
@@ -298,19 +306,23 @@ def main():
             print(f"  {i+1}. {item['name']}")
 
         # 新規ランクイン（レアアイテム）検出 → 即ツイート
-        new_items = [i for i in ranking_items if i['name'] not in prev_names]
-        rare_new = [
-            i for i in new_items
-            if any(kw in i['name'] for kw in RARE_KEYWORDS)
-        ]
-
-        if rare_new:
-            print(f"  🚨 レアアイテム新規ランクイン: {[i['name'] for i in rare_new]}")
-            tweet = tweet_rare_item(rare_new)
-            print(f"\n投稿内容（レアアイテム）:\n{tweet}\n")
-            post_tweet(tweet)
+        # ※ 初回実行（キャッシュ空）は全件が"新規"扱いになるため、誤ツイートを避けてスキップ
+        if not prev_names:
+            print("  初回実行（キャッシュ空）のため、レアアイテム検出はスキップ")
         else:
-            print("  新規レアアイテムなし")
+            new_items = [i for i in ranking_items if i['name'] not in prev_names]
+            rare_new = [
+                i for i in new_items
+                if any(kw in i['name'] for kw in RARE_KEYWORDS)
+            ]
+
+            if rare_new:
+                print(f"  🚨 レアアイテム新規ランクイン: {[i['name'] for i in rare_new]}")
+                tweet = tweet_rare_item(rare_new)
+                print(f"\n投稿内容（レアアイテム）:\n{tweet}\n")
+                post_tweet(tweet)
+            else:
+                print("  新規レアアイテムなし")
 
     # ② 定期ツイート（月・水・金 かつ 今日まだ投稿していない場合）
     # ※ ランキング取得の成否に関わらず実行する

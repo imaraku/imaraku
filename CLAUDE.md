@@ -49,6 +49,10 @@ imaraku/                        ← リポジトリルート
 | `adidas` | adidasセール（常設ではない） | false |
 | `nike` | NIKEセール（常設ではない） | false |
 | `mobilebonus` | 楽天モバイル限定+2倍（常設ではない） | false |
+| `repeat_purchase` | リピート購入 +1倍（マラソン期間中のみ開催） | false |
+| `guerrilla` | ゲリラ 全店+1倍（不定期） | false |
+| `superdeal_4h` | スーパーDEAL 4時間限定（マラソン期間中のみ開催） | false |
+| `mobiledeal` | 楽天モバイル×スーパーDEAL（マラソン期間中のみ開催） | false |
 
 ---
 
@@ -109,10 +113,10 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 
 | ワークフロー | cron（UTC） | JST換算 |
 |---|---|---|
-| check-campaigns | 毎時 奇数(15,17,19,21,23,1,3,5,7,9,11,13) | 2時間ごと |
-| daily-tweet | 0 15/3/9/11 * * * | 0時/12時/18時/20時 JST |
-| marathon-preannounce | 50 10 * * * | 毎日19:50 JST |
-| ranking-check | 0 */3 * * * | 3時間ごと |
+| check-campaigns | `0 15,17,19,21,23,1,3,5,7,9,11,13 * * *` | 2時間ごと |
+| daily-tweet | `0 15 * * *` / `0 3 * * *` / `0 9 * * *` / `0 11 * * *`（4本） | 0時/12時/18時/20時 JST |
+| marathon-preannounce | `50 10 * * *` | 毎日19:50 JST |
+| ranking-check | `0 */3 * * *` | 3時間ごと |
 
 全ワークフローに `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` 設定済み。
 
