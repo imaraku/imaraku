@@ -73,15 +73,12 @@ def build_thread() -> list[str]:
 
 
 # ── 投稿処理 ──────────────────────────────────────────────────────────────────
-def post_tweet(text: str, reply_to_id: str = None) -> str | None:
+def post_tweet(text: str) -> str | None:
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-    body = {"text": text}
-    if reply_to_id:
-        body["reply"] = {"in_reply_to_tweet_id": reply_to_id}
     resp = requests.post(
         "https://api.twitter.com/2/tweets",
         auth=auth,
-        json=body,
+        json={"text": text},
         headers={"Content-Type": "application/json"},
     )
     if resp.status_code == 201:
@@ -94,19 +91,18 @@ def post_tweet(text: str, reply_to_id: str = None) -> str | None:
 
 def main():
     tweets = build_thread()
-    print(f"=== ポケモンカード抽選スレッド投稿 ({len(tweets)}件) ===\n")
+    print(f"=== ポケモンカード抽選投稿 ({len(tweets)}件) ===\n")
 
-    last_id = None
     for i, text in enumerate(tweets, 1):
         print(f"── ツイート {i}/{len(tweets)} ──")
         print(text)
         print()
-        last_id = post_tweet(text, reply_to_id=last_id)
-        if last_id is None:
+        tweet_id = post_tweet(text)
+        if tweet_id is None:
             print("投稿に失敗したため中断します。", file=sys.stderr)
             sys.exit(1)
 
-    print("\n🎉 スレッド投稿完了！")
+    print("\n🎉 投稿完了！")
 
 
 if __name__ == "__main__":
