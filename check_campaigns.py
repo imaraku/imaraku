@@ -61,17 +61,21 @@ CAMPAIGNS = [
         "default": False,
     },
     {
+        # 勝利ボーナスの検出は「勝利」「勝ちました」「ポイント2倍エントリー」等の
+        # 勝利マーカーが必須。チーム名だけでは常時ページ内に存在するため false 判定。
         "key": "eagles",
         "url": "https://event.rakuten.co.jp/campaign/sports/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
-        "active_kw": ["EAGLES", "イーグルス"],
+        "active_kw": ["イーグルス勝利", "EAGLES勝利", "イーグルスが勝ちました",
+                      "イーグルス勝ちました", "勝利記念"],
         "default": False,
     },
     {
         "key": "vissel",
         "url": "https://event.rakuten.co.jp/campaign/sports/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
-        "active_kw": ["VISSEL", "ヴィッセル"],
+        "active_kw": ["ヴィッセル勝利", "VISSEL勝利", "ヴィッセルが勝ちました",
+                      "ヴィッセル勝ちました", "神戸勝利"],
         "default": False,
     },
     {
@@ -538,6 +542,13 @@ def main():
         if results.get("marathon_pointup") != p_flag:
             print(f"  [marathon_pointup] キーワード判定={results.get('marathon_pointup')} → スケジュール判定={p_flag} で上書き")
         results["marathon_pointup"] = p_flag
+
+    # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
+    if not results.get("marathon", False):
+        for k in ["repeat_purchase", "guerrilla", "superdeal_4h", "mobiledeal"]:
+            if results.get(k):
+                print(f"  [{k}] マラソン非開催のため false に補正")
+                results[k] = False
 
     print("\n── 結果まとめ ──")
     for key, val in results.items():
