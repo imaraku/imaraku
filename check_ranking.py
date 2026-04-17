@@ -26,10 +26,12 @@ API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
 
-# 楽天ウェブサービスのアプリID（無料登録: https://webservice.rakuten.co.jp/）
-# 設定がない場合はスクレイピングにフォールバック（ただし現状 ranking.rakuten.co.jp は
-# Bot 遮断で 403 のため、API を設定しないと急上昇アイテムの検知は機能しない）
-RAKUTEN_APP_ID = os.environ.get("RAKUTEN_APP_ID", "").strip()
+# 楽天ウェブサービスの認証情報（無料登録: https://webservice.rakuten.co.jp/）
+# 2024年以降の新APIは applicationId + accessKey + Origin ヘッダの3点セットが必要。
+# 未設定時はスクレイピングへフォールバック（ranking.rakuten.co.jp は Bot 遮断で 403）。
+RAKUTEN_APP_ID     = os.environ.get("RAKUTEN_APP_ID", "").strip()
+RAKUTEN_ACCESS_KEY = os.environ.get("RAKUTEN_ACCESS_KEY", "").strip()
+RAKUTEN_ORIGIN     = os.environ.get("RAKUTEN_ORIGIN", "https://imaraku.github.io").strip()
 
 # ── 定数 ─────────────────────────────────────────────────────────────────────
 JST          = datetime.timezone(datetime.timedelta(hours=9))
@@ -189,19 +191,22 @@ def post_tweet(text: str) -> bool:
 # ── ランキング取得 ─────────────────────────────────────────────────────────────
 
 def fetch_ranking_via_api() -> list[dict]:
-    """楽天ウェブサービス API でランキングを取得する（RAKUTEN_APP_ID 必須）。"""
-    if not RAKUTEN_APP_ID:
+    """楽天ウェブサービス API でランキングを取得する。
+    新API（openapi.rakuten.co.jp）は applicationId + accessKey + Origin が必須。"""
+    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
         return []
-    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20170628"
+    url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
     params = {
         "format": "json",
         "applicationId": RAKUTEN_APP_ID,
+        "accessKey": RAKUTEN_ACCESS_KEY,
         "genreId": 0,            # 総合ランキング
         "period": "realtime",    # リアルタイム
         "hits": 20,
     }
+    headers = {"Origin": RAKUTEN_ORIGIN}
     try:
-        r = requests.get(url, params=params, timeout=20)
+        r = requests.get(url, params=params, headers=headers, timeout=20)
         if r.status_code != 200:
             print(f"⚠️ 楽天API エラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
             return []

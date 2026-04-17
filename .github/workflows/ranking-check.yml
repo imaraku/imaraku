@@ -34,6 +34,7 @@ jobs:
           TWITTER_ACCESS_TOKEN:        ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
           RAKUTEN_APP_ID:              ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY:          ${{ secrets.RAKUTEN_ACCESS_KEY }}
         run: python check_ranking.py
 
       - name: キャッシュをコミット
