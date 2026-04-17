@@ -1,0 +1,8 @@
+{
+  "entry_start": null,
+  "pointup_start": null,
+  "pointup_end": null,
+  "source": "manual",
+  "updated_at": null,
+  "_comment": "ISO8601(JST, +09:00)形式。nullなら未設定。check_campaigns.pyが自動取得を試み、成功したらsourceを'auto'に更新します。手動で上書きしたい場合は source を 'manual' にしておけば auto で上書きされません。"
+}

@@ -11,6 +11,7 @@ HTML ファイルはこれらの JSON をページ読み込み時に動的取得
 HTML 自体を書き換える必要がなくなりました。
 """
 
+import datetime
 import json
 import os
 import re
@@ -18,6 +19,8 @@ import sys
 from urllib.parse import urlparse
 
 import requests
+
+JST = datetime.timezone(datetime.timedelta(hours=9))
 
 HEADERS = {
     "User-Agent": (
@@ -29,8 +32,10 @@ HEADERS = {
     "Accept": "text/html,application/xhtml+xml,*/*;q=0.8",
 }
 
-STATUS_JSON  = "campaign_status.json"
-NEW_JSON     = "new_campaigns.json"
+STATUS_JSON    = "campaign_status.json"
+NEW_JSON       = "new_campaigns.json"
+SCHEDULE_JSON  = "marathon_schedule.json"
+MARATHON_URL   = "https://event.rakuten.co.jp/campaign/point-up/marathon/"
 
 # ─── 既知キャンペーン定義 ─────────────────────────────────────────────────
 # key        : campaign_status.json のキー（HTML の CAMPAIGN_STATUS と一致）
@@ -224,6 +229,160 @@ def fetch(url: str, timeout: int = 15) -> str | None:
     return result
 
 
+# ─── マラソン スケジュール抽出 ─────────────────────────────────────────────
+# ページ内テキストから「yyyy年m月d日(曜)hh:mm」や「m月d日hh:mm〜」を探す。
+# ポイントアップ期間（例: 4/4 20:00 〜 4/11 01:59）と
+# エントリー期間（例: 4/1 10:00 〜 4/11 01:59）の2種類がよくある。
+
+# 「2026年4月4日（土）20:00」または「4月4日(土)20:00」にマッチ
+_DATE_RE = re.compile(
+    r'(?:(\d{4})年)?(\d{1,2})月(\d{1,2})日'         # 日付
+    r'(?:[（(][^）)]{1,3}[）)])?'                   # （土）等 任意
+    r'\s*(\d{1,2})[:：](\d{2})'                     # 時刻
+)
+
+# 期間表記: 「開始 〜 終了」 (〜や～、-の揺れに対応)
+_RANGE_RE = re.compile(
+    r'((?:\d{4}年)?\d{1,2}月\d{1,2}日(?:[（(][^）)]{1,3}[）)])?\s*\d{1,2}[:：]\d{2})'
+    r'\s*[〜～\-]\s*'
+    r'((?:\d{4}年)?\d{1,2}月\d{1,2}日(?:[（(][^）)]{1,3}[）)])?\s*\d{1,2}[:：]\d{2})'
+)
+
+
+def _parse_jst(text: str, fallback_year: int) -> datetime.datetime | None:
+    m = _DATE_RE.search(text)
+    if not m:
+        return None
+    year = int(m.group(1)) if m.group(1) else fallback_year
+    month, day, hour, minute = int(m.group(2)), int(m.group(3)), int(m.group(4)), int(m.group(5))
+    try:
+        return datetime.datetime(year, month, day, hour, minute, tzinfo=JST)
+    except ValueError:
+        return None
+
+
+def extract_marathon_schedule(html: str) -> dict | None:
+    """マラソンページHTMLから開催期間を抽出。見つからなければNone。"""
+    # タグ除去してテキスト化
+    text = re.sub(r'<[^>]+>', ' ', html)
+    text = re.sub(r'\s+', ' ', text)
+
+    now = datetime.datetime.now(JST)
+    fallback_year = now.year
+
+    ranges = _RANGE_RE.findall(text)
+    if not ranges:
+        return None
+
+    # (start_dt, end_dt) のペアを抽出し、未来〜今日の範囲にある最短の期間を採用
+    candidates = []
+    for start_txt, end_txt in ranges:
+        s = _parse_jst(start_txt, fallback_year)
+        e = _parse_jst(end_txt, fallback_year)
+        if not s or not e:
+            continue
+        # 年跨ぎ補正: 終了が開始より前なら終了を翌年に
+        if e < s:
+            e = e.replace(year=e.year + 1)
+        # 過去すぎ（30日以上前に終わっている）は除外
+        if e < now - datetime.timedelta(days=30):
+            continue
+        # 未来すぎ（1年以上先）も除外
+        if s > now + datetime.timedelta(days=365):
+            continue
+        candidates.append((s, e))
+
+    if not candidates:
+        return None
+
+    # ポイントアップ期間の候補: 開始が20時台（マラソンは通常20:00開始）
+    pointup = next(((s, e) for s, e in candidates if s.hour == 20), None)
+    # エントリー期間の候補: 開始が10時前後（通常エントリーは10:00開始）かつ pointup と終了時刻が一致
+    entry = None
+    if pointup:
+        entry = next(
+            ((s, e) for s, e in candidates if s.hour < 20 and abs((e - pointup[1]).total_seconds()) < 3600),
+            None,
+        )
+    if not pointup:
+        # 20時開始が見つからない場合は最初の候補を pointup として扱う
+        pointup = candidates[0]
+
+    result = {
+        "pointup_start": pointup[0].isoformat(),
+        "pointup_end":   pointup[1].isoformat(),
+        "entry_start":   entry[0].isoformat() if entry else None,
+    }
+    return result
+
+
+def update_marathon_schedule() -> dict:
+    """マラソンページから日程を抽出して marathon_schedule.json を更新。
+    既存が source='manual' なら上書きしない。"""
+    existing = load_json(SCHEDULE_JSON, {})
+    if existing.get("source") == "manual" and existing.get("pointup_end"):
+        # 手動設定が有効期限内なら触らない
+        try:
+            end = datetime.datetime.fromisoformat(existing["pointup_end"])
+            if end > datetime.datetime.now(JST):
+                print("  [schedule] 手動設定を維持（未終了）")
+                return existing
+        except Exception:
+            pass
+
+    html = fetch(MARATHON_URL)
+    if not html:
+        print("  [schedule] ページ取得失敗 → 既存値維持")
+        return existing
+
+    extracted = extract_marathon_schedule(html)
+    if not extracted:
+        print("  [schedule] 日程の抽出に失敗 → 既存値維持")
+        return existing
+
+    new_schedule = {
+        "entry_start":   extracted.get("entry_start"),
+        "pointup_start": extracted["pointup_start"],
+        "pointup_end":   extracted["pointup_end"],
+        "source":        "auto",
+        "updated_at":    datetime.datetime.now(JST).isoformat(),
+    }
+    save_json(SCHEDULE_JSON, new_schedule)
+    print(f"  [schedule] ✓ 自動抽出: {new_schedule['pointup_start']} 〜 {new_schedule['pointup_end']}")
+    return new_schedule
+
+
+def marathon_flags_from_schedule(schedule: dict) -> tuple[bool | None, bool | None]:
+    """スケジュールから現在時刻基準で (marathon, marathon_pointup) を計算。
+    スケジュール無効の場合は (None, None) を返し、呼び出し側はキーワード判定にフォールバックする。"""
+    if not schedule:
+        return (None, None)
+    try:
+        p_start = schedule.get("pointup_start")
+        p_end   = schedule.get("pointup_end")
+        if not p_start or not p_end:
+            return (None, None)
+        p_start_dt = datetime.datetime.fromisoformat(p_start)
+        p_end_dt   = datetime.datetime.fromisoformat(p_end)
+    except Exception:
+        return (None, None)
+
+    now = datetime.datetime.now(JST)
+    e_start = schedule.get("entry_start")
+    e_start_dt = None
+    if e_start:
+        try:
+            e_start_dt = datetime.datetime.fromisoformat(e_start)
+        except Exception:
+            pass
+
+    # エントリー期間開始 〜 ポイントアップ終了 の間は marathon=true
+    start_of_marathon = e_start_dt if e_start_dt else p_start_dt
+    marathon = start_of_marathon <= now <= p_end_dt
+    pointup  = p_start_dt <= now <= p_end_dt
+    return (marathon, pointup)
+
+
 def check_campaign(camp: dict) -> bool:
     text = fetch(camp["url"])
     if text is None:
@@ -366,6 +525,19 @@ def main():
     results = {}
     for camp in CAMPAIGNS:
         results[camp["key"]] = check_campaign(camp)
+
+    # 1-b. マラソン スケジュール取得 → 時刻ベースで marathon / marathon_pointup を上書き
+    print("\n── 1-b. マラソン スケジュール判定 ──")
+    schedule = update_marathon_schedule()
+    m_flag, p_flag = marathon_flags_from_schedule(schedule)
+    if m_flag is not None:
+        if results.get("marathon") != m_flag:
+            print(f"  [marathon] キーワード判定={results.get('marathon')} → スケジュール判定={m_flag} で上書き")
+        results["marathon"] = m_flag
+    if p_flag is not None:
+        if results.get("marathon_pointup") != p_flag:
+            print(f"  [marathon_pointup] キーワード判定={results.get('marathon_pointup')} → スケジュール判定={p_flag} で上書き")
+        results["marathon_pointup"] = p_flag
 
     print("\n── 結果まとめ ──")
     for key, val in results.items():

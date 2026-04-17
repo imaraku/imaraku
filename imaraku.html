@@ -1781,13 +1781,32 @@
   restoreDismissed();
   applyFilter('essential'); // デフォルト値で即時表示
 
+  // marathon_schedule.json の開始/終了時刻と現在時刻(JST)を比較して
+  // marathon / marathon_pointup を分単位で上書きする
+  function applyMarathonSchedule(schedule) {
+    if (!schedule || !schedule.pointup_start || !schedule.pointup_end) return;
+    var now = new Date(); // クライアント端末のローカル時刻（表示される時計と一致）
+    var pStart = new Date(schedule.pointup_start);
+    var pEnd   = new Date(schedule.pointup_end);
+    if (isNaN(pStart.getTime()) || isNaN(pEnd.getTime())) return;
+    var eStart = schedule.entry_start ? new Date(schedule.entry_start) : pStart;
+    if (isNaN(eStart.getTime())) eStart = pStart;
+    CAMPAIGN_STATUS.marathon         = (now >= eStart && now <= pEnd);
+    CAMPAIGN_STATUS.marathon_pointup = (now >= pStart && now <= pEnd);
+  }
+
   // campaign_status.json を取得して最新キャンペーン状態に更新
   // （ページを開くたびに実行 → GitHub Actions の実行タイミングに依存しない）
   fetch('./campaign_status.json?v=' + Date.now())
     .then(function(r) { return r.ok ? r.json() : null; })
     .then(function(data) {
-      if (!data) return;
-      Object.assign(CAMPAIGN_STATUS, data);
+      if (data) Object.assign(CAMPAIGN_STATUS, data);
+      // スケジュール判定で上書き（分単位で正確）
+      return fetch('./marathon_schedule.json?v=' + Date.now());
+    })
+    .then(function(r) { return r && r.ok ? r.json() : null; })
+    .then(function(schedule) {
+      applyMarathonSchedule(schedule);
       updateNoticeBanner();
       applyFilter(currentMode);
       // 🆕 自動検出キャンペーンの表示（new_campaigns.json）

@@ -1,6 +1,6 @@
 {
-  "marathon": true,
-  "marathon_pointup": true,
+  "marathon": false,
+  "marathon_pointup": false,
   "eagles": true,
   "vissel": true,
   "biccamera": true,
@@ -12,6 +12,6 @@
   "mobilebonus": false,
   "repeat_purchase": false,
   "guerrilla": false,
-  "superdeal_4h": true,
-  "mobiledeal": true
+  "superdeal_4h": false,
+  "mobiledeal": false
 }
