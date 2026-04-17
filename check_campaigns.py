@@ -67,7 +67,8 @@ CAMPAIGNS = [
         "url": "https://event.rakuten.co.jp/campaign/sports/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
         "active_kw": ["イーグルス勝利", "EAGLES勝利", "イーグルスが勝ちました",
-                      "イーグルス勝ちました", "勝利記念"],
+                      "イーグルス勝ちました", "勝利記念", "W勝利",
+                      "EAGLES勝", "イーグルス勝"],
         "default": False,
     },
     {
@@ -75,7 +76,8 @@ CAMPAIGNS = [
         "url": "https://event.rakuten.co.jp/campaign/sports/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
         "active_kw": ["ヴィッセル勝利", "VISSEL勝利", "ヴィッセルが勝ちました",
-                      "ヴィッセル勝ちました", "神戸勝利"],
+                      "ヴィッセル勝ちました", "神戸勝利", "W勝利",
+                      "VISSEL勝", "ヴィッセル勝", "神戸勝"],
         "default": False,
     },
     {
