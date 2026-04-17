@@ -371,6 +371,66 @@ def update_marathon_schedule() -> dict:
     return new_schedule
 
 
+# ─── 勝ったら倍（sports）判定 ─────────────────────────────────────────────
+# sports ページは「W勝利！」バナーが画像化されていて HTML 文字列を解析しても
+# 検出できない。代わりに「過去のキャンペーン開催日一覧」テーブルから
+# 昨日（= 今日のポイント付与対象となる試合日）の結果を読み取る。
+
+SPORTS_URL_BARE = "https://event.rakuten.co.jp/campaign/sports/"
+
+# 例: 「4月17日（金） 楽天イーグルス＆ヴィッセル」「4月11日（土） 楽天イーグルス」
+# ヴィッセルのみの場合は「ヴィッセル」単独、両チーム勝利は＆または&で連結
+_SPORTS_ROW_RE = re.compile(
+    r'(\d{1,2})月(\d{1,2})日'
+    r'(?:[（(][^）)]{1,3}[）)])?'
+    r'\s*((?:楽天イーグルス|ヴィッセル神戸|ヴィッセル|イーグルス)'
+    r'(?:\s*[＆&]\s*(?:ヴィッセル神戸|ヴィッセル|楽天イーグルス|イーグルス))?)'
+)
+
+
+def detect_sports_wins(now: datetime.datetime) -> tuple[bool | None, bool | None]:
+    """sports ページの過去開催日一覧テーブルから、今日のW勝利状況を判定。
+    試合で勝った翌日が倍率対象日なので、今日の 0-23:59 は「昨日の試合結果」が効く。
+    深夜をまたぐ試合もあるため、昨日と一昨日の両方を確認する。
+
+    戻り値: (eagles_flag, vissel_flag)  Noneの場合はキーワード判定にフォールバック。"""
+    html = fetch(SPORTS_URL_BARE)
+    if not html:
+        return (None, None)
+
+    # HTML タグ除去してテキスト化（スペース区切り）
+    text = re.sub(r'<[^>]+>', ' ', html)
+    text = re.sub(r'\s+', ' ', text)
+
+    # 今日が何曜日で何月何日か
+    today = now.date()
+    candidates = [today - datetime.timedelta(days=1), today - datetime.timedelta(days=2)]
+
+    eagles = False
+    vissel = False
+    matched = False
+    for m in _SPORTS_ROW_RE.finditer(text):
+        mo, d, teams = int(m.group(1)), int(m.group(2)), m.group(3)
+        # 年は暦上の最新一致を採用（過去半年以内）
+        for cand in candidates:
+            if cand.month == mo and cand.day == d:
+                # 対象期間: 試合日翌日 = 今日
+                bonus_date = cand + datetime.timedelta(days=1)
+                if bonus_date == today:
+                    matched = True
+                    if "イーグルス" in teams:
+                        eagles = True
+                    if "ヴィッセル" in teams:
+                        vissel = True
+                    print(f"  [sports] {mo}/{d} の試合結果: {teams} → 今日({today}) 有効")
+                break
+
+    if not matched:
+        print(f"  [sports] 昨日・一昨日の試合結果が見つからず → キーワード判定にフォールバック")
+        return (None, None)
+    return (eagles, vissel)
+
+
 def marathon_flags_from_schedule(schedule: dict) -> tuple[bool | None, bool | None]:
     """スケジュールから現在時刻基準で (marathon, marathon_pointup) を計算。
     スケジュール無効の場合は (None, None) を返し、呼び出し側はキーワード判定にフォールバックする。"""
@@ -566,6 +626,19 @@ def main():
         if results.get("marathon_pointup") != p_flag:
             print(f"  [marathon_pointup] キーワード判定={results.get('marathon_pointup')} → スケジュール判定={p_flag} で上書き")
         results["marathon_pointup"] = p_flag
+
+    # 1-b2. 勝ったら倍（sports）は過去開催日テーブルで判定（バナー画像対策）
+    print("\n── 1-b2. 勝ったら倍 判定（過去開催日テーブル） ──")
+    now_jst = datetime.datetime.now(JST)
+    e_flag, v_flag = detect_sports_wins(now_jst)
+    if e_flag is not None:
+        if results.get("eagles") != e_flag:
+            print(f"  [eagles] キーワード判定={results.get('eagles')} → テーブル判定={e_flag} で上書き")
+        results["eagles"] = e_flag
+    if v_flag is not None:
+        if results.get("vissel") != v_flag:
+            print(f"  [vissel] キーワード判定={results.get('vissel')} → テーブル判定={v_flag} で上書き")
+        results["vissel"] = v_flag
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
     if not results.get("marathon", False):
