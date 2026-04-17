@@ -7,7 +7,7 @@
   "superdeal": true,
   "returnpurchaser": false,
   "newpurchaser": false,
-  "adidas": true,
+  "adidas": false,
   "nike": false,
   "mobilebonus": false,
   "repeat_purchase": false,

@@ -107,17 +107,22 @@ CAMPAIGNS = [
         "default": True,
     },
     {
+        # SALE/セール等のキーワードはページに常時残ることが多いため、
+        # 「開催中」「実施中」と明確に書かれている場合のみ true
         "key": "adidas",
         "url": "https://www.rakuten.ne.jp/gold/adidas/adidasdays/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了", "セールは終了"],
-        "active_kw": ["SALE", "セール", "50%", "40%", "30%", "20%", "OFF", "off"],
+        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了",
+                      "セールは終了", "先行セールは終了", "次回セール"],
+        "active_kw": ["開催中", "実施中", "SALE開催中", "セール開催中",
+                      "セール実施中", "本日最終日"],
         "default": False,
     },
     {
         "key": "nike",
         "url": "https://item.rakuten.co.jp/nike-official/c/0000000172/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "セールは終了"],
-        "active_kw": ["SALE", "セール", "60%", "50%", "40%", "30%", "OFF", "off"],
+        "active_kw": ["開催中", "実施中", "SALE開催中", "セール開催中",
+                      "セール実施中", "本日最終日"],
         "default": False,
     },
     {
