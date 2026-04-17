@@ -1100,6 +1100,26 @@
       nb.style.background = "#FFF3CD";
       nb.style.borderColor = "#E6A800";
       nb.style.color = "#5C3D00";
+    } else if (CAMPAIGN_STATUS.eagles && CAMPAIGN_STATUS.vissel && (isSpecialDay || day === 1 || day === 18)) {
+      // ★ レアチャンス: W勝利 × 特別日（赤+ゴールドのグラデ表示）
+      var label = (day === 1) ? "ワンダフルデー"
+                : (day === 18) ? "楽天市場の日"
+                : "0と5のつく日";
+      nb.innerHTML =
+        `🔥 <strong>レアチャンス！</strong> W勝利（⚾×⚽）× ${label} の合わせ技！ポイント倍率が大幅アップ✨「勝ったら倍」エントリーをお忘れなく！`;
+      nb.style.background = "linear-gradient(135deg, #FCE4EC 0%, #FFF8E7 100%)";
+      nb.style.borderColor = "#C62828";
+      nb.style.color = "#7B0000";
+    } else if ((CAMPAIGN_STATUS.eagles || CAMPAIGN_STATUS.vissel) && (isSpecialDay || day === 1 || day === 18)) {
+      var team2 = CAMPAIGN_STATUS.eagles ? "楽天イーグルス⚾" : "ヴィッセル神戸⚽";
+      var label2 = (day === 1) ? "ワンダフルデー"
+                 : (day === 18) ? "楽天市場の日"
+                 : "0と5のつく日";
+      nb.innerHTML =
+        `✨ <strong>お得デー！</strong> ${team2} 勝利 × ${label2} の合わせ技でポイント増量！「勝ったら倍」エントリーをお忘れなく！`;
+      nb.style.background = "linear-gradient(135deg, #E8EFF8 0%, #FFF8E7 100%)";
+      nb.style.borderColor = "#004B8D";
+      nb.style.color = "#003166";
     } else if (CAMPAIGN_STATUS.eagles && CAMPAIGN_STATUS.vissel) {
       nb.innerHTML =
         `🎉 <strong>W勝利！ポイント3倍！</strong> イーグルス⚾ × ヴィッセル神戸⚽ 両チーム勝利！「勝ったら倍」エントリーをお忘れなく！`;

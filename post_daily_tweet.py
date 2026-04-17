@@ -329,6 +329,87 @@ def tweet_zero_five_day() -> str:
     )
 
 
+def tweet_triple_combo(special_days: list, season_event: str = None) -> str:
+    """マラソン × W勝利 × 特別日/季節イベント → トリプル役満（年に数回の激レア）"""
+    events = season_event if season_event else "・".join(special_days)
+    return (
+        "🔥🔥🔥 超ビッグチャンス！役満デー！\n"
+        f"マラソン × W勝利（⚾×⚽）× {events} が奇跡の3重なり✨\n"
+        "\n"
+        "ポイント倍率が今月最大級に爆上がり📈\n"
+        "エントリー忘れは絶対NG！今日は全力で買いまわろう💰\n"
+        "\n"
+        "買いたいものがなくても楽券・Appleギフトで買い周りOK！\n"
+        "\n"
+        "まとめてエントリー👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        f"{hashtags(['core', 'marathon', 'eagles', 'vissel', 'poikatsu'])}"
+    )
+
+
+def tweet_marathon_x_victory(w_victory: bool, team: str = "") -> str:
+    """マラソン × 勝利（W勝利 or 片チーム）"""
+    if w_victory:
+        head = "🔥 ビッグチャンス！\nマラソン × W勝利（⚾×⚽）でポイント大増量！"
+    else:
+        head = f"🔥 ビッグチャンス！\nマラソン × {team}勝利でポイント増量！"
+    return (
+        f"{head}\n"
+        "\n"
+        "勝ったら倍エントリーを忘れずに、\n"
+        "買いまわりでさらに上乗せしよう💰\n"
+        "\n"
+        "楽券・Appleギフトで買い周りもOK！\n"
+        "\n"
+        "エントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        f"{hashtags(['core', 'marathon', 'eagles' if ('イーグルス' in team or w_victory) else 'vissel', 'poikatsu'])}"
+    )
+
+
+def tweet_w_victory_x_special(special_days: list, season_event: str = None) -> str:
+    """W勝利 × 特別日/季節イベント → レアな組み合わせ"""
+    events = season_event if season_event else "・".join(special_days)
+    return (
+        f"🎉 今日はレアなチャンス！\n"
+        f"W勝利（⚾×⚽）× {events} が重なりました✨\n"
+        "\n"
+        "勝ったら倍でポイント3倍 + 特別日ボーナスで\n"
+        "今日の買い物は大幅にお得💰\n"
+        "\n"
+        "「勝ったら倍」のエントリー忘れずに👇\n"
+        f"{SPORTS_URL}\n"
+        "\n"
+        "その他のエントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        f"{hashtags(['core', 'eagles', 'vissel', 'poikatsu'])}"
+    )
+
+
+def tweet_single_victory_x_special(team: str, special_days: list, season_event: str = None) -> str:
+    """片チーム勝利 × 特別日/季節イベント"""
+    events = season_event if season_event else "・".join(special_days)
+    cat = 'eagles' if 'イーグルス' in team else 'vissel'
+    return (
+        f"✨ 今日はお得デー！\n"
+        f"{team}勝利 × {events} の合わせ技！\n"
+        "\n"
+        "勝ったら倍でポイント2倍 + 特別日ボーナスで\n"
+        "普段よりぐっとお得に買えます💰\n"
+        "\n"
+        "「勝ったら倍」エントリー忘れずに👇\n"
+        f"{SPORTS_URL}\n"
+        "\n"
+        "その他のエントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        "\n"
+        f"{hashtags(['core', cat, 'poikatsu', 'saving'])}"
+    )
+
+
 def tweet_w_victory() -> str:
     """イーグルス＆ヴィッセル神戸W勝利 → ポイント3倍"""
     return (
@@ -459,9 +540,27 @@ def main():
         "クリスマス":   tweet_christmas,
     }
 
+    has_special = bool(special_days) or bool(season_event)
+    w_victory   = eagles and vissel
+    any_victory = eagles or vissel
+    victor_team = "楽天イーグルス" if eagles else ("ヴィッセル神戸" if vissel else "")
+
     # ── 優先度順に判定 ──────────────────────────────────────────────────────
-    if marathon and marathon_pointup and (special_days or season_event):
-        # ポイントアップ期間中 × 特別日 or 季節イベント → 最大のビッグチャンス
+    # ★ 最高優先: マラソン × W勝利 × 特別日 (年に数回の激レア役満)
+    if marathon and marathon_pointup and w_victory and has_special:
+        tweet = tweet_triple_combo(special_days, season_event)
+        label = f"トリプル役満（マラソン×W勝利×{'・'.join(special_days) if special_days else season_event}）"
+
+    elif marathon and marathon_pointup and w_victory:
+        tweet = tweet_marathon_x_victory(w_victory=True)
+        label = "マラソン×W勝利"
+
+    elif marathon and marathon_pointup and any_victory:
+        tweet = tweet_marathon_x_victory(w_victory=False, team=victor_team)
+        label = f"マラソン×{victor_team}勝利"
+
+    elif marathon and marathon_pointup and has_special:
+        # ポイントアップ期間中 × 特別日/季節イベント → ビッグチャンス
         tweet = tweet_marathon_big_chance(special_days, season_event)
         label = f"マラソン×{'・'.join(special_days) if special_days else season_event}（ビッグチャンス）"
 
@@ -474,6 +573,15 @@ def main():
         # エントリー期間のみ → まずエントリーを促す（まだ買わなくてOK）
         tweet = tweet_marathon_entry_only()
         label = "マラソン（エントリー期間のみ・ポイントアップ未開始）"
+
+    # ★ W勝利 × 特別日/季節イベント（マラソン無し）→ レアチャンス
+    elif w_victory and has_special:
+        tweet = tweet_w_victory_x_special(special_days, season_event)
+        label = f"W勝利×{'・'.join(special_days) if special_days else season_event}"
+
+    elif any_victory and has_special:
+        tweet = tweet_single_victory_x_special(victor_team, special_days, season_event)
+        label = f"{victor_team}勝利×{'・'.join(special_days) if special_days else season_event}"
 
     elif season_event:           # 季節イベント（母の日・父の日・クリスマス等）
         tweet = SEASON_TWEET_MAP[season_event]()
@@ -491,7 +599,7 @@ def main():
         tweet = tweet_zero_five_day()
         label = "0と5のつく日"
 
-    elif eagles and vissel:      # W勝利 → 3倍
+    elif w_victory:              # W勝利 → 3倍
         tweet = tweet_w_victory()
         label = "W勝利（イーグルス＆ヴィッセル）ポイント3倍"
 
