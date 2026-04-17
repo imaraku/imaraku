@@ -26,6 +26,11 @@ API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
 
+# 楽天ウェブサービスのアプリID（無料登録: https://webservice.rakuten.co.jp/）
+# 設定がない場合はスクレイピングにフォールバック（ただし現状 ranking.rakuten.co.jp は
+# Bot 遮断で 403 のため、API を設定しないと急上昇アイテムの検知は機能しない）
+RAKUTEN_APP_ID = os.environ.get("RAKUTEN_APP_ID", "").strip()
+
 # ── 定数 ─────────────────────────────────────────────────────────────────────
 JST          = datetime.timezone(datetime.timedelta(hours=9))
 RANKING_BASE = "https://ranking.rakuten.co.jp/"
@@ -183,8 +188,48 @@ def post_tweet(text: str) -> bool:
 
 # ── ランキング取得 ─────────────────────────────────────────────────────────────
 
+def fetch_ranking_via_api() -> list[dict]:
+    """楽天ウェブサービス API でランキングを取得する（RAKUTEN_APP_ID 必須）。"""
+    if not RAKUTEN_APP_ID:
+        return []
+    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20170628"
+    params = {
+        "format": "json",
+        "applicationId": RAKUTEN_APP_ID,
+        "genreId": 0,            # 総合ランキング
+        "period": "realtime",    # リアルタイム
+        "hits": 20,
+    }
+    try:
+        r = requests.get(url, params=params, timeout=20)
+        if r.status_code != 200:
+            print(f"⚠️ 楽天API エラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
+            return []
+        data = r.json()
+    except Exception as e:
+        print(f"⚠️ 楽天API 取得失敗: {e}", file=sys.stderr)
+        return []
+
+    items = []
+    for entry in data.get("Items", []):
+        it = entry.get("Item", {})
+        name = (it.get("itemName") or "").strip()
+        url  = add_affiliate(it.get("itemUrl") or "")
+        if name:
+            items.append({"name": name[:80], "url": url})
+    print(f"  API取得: {len(items)} 件")
+    return items
+
+
 def fetch_ranking() -> list[dict]:
-    """楽天ランキングページから上位アイテムを取得する。"""
+    """ランキング取得。API が使えればそれを優先、ダメならスクレイピングへフォールバック。"""
+    api_items = fetch_ranking_via_api()
+    if api_items:
+        return api_items
+
+    if not RAKUTEN_APP_ID:
+        print("  ℹ️  RAKUTEN_APP_ID 未設定: スクレイピングを試行（現状 403 で失敗する可能性大）")
+
     headers = {
         'User-Agent': (
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
@@ -321,9 +366,10 @@ def main():
             else:
                 print("  新規レアアイテムなし")
 
-    # ② 定期ツイート（月・水・金 かつ 今日まだ投稿していない場合）
+    # ② 定期ツイート（日曜以外の週6日 かつ 今日まだ投稿していない場合）
     # ※ ランキング取得の成否に関わらず実行する
-    if weekday in [0, 2, 4] and last_regular_date != today_str:
+    # 日曜は post_daily_tweet.py 側のNIKE特集ツイートと住み分け
+    if weekday in [0, 1, 2, 3, 4, 5] and last_regular_date != today_str:
         body, tag_categories = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
         tweet = body + "\n\n" + hashtags(tag_categories)
         print(f"\n投稿内容（定期・常連アイテム）:\n{tweet}\n")
