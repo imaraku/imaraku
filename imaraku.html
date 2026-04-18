@@ -1592,8 +1592,8 @@
     { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/?scid=af_pc_etc&sc2id=af_101_0_0", essential: false },
     { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/?scid=af_pc_etc&sc2id=af_101_0_0", essential: false, campaignKey: "biccamera" },
     { name: "スーパーDEAL Days", point: "最大50%還元", url: "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/", essential: false, campaignKey: "superdeal" },
-    { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/", essential: false },
-    { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/", essential: false },
+    { name: "楽天Fashionアプリ", point: "+1.5%", url: "https://brandavenue.rakuten.co.jp/contents/rfapp/?l-id=rfitem_bottom_banner_existing_app3points", essential: false },
+    { name: "楽天ビューティアプリ", point: "+2%", url: "https://beauty.rakuten.co.jp/cnt/topics/campaign/app2x/?l-id=wi_bty_app2x_hair_top_pc", essential: false },
   ];
 
   document.getElementById("everydayEntries").innerHTML =
@@ -1622,7 +1622,6 @@
 
   // 楽天ブックス（本・電子書籍を買う人向け → 全部モードのみ表示）
   const booksEntries = [
-    { name: "楽天ブックス 条件達成", point: "+2%", url: "https://books.rakuten.co.jp/", essential: false },
     { name: "楽天ブックス 初回利用", point: "+5%", url: "https://books.rakuten.co.jp/info/welcome-campaign/", essential: false },
     { name: "kobo 初回購入", point: "+19%", url: "https://books.rakuten.co.jp/event/e-book/camp-bookscollab/", essential: false },
     { name: "DVD・ブルーレイ", point: "+9%", url: "https://books.rakuten.co.jp/event/dvd-blu-ray/campaign/pointup/", essential: false }
@@ -1634,15 +1633,10 @@
   // ジャンル別エントリー（詳しい人向け → 全部モードのみ）
   const genreEntries = [
     { name: "日用品・ペット用品", point: "+4%", url: "https://event.rakuten.co.jp/genre/daily/", essential: false },
-    { name: "インテリア＆キッチン", point: "+4%", url: "https://event.rakuten.co.jp/brand/officialshop/interior/", essential: false },
     { name: "水・ソフトドリンク", point: "+11%", url: "https://event.rakuten.co.jp/drink/point/", essential: false },
-    { name: "キッズ・ベビーファッション", point: "+9%", url: "https://event.rakuten.co.jp/fashion/kids/", essential: false },
     { name: "コンタクト・カラコン", point: "+14%", url: "https://event.rakuten.co.jp/medicine/contactlens/coupon/new/", essential: false },
-    { name: "対象アイテム買いまわり", point: "+9%", url: "https://event.rakuten.co.jp/brand/cross-genre/", essential: false },
     { name: "海外通販×DEAL", point: "+5%", url: "https://event.rakuten.co.jp/superdeal/campaign/overseas/", essential: false },
     { name: "新生活フェア(抽選)1万pt", point: "抽選", url: "https://event.rakuten.co.jp/season/newlife/campaign/", essential: false },
-    { name: "MEGA DEAL(全額還元抽選)", point: "抽選", url: "https://event.rakuten.co.jp/superdeal/campaign/megadeal/", essential: false },
-    { name: "1等最大100%還元①", point: "抽選", url: "https://event.rakuten.co.jp/incentive/ichiba/lottery/event/20260320100/", essential: false },
   ];
 
   document.getElementById("genreEntries").innerHTML =
@@ -1662,11 +1656,8 @@
     { name: "最大半額クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
     { name: "楽天久しぶりの買い物1,000円クーポン", url: "https://event.rakuten.co.jp/campaign/returnpurchaser/", essential: true, campaignKey: "returnpurchaser" },
     { name: "楽天初めての買い物2,000円クーポン", url: "https://event.rakuten.co.jp/campaign/newpurchaser/", essential: true, campaignKey: "newpurchaser" },
-    { name: "ダイヤモンド・プラチナ777円クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: false },
-    { name: "楽天Fashion 2,000円クーポン", url: "https://brandavenue.rakuten.co.jp/", essential: false },
     { name: "ショップオープン記念2,000円クーポン", url: "https://event.rakuten.co.jp/coupon/newshop/", essential: false },
     { name: "ダイヤモンド会員特典クーポン", url: "https://point.rakuten.co.jp/club/rank/reward/", essential: false },
-    { name: "グローバルフェスタ2,026円クーポン", url: "https://event.rakuten.co.jp/overseas/campaign/seasoncoupon/", essential: false },
     { name: "BRAND BEAUTY 300円クーポン", url: "https://event.rakuten.co.jp/beauty/brand/official/", essential: false },
     { name: "洗剤複数購入500円クーポン（楽天24）", url: "https://24.rakuten.co.jp/campaign/detergent/", essential: false },
     { name: "在庫処分市30%offクーポン（楽天24）", url: "https://24.rakuten.co.jp/campaign/zaiko/", essential: false },
