@@ -194,9 +194,9 @@ def tweet_wonderful_day() -> str:
 def tweet_ichiba_day() -> str:
     return (
         "🏪 今日は楽天市場の日！（毎月18日）\n"
+        "エントリーするだけでOK！\n"
         "\n"
         "楽天カードで+1%ポイントUP✨\n"
-        "エントリーするだけでOK！\n"
         "\n"
         "まとめてエントリーはこちら👇\n"
         f"{SITE_URL}\n"
