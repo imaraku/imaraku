@@ -60,90 +60,76 @@ RARE_KEYWORDS = [
 REGULAR_TWEETS = [
     # コンタクトレンズ
     (
-        "👁 コンタクトレンズ、楽天で買ってますか？\n"
+        "👁 コンタクトレンズ、楽天で買ってる？\n"
         "\n"
         "実は市販・眼科より楽天市場の方が\n"
         "安いことがほとんど💡\n"
+        "ポイントも貯まる＆使えてお得🏆\n"
         "\n"
-        "しかもポイントが貯まる・使える！\n"
-        "ランキング上位の常連アイテムです🏆\n"
-        "\n"
-        f"今日のランキングはこちら👇\n{RANKING_URL}\n"
-        "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}",
-        ["core", "contact", "poikatsu", "saving"],
+        f"ランキング👇\n{RANKING_URL}\n"
+        f"エントリー👇\n{SITE_URL}",
+        ["core", "contact", "poikatsu"],
     ),
     # お水・炭酸水
     (
         "💧 重い飲料こそ楽天で！\n"
         "\n"
         "お水・炭酸水を箱買いしても\n"
-        "玄関まで届けてくれるので体への負担ゼロ✨\n"
+        "玄関まで届くから体への負担ゼロ✨\n"
+        "スーパーより安く、ポイントも👍\n"
         "\n"
-        "スーパーで運ぶより安くてポイントも貯まる👍\n"
-        "\n"
-        f"ランキングをチェック👇\n{RANKING_URL}\n"
-        "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}",
-        ["core", "water", "poikatsu", "saving"],
+        f"ランキング👇\n{RANKING_URL}\n"
+        f"エントリー👇\n{SITE_URL}",
+        ["core", "water", "poikatsu"],
     ),
     # ティッシュ・トイレットペーパー
     (
         "🧻 かさばる日用品も楽天にお任せ！\n"
         "\n"
         "ティッシュ・トイレットペーパーは\n"
-        "重くてかさばってスーパーで買うのが大変…😅\n"
-        "楽天なら玄関まで届けてくれます✨\n"
+        "重くてかさばって大変…😅\n"
+        "楽天なら玄関まで届きます✨\n"
+        "まとめ買いでさらにお得💡\n"
         "\n"
-        "まとめ買いでさらにお得＆ポイントも貯まる💡\n"
-        "\n"
-        f"ランキングをチェック👇\n{RANKING_URL}\n"
-        "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}",
-        ["core", "daily", "poikatsu", "saving"],
+        f"ランキング👇\n{RANKING_URL}\n"
+        f"エントリー👇\n{SITE_URL}",
+        ["core", "daily", "poikatsu"],
     ),
     # お米
     (
         "🍚 重いお米も楽天でお得に！\n"
         "\n"
-        "5kg・10kgのお米をスーパーで運ぶのは重労働…\n"
-        "楽天なら玄関まで届けてくれます🏠\n"
+        "5kg・10kgのお米を運ぶのは重労働…\n"
+        "楽天なら玄関まで届きます🏠\n"
+        "ポイントも貯まる＆定期便割引も💡\n"
         "\n"
-        "ポイントも貯まってさらにお得💡\n"
-        "定期購入でさらに割引になるショップも！\n"
-        "\n"
-        f"ランキングをチェック👇\n{RANKING_URL}\n"
-        "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}",
-        ["core", "rice", "poikatsu", "saving"],
+        f"ランキング👇\n{RANKING_URL}\n"
+        f"エントリー👇\n{SITE_URL}",
+        ["core", "rice", "poikatsu"],
     ),
     # 洗剤・柔軟剤
     (
         "🫧 洗剤・柔軟剤も楽天でまとめ買い！\n"
         "\n"
-        "重くてかさばる洗剤類こそ宅配が便利✨\n"
-        "楽天市場ならポイントが貯まって\n"
+        "重くてかさばる洗剤こそ宅配が便利✨\n"
+        "ポイントが貯まって\n"
         "スーパーよりお得なことも💡\n"
         "\n"
-        f"ランキングをチェック👇\n{RANKING_URL}\n"
-        "\n"
-        f"エントリーを忘れずに👇\n{SITE_URL}",
-        ["core", "detergent", "daily", "poikatsu"],
+        f"ランキング👇\n{RANKING_URL}\n"
+        f"エントリー👇\n{SITE_URL}",
+        ["core", "detergent", "daily"],
     ),
     # ランキング全般
     (
-        "🏆 楽天ランキング、チェックしてますか？\n"
+        "🏆 楽天ランキング、チェックしてる？\n"
         "\n"
-        "毎日リアルタイムで更新されるランキングは\n"
+        "毎日リアルタイムで更新されるから\n"
         "買い物のヒントにもなります🛒\n"
+        "エントリー併用でポイント最大化💡\n"
         "\n"
-        "エントリーと合わせてポイント最大化で\n"
-        "賢くお買い物しよう💡\n"
-        "\n"
-        f"今日のランキングはこちら👇\n{RANKING_URL}\n"
-        "\n"
-        f"エントリーまとめ👇\n{SITE_URL}",
-        ["core", "ranking", "poikatsu", "saving"],
+        f"ランキング👇\n{RANKING_URL}\n"
+        f"エントリー👇\n{SITE_URL}",
+        ["core", "ranking", "poikatsu"],
     ),
 ]
 
@@ -306,24 +292,27 @@ def fetch_ranking() -> list[dict]:
 
 # ── ツイート文 生成 ─────────────────────────────────────────────────────────────
 
-def tweet_rare_item(items: list[dict]) -> str:
+def tweet_rare_item(items: list) -> str:
     """レアアイテム新規ランクインのツイートを生成する。"""
     top = items[0]
     name = top['name']
     item_url = top['url'] or RANKING_URL
 
+    # 商品名が長い場合は切り詰める（Twitter 280字制限対応）
+    # 日本語換算で約40文字を上限に（タイトル＋他要素で〜250字を目指す）
+    if len(name) > 40:
+        name = name[:38] + "…"
+
     return (
-        f"🚨 楽天ランキングに「{name}」が急上昇！\n"
+        f"🚨 楽天ランキングに急上昇！\n"
+        f"「{name}」\n"
         "\n"
-        "人気アイテムはすぐ売り切れることも😰\n"
+        "人気アイテムはすぐ売り切れも😰\n"
         "気になる方はお早めに✨\n"
         "\n"
-        f"▶ 商品を見る\n{item_url}\n"
-        "\n"
-        "エントリーしてからお買い物でポイントお得👇\n"
-        f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'ranking', 'poikatsu', 'saving'])}"
+        f"▶ 商品\n{item_url}\n"
+        f"▶ エントリー\n{SITE_URL}\n"
+        f" {hashtags(['core', 'ranking', 'poikatsu'], max_tags=3)}"
     )
 
 

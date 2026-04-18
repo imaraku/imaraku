@@ -142,17 +142,15 @@ def post_tweet(text: str) -> bool:
 def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> str:
     events = season_event if season_event else "・".join(special_days)
     return (
-        f"🔥 今日はビッグチャンス！\n"
-        f"マラソン × {events} が重なってます✨\n"
+        f"🔥 ビッグチャンス！\n"
+        f"マラソン × {events} 重なり✨\n"
         "\n"
-        "今日のお買い物でポイントをまとめて稼ごう💡\n"
+        "ポイント大増量のチャンス💡\n"
+        "楽券・Appleギフトで買い周りOK！\n"
         "\n"
-        "買いたいものがなくても楽券・Appleギフトで買い周りOK！\n"
-        "\n"
-        "まとめてエントリーはこちら👇\n"
+        "エントリーまとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'marathon', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -161,19 +159,15 @@ def tweet_marathon_entry_only() -> str:
     return (
         "🏃 お買物マラソン、エントリー受付中！\n"
         "\n"
-        "⚠️ ただし今はまだ「エントリー期間」です\n"
-        "ポイントアップが始まるのはもう少し後。\n"
+        "⚠️ 今はまだ「エントリー期間」\n"
+        "ポイントアップはまだだが、\n"
+        "エントリー忘れると対象外💧\n"
         "\n"
-        "✅ でも今のうちに【エントリーだけ】はしておこう！\n"
-        "エントリーしないとポイントアップ対象外になります。\n"
+        "✅今のうちにエントリー済ませよう！\n"
         "\n"
-        "ポイントアップ期間が始まったら\n"
-        "一気に複数ショップで買いまわりがお得🛒\n"
-        "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'marathon', 'entry', 'poikatsu'])}"
+        f" {hashtags(['core', 'marathon', 'entry'], max_tags=3)}"
     )
 
 
@@ -182,15 +176,14 @@ def tweet_marathon_normal() -> str:
         "🏃 お買物マラソン開催中！\n"
         "\n"
         "買いたいものがない方も\n"
-        "📦 楽券(eギフト)→ローソン・ファミマ・コメダ等で使えます\n"
+        "📦 楽券(eギフト)→コンビニ・コメダ等OK\n"
         f"{RAKKEN_URL}\n"
-        "🍎 Appleギフトカードも対象！\n"
+        "🍎 Appleギフトカードも対象\n"
         f"{APPLE_URL}\n"
         "\n"
         "エントリーまとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'marathon', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -198,13 +191,12 @@ def tweet_wonderful_day() -> str:
     return (
         "🎉 今日はワンダフルデー！（毎月1日）\n"
         "\n"
-        "楽天カード利用でポイントUPの特別な日✨\n"
-        "エントリーするだけでOK！今月もお得に始めよう🛒\n"
+        "楽天カード利用でポイントUP✨\n"
+        "エントリーするだけ！今月もお得に🛒\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'wonderful', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'wonderful', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -215,10 +207,9 @@ def tweet_ichiba_day() -> str:
         "\n"
         "楽天カードで+1%ポイントUP✨\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'ichibaday', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'ichibaday', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -229,10 +220,9 @@ def tweet_new_year() -> str:
         "今年も楽天でポイントを賢く貯めよう💡\n"
         "新年のお買い物は必ずエントリーから✅\n"
         "\n"
-        "今日のエントリーをチェック👇\n"
+        "今日のエントリー👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'newyear', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'newyear', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -240,14 +230,13 @@ def tweet_valentine() -> str:
     return (
         "🍫 今日はバレンタイン！\n"
         "\n"
-        "楽天市場でチョコレートを買うなら\n"
+        "楽天市場でチョコを買うなら\n"
         "エントリーしてからがお得💡\n"
-        "ポイントも貯まってさらに嬉しい✨\n"
+        "ポイントも貯まる✨\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'valentine', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'valentine', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -256,13 +245,12 @@ def tweet_white_day() -> str:
         "🍬 今日はホワイトデー！\n"
         "\n"
         "楽天市場でお返しギフトを探そう🎁\n"
-        "エントリーしてお買い物すれば\n"
-        "ポイントもしっかり貯まります✨\n"
+        "エントリーしてから買えば\n"
+        "ポイントもしっかり✨\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'whiteday', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'whiteday', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -270,14 +258,13 @@ def tweet_mothers_day() -> str:
     return (
         "🌸 今日は母の日！\n"
         "\n"
-        "楽天市場で感謝の気持ちをプレゼントしよう🎁\n"
-        "エントリーしてからお買い物すれば\n"
-        "ポイントもたっぷり貯まります✨\n"
+        "楽天市場で感謝の気持ちをプレゼント🎁\n"
+        "エントリーしてから買えば\n"
+        "ポイントもたっぷり✨\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'mothers', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'mothers', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -286,13 +273,12 @@ def tweet_fathers_day() -> str:
         "👔 今日は父の日！\n"
         "\n"
         "楽天市場で日頃の感謝をプレゼント🎁\n"
-        "エントリーしてからお買い物で\n"
-        "ポイントもたっぷり貯まります✨\n"
+        "エントリーしてから買えば\n"
+        "ポイントもたっぷり✨\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'fathers', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'fathers', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -302,12 +288,11 @@ def tweet_christmas_eve() -> str:
         "\n"
         "楽天市場でクリスマスギフトを探すなら\n"
         "エントリーしてからがお得💡\n"
-        "ポイントをしっかり貯めてプレゼントしよう🎁\n"
+        "ポイント貯めてプレゼント🎁\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'christmas', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'christmas', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -315,34 +300,31 @@ def tweet_christmas() -> str:
     return (
         "🎅 メリークリスマス！\n"
         "\n"
-        "楽天市場でのお買い物は\n"
-        "エントリーしてからがポイントお得✨\n"
-        "今日も忘れずにエントリーを！\n"
+        "楽天市場のお買い物は\n"
+        "エントリーしてからがお得✨\n"
+        "今日も忘れずに！\n"
         "\n"
-        "まとめてエントリーはこちら👇\n"
+        "まとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'christmas', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'christmas', 'poikatsu'], max_tags=3)}"
     )
 
 
 def tweet_zero_five_day() -> str:
     return (
         "📅 今日は0と5のつく日！\n"
-        "楽天カード利用で【ふるさと納税】もポイント+1倍💳\n"
+        "楽天カードで【ふるさと納税】+1倍💳\n"
         "\n"
-        "💡 物価高の今こそ、早めのふるさと納税がお得！\n"
-        "・年末より今のほうが品数が圧倒的に豊富\n"
-        "・年末の駆け込みは人気返礼品が売り切れ続出😰\n"
-        "・今なら選び放題でじっくり検討できます✨\n"
+        "💡 物価高の今こそ早めのふるさと納税が◎\n"
+        "・年末より品数が豊富\n"
+        "・人気返礼品の売り切れ回避🎯\n"
         "\n"
-        "ふるさと納税キャンペーンはこちら👇\n"
+        "ふるさと納税👇\n"
         f"{POINTDAY_URL}\n"
         "\n"
-        "エントリーまとめ👇\n"
+        "エントリー👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'zerogo', 'furusato', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'zerogo', 'furusato'], max_tags=3)}"
     )
 
 
@@ -386,39 +368,37 @@ def tweet_triple_combo(special_days: list, season_event: str = None) -> str:
     """マラソン × W勝利 × 特別日/季節イベント → トリプル役満（年に数回の激レア）"""
     events = season_event if season_event else "・".join(special_days)
     return (
-        "🔥🔥🔥 超ビッグチャンス！役満デー！\n"
-        f"マラソン × W勝利（⚾×⚽）× {events} が奇跡の3重なり✨\n"
+        "🔥🔥🔥 役満デー！\n"
+        f"マラソン × W勝利(⚾×⚽) × {events}\n"
+        "奇跡の3重なり✨\n"
         "\n"
-        "ポイント倍率が今月最大級に爆上がり📈\n"
-        "エントリー忘れは絶対NG！今日は全力で買いまわろう💰\n"
+        "ポイント倍率が今月最大級📈\n"
+        "エントリー忘れ絶対NG💰\n"
+        "楽券・Appleギフトで買い周りOK！\n"
         "\n"
-        "買いたいものがなくても楽券・Appleギフトで買い周りOK！\n"
-        "\n"
-        "まとめてエントリー👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'marathon', 'eagles', 'vissel', 'poikatsu'])}"
+        f" {hashtags(['core', 'marathon', 'eagles'], max_tags=3)}"
     )
 
 
 def tweet_marathon_x_victory(w_victory: bool, team: str = "") -> str:
     """マラソン × 勝利（W勝利 or 片チーム）"""
     if w_victory:
-        head = "🔥 ビッグチャンス！\nマラソン × W勝利（⚾×⚽）でポイント大増量！"
+        head = "🔥 ビッグチャンス！\nマラソン × W勝利(⚾×⚽) ポイント大増量！"
     else:
         head = f"🔥 ビッグチャンス！\nマラソン × {team}勝利でポイント増量！"
+    tag_team = 'eagles' if ('イーグルス' in team or w_victory) else 'vissel'
     return (
         f"{head}\n"
         "\n"
-        "勝ったら倍エントリーを忘れずに、\n"
-        "買いまわりでさらに上乗せしよう💰\n"
+        "勝ったら倍エントリー忘れずに、\n"
+        "買いまわりで上乗せ💰\n"
+        "楽券・Appleギフトで買い周りOK！\n"
         "\n"
-        "楽券・Appleギフトで買い周りもOK！\n"
-        "\n"
-        "エントリーまとめ👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'marathon', 'eagles' if ('イーグルス' in team or w_victory) else 'vissel', 'poikatsu'])}"
+        f" {hashtags(['core', 'marathon', tag_team], max_tags=3)}"
     )
 
 
@@ -426,19 +406,17 @@ def tweet_w_victory_x_special(special_days: list, season_event: str = None) -> s
     """W勝利 × 特別日/季節イベント → レアな組み合わせ"""
     events = season_event if season_event else "・".join(special_days)
     return (
-        f"🎉 今日はレアなチャンス！\n"
-        f"W勝利（⚾×⚽）× {events} が重なりました✨\n"
+        f"🎉 レアなチャンス！\n"
+        f"W勝利(⚾×⚽) × {events} 重なり✨\n"
         "\n"
-        "勝ったら倍でポイント3倍 + 特別日ボーナスで\n"
-        "今日の買い物は大幅にお得💰\n"
+        "ポイント3倍 + 特別日ボーナス💰\n"
         "\n"
-        "「勝ったら倍」のエントリー忘れずに👇\n"
+        "「勝ったら倍」エントリー👇\n"
         f"{SPORTS_URL}\n"
         "\n"
-        "その他のエントリーまとめ👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'eagles', 'vissel', 'poikatsu'])}"
+        f" {hashtags(['core', 'eagles', 'vissel'], max_tags=3)}"
     )
 
 
@@ -447,19 +425,17 @@ def tweet_single_victory_x_special(team: str, special_days: list, season_event: 
     events = season_event if season_event else "・".join(special_days)
     cat = 'eagles' if 'イーグルス' in team else 'vissel'
     return (
-        f"✨ 今日はお得デー！\n"
-        f"{team}勝利 × {events} の合わせ技！\n"
+        f"✨ お得デー！\n"
+        f"{team}勝利 × {events} 合わせ技！\n"
         "\n"
-        "勝ったら倍でポイント2倍 + 特別日ボーナスで\n"
-        "普段よりぐっとお得に買えます💰\n"
+        "ポイント2倍 + 特別日ボーナス💰\n"
         "\n"
-        "「勝ったら倍」エントリー忘れずに👇\n"
+        "「勝ったら倍」エントリー👇\n"
         f"{SPORTS_URL}\n"
         "\n"
-        "その他のエントリーまとめ👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', cat, 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', cat, 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -467,21 +443,17 @@ def tweet_w_victory() -> str:
     """イーグルス＆ヴィッセル神戸W勝利 → ポイント3倍"""
     return (
         "🎉🎉 W勝利でポイント3倍！！\n"
-        "楽天イーグルス⚾ × ヴィッセル神戸⚽ 両チーム勝利！\n"
+        "楽天イーグルス⚾×ヴィッセル神戸⚽ 勝利✨\n"
         "\n"
-        "今日は「勝ったら倍」キャンペーンが\n"
-        "なんとポイント3倍になっています🔥\n"
+        "「勝ったら倍」が3倍になる超お得日🔥\n"
+        "エントリーしてから買い物しよう💰\n"
         "\n"
-        "エントリーしてからお買い物すると\n"
-        "いつもより大幅にポイントが貯まります💰\n"
-        "\n"
-        "エントリーはこちら👇\n"
+        "エントリー👇\n"
         f"{SPORTS_URL}\n"
         "\n"
-        "その他エントリーまとめ👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'eagles', 'vissel', 'poikatsu'])}"
+        f" {hashtags(['core', 'eagles', 'vissel'], max_tags=3)}"
     )
 
 
@@ -489,16 +461,15 @@ def tweet_eagles() -> str:
     """イーグルスのみ勝利 → ポイント2倍"""
     return (
         "⚾ 楽天イーグルス勝利！\n"
-        "「勝ったら倍」キャンペーンでポイント2倍🎉\n"
+        "「勝ったら倍」でポイント2倍🎉\n"
         "\n"
-        "エントリーしてからお買い物するだけでOK✅\n"
-        "忘れずにエントリーを👇\n"
+        "エントリーしてから買うだけでOK✅\n"
+        "エントリー👇\n"
         f"{SPORTS_URL}\n"
         "\n"
-        "その他エントリーまとめ👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'eagles', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'eagles', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -506,16 +477,15 @@ def tweet_vissel() -> str:
     """ヴィッセル神戸のみ勝利 → ポイント2倍"""
     return (
         "⚽ ヴィッセル神戸勝利！\n"
-        "「勝ったら倍」キャンペーンでポイント2倍🎉\n"
+        "「勝ったら倍」でポイント2倍🎉\n"
         "\n"
-        "エントリーしてからお買い物するだけでOK✅\n"
-        "忘れずにエントリーを👇\n"
+        "エントリーしてから買うだけでOK✅\n"
+        "エントリー👇\n"
         f"{SPORTS_URL}\n"
         "\n"
-        "その他エントリーまとめ👇\n"
+        "まとめ👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'vissel', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'vissel', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -528,10 +498,9 @@ def tweet_adidas() -> str:
         f"30%off → {ADIDAS_30}\n"
         f"20%off → {ADIDAS_20}\n"
         "\n"
-        "お買物マラソンと組み合わせてさらにお得🔥\n"
-        f"エントリーはこちら👇 {SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'adidas', 'poikatsu', 'saving'])}"
+        "マラソンと組み合わせでお得🔥\n"
+        f"エントリー👇 {SITE_URL}\n"
+        f" {hashtags(['core', 'adidas', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -539,13 +508,12 @@ def tweet_nike() -> str:
     return (
         "👟 NIKE 最大60%OFF開催中！\n"
         "\n"
-        "お買物マラソンと組み合わせてさらにお得🔥\n"
+        "マラソンと組み合わせでお得🔥\n"
         f"{NIKE_URL}\n"
         "\n"
-        "エントリー忘れずに👇\n"
+        "エントリー👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'nike', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'nike', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -553,13 +521,12 @@ def tweet_normal() -> str:
     return (
         "💡 楽天でお買い物する前に、まずエントリー！\n"
         "\n"
-        "エントリーするだけでポイントが変わります✨\n"
-        "今日のキャンペーンをまとめてチェック👇\n"
+        "エントリーするだけでポイントが変わる✨\n"
+        "今日のキャンペーン👇\n"
         f"{SITE_URL}\n"
         "\n"
         "クーポンも忘れずに！\n"
-        "\n"
-        f"{hashtags(['core', 'poikatsu', 'saving', 'coupon'])}"
+        f" {hashtags(['core', 'poikatsu', 'coupon'], max_tags=3)}"
     )
 
 

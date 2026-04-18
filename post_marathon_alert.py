@@ -96,12 +96,11 @@ def build_tweet(special_days: list) -> str:
             f"🔥 今夜20時からマラソン開始 & {events}！\n"
             "ポイントを最大限稼げるビッグチャンス🎯\n"
             "\n"
-            "エントリーをまとめてチェック👇\n"
+            "エントリーまとめ👇\n"
             f"{SITE_URL}\n"
-            "\n"
-            f"{hashtags(['core', 'marathon', 'poikatsu', 'saving'])}"
+            f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
         )
- 
+
     # 通常のマラソン事前告知（SPU控えめ、eギフト追記）
     return (
         "🏃 今夜20時からお買物マラソン開始！\n"
@@ -109,12 +108,11 @@ def build_tweet(special_days: list) -> str:
         "注文前に必ずエントリーを✅\n"
         "\n"
         "買いたいものがない方も\n"
-        "楽券(eギフト)やAppleギフトカードで買い周りOK！\n"
+        "楽券・Appleギフトで買い周りOK！\n"
         "\n"
-        "20時になったら「今楽」でまとめてエントリー👇\n"
+        "20時から「今楽」でまとめて👇\n"
         f"{SITE_URL}\n"
-        "\n"
-        f"{hashtags(['core', 'marathon', 'entry', 'poikatsu', 'saving'])}"
+        f" {hashtags(['core', 'marathon', 'entry'], max_tags=3)}"
     )
  
  
