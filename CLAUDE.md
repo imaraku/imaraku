@@ -190,6 +190,26 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 - `check_campaigns.py` と `post_marathon_alert.py` はリポジトリルート直下
 （旧: scripts/配下だったが修正済み）
 
+### 🎴 ポケカ抽選（楽天ブックス・数ヶ月に1回開催）
+
+**狙い**: マラソン時のレッドオーシャンを避け、普段と違う層（ポケモン勢）にリーチして認知拡大。
+
+**運用手順（開催日が告知されたら）**:
+1. `pokemon_lottery.json` の `receipt_periods` に新しい期間を追加
+   ```json
+   { "name": "2026年XX月 YY弾", "start": "YYYY-MM-DDTHH:MM:SS+09:00", "end": "YYYY-MM-DDTHH:MM:SS+09:00" }
+   ```
+2. 商品が変わっていれば `post_pokemon_lottery.py` の `PRODUCTS` リストを更新
+3. 必要なら `imaraku.html` の個別17種カードを差し替え（booksEntries セクション内）
+4. コミット&push すれば `check_campaigns.py` が受付期間中だけ `pokemon_lottery=true` にしてくれる
+5. X投稿は GitHub Actions の「ポケモンカード抽選ツイート投稿（手動）」を workflow_dispatch で発射
+   - **初回**: `mode=initial`（受付開始直後の夕方ゴールデンタイム推奨）
+   - **リマインド**: `mode=reminder`（締切前日夕方〜当日朝）
+   - 同じ内容の二重投稿はX側に403される → reminder モードが文言と商品順を変えて回避
+
+**重要**: ポケカ抽選で当選 → 3,000円以上注文で 楽天ブックスSPU+0.5% が自動ONになる独自価値情報。
+これが他のポケカ速報アカウントと差別化できる武器。ツイートに必ず盛り込む。
+
 ### ランキングスクレイピング
 - `check_ranking.py` が3時間ごとに `ranking.rakuten.co.jp` を取得
 - `ranking_cache.json` に前回結果をキャッシュ

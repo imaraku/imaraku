@@ -41,27 +41,52 @@ PRODUCTS = [
 ]
 
 # ── スレッド本文 ──────────────────────────────────────────────────────────────
-def build_thread() -> list[str]:
-    # ツイート1: 概要
-    tweet1 = (
-        "🎴 楽天ブックスでポケモンカード抽選受付中！\n"
-        "\n"
-        "📅 受付: 4/17(金)10時〜4/20(月)9:59\n"
-        "🛒 購入: 4/27(月)〜5/1(金)\n"
-        "🚛 発送: 4月下旬予定\n"
-        "\n"
-        f"新弾・人気パック{len(PRODUCTS)}種がラインナップ🎯\n"
-        "各商品のエントリーリンクは続くツイートから👇\n"
-        "\n"
-        "#楽天ブックス #ポケモンカード #ポイ活"
-    )
+def build_thread(mode: str = "initial") -> list[str]:
+    """mode: "initial"（初回告知）or "reminder"（締切前リマインド）"""
+
+    if mode == "reminder":
+        # ── リマインド版（締切直前）──
+        tweet1 = (
+            "⏰【明日9:59締切】ポケカ抽選まだ間に合う！\n"
+            "\n"
+            "楽天ブックスの17種抽選、まだ申込OKです✨\n"
+            "📅 締切: 4/20(月)9:59\n"
+            "\n"
+            "💡 当選すればSPU+0.5%も自動ON\n"
+            "その月の他の買い物も全部ポイント倍率UP🎯\n"
+            "\n"
+            "各商品リンクは👇\n"
+            "\n"
+            "#ポケカ #楽天ブックス #ポイ活"
+        )
+    else:
+        # ── 初回告知版 ──
+        tweet1 = (
+            "🎴 楽天ブックスでポケモンカード抽選受付中！\n"
+            "\n"
+            "📅 受付: 4/17(金)10時〜4/20(月)9:59\n"
+            "🛒 購入: 4/27(月)〜5/1(金)\n"
+            "🚛 発送: 4月下旬予定\n"
+            "\n"
+            f"新弾・人気パック{len(PRODUCTS)}種がラインナップ🎯\n"
+            "\n"
+            "💡 当選すればSPU+0.5%も自動ON\n"
+            "その月の他の買い物も全部ポイント倍率UP✨\n"
+            "\n"
+            "各商品のエントリーは続くツイートから👇\n"
+            "\n"
+            "#楽天ブックス #ポケモンカード #ポイ活"
+        )
 
     # ツイート2〜4: 商品リストを6件ずつに分割
     product_tweets = []
     chunk_size = 6
-    chunks = [PRODUCTS[i:i+chunk_size] for i in range(0, len(PRODUCTS), chunk_size)]
+    # リマインド時は順序を逆転させて重複検知を回避
+    products = list(reversed(PRODUCTS)) if mode == "reminder" else PRODUCTS
+    chunks = [products[i:i+chunk_size] for i in range(0, len(products), chunk_size)]
     for idx, chunk in enumerate(chunks, 1):
-        lines = [f"【対象商品 {idx}/{len(chunks)}】"]
+        header = f"【対象商品 {idx}/{len(chunks)}】" if mode == "initial" else f"【締切直前・対象 {idx}/{len(chunks)}】"
+        lines = [header]
         for name, url in chunk:
             lines.append(f"・{name}")
             lines.append(aff(url))
@@ -88,8 +113,13 @@ def post_tweet(text: str) -> str | None:
 
 
 def main():
-    tweets = build_thread()
-    print(f"=== ポケモンカード抽選投稿 ({len(tweets)}件) ===\n")
+    mode = os.environ.get("POKEMON_MODE", "initial").strip().lower()
+    if mode not in ("initial", "reminder"):
+        print(f"⚠️ 不明な POKEMON_MODE: {mode!r} → initial にフォールバック")
+        mode = "initial"
+
+    tweets = build_thread(mode)
+    print(f"=== ポケモンカード抽選投稿 mode={mode} ({len(tweets)}件) ===\n")
 
     for i, text in enumerate(tweets, 1):
         print(f"── ツイート {i}/{len(tweets)} ──")

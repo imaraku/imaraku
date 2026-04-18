@@ -13,5 +13,6 @@
   "repeat_purchase": false,
   "guerrilla": false,
   "superdeal_4h": false,
-  "mobiledeal": false
+  "mobiledeal": false,
+  "pokemon_lottery": true
 }

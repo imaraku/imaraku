@@ -431,6 +431,27 @@ def detect_sports_wins(now: datetime.datetime) -> tuple[bool | None, bool | None
     return (eagles, vissel)
 
 
+# ─── ポケモンカード抽選（楽天ブックス）判定 ─────────────────────────────
+# pokemon_lottery.json に複数の受付期間を登録できる。
+# 受付期間中(= start <= now <= end) のみ True を返す。
+POKEMON_LOTTERY_JSON = "pokemon_lottery.json"
+
+
+def detect_pokemon_lottery(now: datetime.datetime) -> bool:
+    data = load_json(POKEMON_LOTTERY_JSON, {})
+    periods = data.get("receipt_periods", []) if isinstance(data, dict) else []
+    for p in periods:
+        try:
+            s = datetime.datetime.fromisoformat(p["start"])
+            e = datetime.datetime.fromisoformat(p["end"])
+        except (KeyError, ValueError, TypeError):
+            continue
+        if s <= now <= e:
+            print(f"  [pokemon_lottery] 受付期間中: {p.get('name', '(no name)')}")
+            return True
+    return False
+
+
 def marathon_flags_from_schedule(schedule: dict) -> tuple[bool | None, bool | None]:
     """スケジュールから現在時刻基準で (marathon, marathon_pointup) を計算。
     スケジュール無効の場合は (None, None) を返し、呼び出し側はキーワード判定にフォールバックする。"""
@@ -639,6 +660,12 @@ def main():
         if results.get("vissel") != v_flag:
             print(f"  [vissel] キーワード判定={results.get('vissel')} → テーブル判定={v_flag} で上書き")
         results["vissel"] = v_flag
+
+    # 1-b3. ポケカ抽選（楽天ブックス）は pokemon_lottery.json の受付期間で判定
+    print("\n── 1-b3. ポケカ抽選 判定（受付期間スケジュール） ──")
+    results["pokemon_lottery"] = detect_pokemon_lottery(now_jst)
+    if not results["pokemon_lottery"]:
+        print("  [pokemon_lottery] 受付期間外")
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
     if not results.get("marathon", False):
