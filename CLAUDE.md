@@ -138,6 +138,42 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 
 ---
 
+## 🚨 自動化レジストリ（⚠️ 新しい自動化を足す前に必ず読むこと）
+
+**このプロジェクトで @ima_raku_entry に投稿できる全経路を、ここに一元管理する。**
+新しい cron / LaunchAgent / 別サーバー上のbot / n8n / Buffer 等を追加する時は、
+**必ずこの表に追記する**。二重投稿の温床になる。
+
+### 稼働中の自動投稿経路（2026-04-18 現在）
+
+| 経路 | 実体 | スケジュール | 停止方法 |
+|---|---|---|---|
+| GitHub Actions: daily-tweet | `.github/workflows/daily-tweet.yml` → `post_daily_tweet.py` | 0/12/18/20時 JST | ワークフローを disable |
+| GitHub Actions: marathon-preannounce | `.github/workflows/marathon-preannounce.yml` → `post_marathon_alert.py` | 19:50 JST | 同上 |
+| GitHub Actions: ranking-check | `.github/workflows/ranking-check.yml` → `check_ranking.py` | 3時間ごと | 同上 |
+| GitHub Actions: post-pokemon-lottery | `.github/workflows/post-pokemon-lottery.yml` → `post_pokemon_lottery.py` | 手動 | 実行しない |
+
+### 過去に存在したが **廃止済** の自動化（掘り起こし禁止）
+
+| 経路 | 実体 | 廃止日 | 廃止理由 |
+|---|---|---|---|
+| `com.imaraku.autopost` LaunchAgent | `~/.imaraku/x_auto_post.py` | 2026-04-18 | GitHub Actions と二重投稿、古いSPU/TOP3テンプレで誤発信 |
+
+### 🛡️ 新しい自動化を仕込む時の必須手順
+
+1. **上の「稼働中」表に追記**（経路・実体パス・スケジュール・停止方法）
+2. **旧方式は必ず根絶** — 移行のつもりで新旧並走させない。古い LaunchAgent・cron・スクリプトは **即ungrant＋削除**
+3. **停止方法を具体的に書く** — 「launchctl bootout gui/UID/Label」等、コマンドレベルで残す
+4. **投稿先アカウントとAPIキーの出所を明記** — 生書き .env ファイルをローカルに残さない（GitHub Secrets 一本化）
+
+### 🔍 怪しい投稿が出た時の調査3ステップ
+
+1. X のツイートの投稿時刻をチェック
+2. GitHub Actions の実行履歴（`/actions/workflows/*/runs`）に対応する時刻があるか確認
+3. **なければローカル疑惑** → `launchctl list | grep imaraku` / `crontab -l` / `ps aux | grep python`
+
+---
+
 ## 重要な注意事項・過去の対応履歴
 
 ### マラソン期間の2段階について
