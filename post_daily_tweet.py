@@ -7,12 +7,13 @@ post_daily_tweet.py
 【優先度順】
   1. マラソン × 特別日（0と5のつく日 or ワンダフルデー）→ ビッグチャンス
   2. マラソン開催中                                      → eギフト活用ヒント
-  3. ワンダフルデー（18日）                              → ワンダフルデー告知
-  4. 0と5のつく日（5/10/15/20/25/30日）                  → 0と5のつく日告知
-  5. 楽天イーグルス勝利ボーナス開催中                    → 勝利ボーナス告知
-  6. 土曜日                                              → adidas 特集
-  7. 日曜日                                              → NIKE 特集
-  8. 通常日                                              → 39ショップ・リピート・ゲリラ告知
+  3. 月末2日（前日・最終日）※マラソン無し時              → 期間限定ポイント失効注意
+  4. ワンダフルデー（18日）                              → ワンダフルデー告知
+  5. 0と5のつく日（5/10/15/20/25/30日）                  → 0と5のつく日告知
+  6. 楽天イーグルス勝利ボーナス開催中                    → 勝利ボーナス告知
+  7. 土曜日                                              → adidas 特集
+  8. 日曜日                                              → NIKE 特集
+  9. 通常日                                              → 39ショップ・リピート・ゲリラ告知
 """
 
 import os
@@ -74,6 +75,22 @@ def get_special_days(now: datetime.datetime) -> list:
     if day == 18:
         special.append("楽天市場の日")
     return special
+
+
+def get_month_end_phase(now: datetime.datetime) -> str | None:
+    """月末2日間の判定。
+       - 前日（最後から2日目）: "eve"
+       - 最終日                : "last"
+       - それ以外              : None
+       月の日数に応じて自動計算（31日月/30日月/2月28日/2月29日すべて対応）。
+    """
+    import calendar
+    last_day = calendar.monthrange(now.year, now.month)[1]
+    if now.day == last_day - 1:
+        return "eve"
+    if now.day == last_day:
+        return "last"
+    return None
 
 
 def get_season_event(now: datetime.datetime) -> str | None:
@@ -329,6 +346,47 @@ def tweet_zero_five_day() -> str:
     )
 
 
+def tweet_month_end_eve() -> str:
+    """月末前日：期間限定ポイント失効注意（警告＋使い道提案）"""
+    return (
+        "⏰【月末まであと1日】楽天の期間限定ポイント、大丈夫？\n"
+        "\n"
+        "楽天の期間限定ポイントは月末失効が多い💸\n"
+        "初心者が一番やらかすミスがコレ…\n"
+        "\n"
+        "✅ おすすめの使い切り術\n"
+        "・楽天市場でAppleギフト・楽券を購入\n"
+        f"{APPLE_URL}\n"
+        "・楽天市場で日用品購入\n"
+        "・楽天ペイで支払い（コンビニ・ドラッグストア）\n"
+        "\n"
+        "👉楽天PointClubで期限チェック\n"
+        "https://point.rakuten.co.jp/\n"
+        "\n"
+        f"{hashtags(['core', 'pointexpire', 'poikatsu', 'saving'])}"
+    )
+
+
+def tweet_month_end_last() -> str:
+    """月末当日：期間限定ポイント失効目前（緊急告知）"""
+    return (
+        "🚨【本日23:59期限】期間限定ポイント、失効目前！\n"
+        "\n"
+        "「あれ、なんで減ってる…？」の原因、だいたいコレ💧\n"
+        "\n"
+        "今すぐ使い切るワザ👇\n"
+        "・楽天市場でAppleギフト・楽券を購入（調整が簡単）\n"
+        f"{APPLE_URL}\n"
+        "・楽天ふるさと納税（なくなるポイントをお得に変換）\n"
+        f"{POINTDAY_URL}\n"
+        "\n"
+        "👉保有ポイントをチェック\n"
+        "https://point.rakuten.co.jp/\n"
+        "\n"
+        f"{hashtags(['core', 'pointexpire', 'poikatsu', 'furusato'])}"
+    )
+
+
 def tweet_triple_combo(special_days: list, season_event: str = None) -> str:
     """マラソン × W勝利 × 特別日/季節イベント → トリプル役満（年に数回の激レア）"""
     events = season_event if season_event else "・".join(special_days)
@@ -526,9 +584,10 @@ def main():
     nike_on          = status.get("nike",             False)
     special_days     = get_special_days(now)
     season_event     = get_season_event(now)
+    month_end_phase  = get_month_end_phase(now)
 
     print(f"  marathon={marathon}, marathon_pointup={marathon_pointup}, eagles={eagles}, vissel={vissel}")
-    print(f"  adidas={adidas_on}, nike={nike_on}, special={special_days}, season={season_event}, weekday={weekday}")
+    print(f"  adidas={adidas_on}, nike={nike_on}, special={special_days}, season={season_event}, weekday={weekday}, month_end={month_end_phase}")
 
     SEASON_TWEET_MAP = {
         "年始":         tweet_new_year,
@@ -573,6 +632,15 @@ def main():
         # エントリー期間のみ → まずエントリーを促す（まだ買わなくてOK）
         tweet = tweet_marathon_entry_only()
         label = "マラソン（エントリー期間のみ・ポイントアップ未開始）"
+
+    # ★ 月末2日（マラソン無し時）→ 期間限定ポイント失効注意
+    elif month_end_phase == "eve":
+        tweet = tweet_month_end_eve()
+        label = "月末前日（期間限定ポイント失効注意）"
+
+    elif month_end_phase == "last":
+        tweet = tweet_month_end_last()
+        label = "月末最終日（期間限定ポイント失効目前）"
 
     # ★ W勝利 × 特別日/季節イベント（マラソン無し）→ レアチャンス
     elif w_victory and has_special:
