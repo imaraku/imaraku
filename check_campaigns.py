@@ -393,14 +393,29 @@ def detect_sports_wins(now: datetime.datetime) -> tuple[bool | None, bool | None
     試合で勝った翌日が倍率対象日なので、今日の 0-23:59 は「昨日の試合結果」が効く。
     深夜をまたぐ試合もあるため、昨日と一昨日の両方を確認する。
 
-    戻り値: (eagles_flag, vissel_flag)  Noneの場合はキーワード判定にフォールバック。"""
+    戻り値: (eagles_flag, vissel_flag)
+       - (True,  *    ) / (*,    True ): 該当試合あり → 倍率有効
+       - (False, False): ページ正常取得できたが該当行なし → 倍率無効（確定）
+       - (None,  None ): ページ取得失敗／HTML解析失敗    → キーワード判定にフォールバック
+
+    ⚠️ 重要: 「該当行なし」は (False, False) を返す。キーワード判定は楽天ページ
+    内の過去実績や説明文（"イーグルス勝利時ポイント2倍" 等）に含まれる文言に
+    常に反応して誤陽性を起こすため、テーブル判定で確信がある時はそれを優先する。
+    """
     html = fetch(SPORTS_URL_BARE)
     if not html:
+        # ネットワーク失敗 → キーワード判定にフォールバック
         return (None, None)
 
     # HTML タグ除去してテキスト化（スペース区切り）
     text = re.sub(r'<[^>]+>', ' ', html)
     text = re.sub(r'\s+', ' ', text)
+
+    # 過去開催日一覧セクションが存在することを確認（HTML構造が変わっていないか）
+    # 見つからなければ解析失敗とみなしてフォールバック
+    if '過去のキャンペーン開催日一覧' not in text:
+        print("  [sports] 過去開催日一覧セクションが見つからず → キーワード判定にフォールバック")
+        return (None, None)
 
     # 今日が何曜日で何月何日か
     today = now.date()
@@ -409,8 +424,17 @@ def detect_sports_wins(now: datetime.datetime) -> tuple[bool | None, bool | None
     eagles = False
     vissel = False
     matched = False
+    # ページ内の開催日一覧は時系列降順で並ぶ (新 → 旧)。
+    # 月番号が上昇したら年度境界（= 前年度の領域に突入）と判断してスキャン停止する。
+    # これがないと「前年の4月19日」のような古いデータを誤って今年として拾ってしまう。
+    prev_mo = None
     for m in _SPORTS_ROW_RE.finditer(text):
         mo, d, teams = int(m.group(1)), int(m.group(2)), m.group(3)
+        if prev_mo is not None and mo > prev_mo:
+            # 月が上昇 = 年度跨ぎ → 以降は前年度データなのでスキャン終了
+            print(f"  [sports] 年度境界検知（{prev_mo}月 → {mo}月）→ スキャン終了")
+            break
+        prev_mo = mo
         # 年は暦上の最新一致を採用（過去半年以内）
         for cand in candidates:
             if cand.month == mo and cand.day == d:
@@ -426,8 +450,10 @@ def detect_sports_wins(now: datetime.datetime) -> tuple[bool | None, bool | None
                 break
 
     if not matched:
-        print(f"  [sports] 昨日・一昨日の試合結果が見つからず → キーワード判定にフォールバック")
-        return (None, None)
+        # ページは正常取得できたが、昨日・一昨日の勝利行が存在しない
+        # = 両チームとも負けた or 試合なし → 倍率無効で確定
+        print(f"  [sports] 昨日・一昨日の勝利行なし → eagles/vissel 共に false 確定")
+        return (False, False)
     return (eagles, vissel)
 
 
