@@ -107,30 +107,27 @@ def _is_furusato(name: str) -> bool:
 
 
 def fetch_via_search_api(hits: int = 30, sort: str = "-reviewCount") -> list[dict]:
-    """IchibaItem Search API (新openapi) でふるさと納税キーワード検索。
-    applicationId + accessKey + Origin が必要。
-    ヒット結果を商品名で「ふるさと納税」含有にフィルタ。"""
-    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
-        print("❌ RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY が未設定", file=sys.stderr)
+    """旧公開Search API (app.rakuten.co.jp) でふるさと納税キーワード検索。
+    Originヘッダ付与でOrigin制限されたappIdにも対応。"""
+    if not RAKUTEN_APP_ID:
         return []
-    url = "https://openapi.rakuten.co.jp/ichibaitem/api/IchibaItem/Search/20220601"
+    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
     params = {
         "format": "json",
         "applicationId": RAKUTEN_APP_ID,
-        "accessKey": RAKUTEN_ACCESS_KEY,
         "keyword": "ふるさと納税",
-        "sort": sort,    # -reviewCount = レビュー件数降順 ≒ 人気順
+        "sort": sort,
         "hits": hits,
     }
-    headers = {"Origin": RAKUTEN_ORIGIN}
+    headers = {"Origin": RAKUTEN_ORIGIN} if RAKUTEN_ORIGIN else {}
     try:
         r = requests.get(url, params=params, headers=headers, timeout=20)
         if r.status_code != 200:
-            print(f"⚠️ Search APIエラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
+            print(f"⚠️ Search API {r.status_code}: {r.text[:200]}", file=sys.stderr)
             return []
         data = r.json()
     except Exception as e:
-        print(f"⚠️ Search API取得失敗: {e}", file=sys.stderr)
+        print(f"⚠️ Search API失敗: {e}", file=sys.stderr)
         return []
 
     items = []
@@ -143,14 +140,65 @@ def fetch_via_search_api(hits: int = 30, sort: str = "-reviewCount") -> list[dic
     return items
 
 
+def fetch_via_ranking_probe() -> list[dict]:
+    """Ranking API を複数条件で叩いて、商品名に「ふるさと納税」を含むものだけ集める。
+    Search APIが401/404で使えない場合のフォールバック。"""
+    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
+        return []
+    url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
+    headers = {"Origin": RAKUTEN_ORIGIN}
+    probes = [
+        (0, "realtime", 1),
+        (0, "daily", 1),
+        (0, "daily", 2),
+        (0, "daily", 3),
+        (552612, "realtime", 1),
+        (552612, "daily", 1),
+    ]
+    seen = set()
+    results = []
+    for gid, period, page in probes:
+        params = {
+            "format": "json",
+            "applicationId": RAKUTEN_APP_ID,
+            "accessKey": RAKUTEN_ACCESS_KEY,
+            "genreId": gid,
+            "period": period,
+            "hits": 30,
+            "page": page,
+        }
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=20)
+            if r.status_code != 200:
+                print(f"  ⚠️ probe gid={gid} period={period} page={page}: {r.status_code}", file=sys.stderr)
+                continue
+            data = r.json()
+        except Exception as e:
+            print(f"  ⚠️ probe err: {e}", file=sys.stderr)
+            continue
+        for entry in data.get("Items", []):
+            it = _normalize_item(entry.get("Item", {}))
+            if not (it["name"] and it["url"]):
+                continue
+            base = it["url"].split("?")[0]
+            if base in seen:
+                continue
+            if _is_furusato(it["name"]):
+                seen.add(base)
+                results.append(it)
+        print(f"  probe gid={gid} period={period} page={page}: 累計 {len(results)} 件")
+        if len(results) >= 15:
+            break
+    return results
+
+
 def fetch_furusato_items() -> list[dict]:
-    """Search API でふるさと納税の人気商品を取得。
-    レビュー件数降順 → 空ならレビュー評価降順にフォールバック。"""
+    """Search API → Ranking APIプローブの順で試す。"""
     items = fetch_via_search_api(hits=30, sort="-reviewCount")
     if items:
         return items
-    print("  -reviewCount で空 → -reviewAverage にフォールバック")
-    return fetch_via_search_api(hits=30, sort="-reviewAverage")
+    print("  Search API空/失敗 → Ranking APIプローブへ")
+    return fetch_via_ranking_probe()
 
 
 # ── 商品選出 ───────────────────────────────────────────────────────────────────
