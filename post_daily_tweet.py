@@ -5,15 +5,22 @@ post_daily_tweet.py
 今日のキャンペーン状況・曜日・日付に応じたツイートを投稿する。
 
 【優先度順】
-  1. マラソン × 特別日（0と5のつく日 or ワンダフルデー）→ ビッグチャンス
-  2. マラソン開催中                                      → eギフト活用ヒント
-  3. 月末2日（前日・最終日）※マラソン無し時              → 期間限定ポイント失効注意
-  4. ワンダフルデー（18日）                              → ワンダフルデー告知
-  5. 0と5のつく日（5/10/15/20/25/30日）                  → 0と5のつく日告知
-  6. 楽天イーグルス勝利ボーナス開催中                    → 勝利ボーナス告知
-  7. 土曜日                                              → adidas 特集
-  8. 日曜日                                              → NIKE 特集
-  9. 通常日                                              → 39ショップ・リピート・ゲリラ告知
+  1. マラソン × W勝利 × 特別日                           → トリプル役満（W勝利版）
+  2. マラソン × W勝利                                    → マラソン×W勝利
+  3. マラソン × 片チーム勝利                             → マラソン×単勝利
+  4. マラソン × 特別日 × adidas開催中                    → トリプル役満（adidas）
+  5. マラソン × 特別日 × nike開催中                      → トリプル役満（NIKE）
+  6. マラソン × 特別日                                   → ビッグチャンス
+  7. マラソン（ポイントアップ中）                        → eギフト活用ヒント
+  8. マラソン（エントリー期間のみ）                      → 事前エントリー促進
+  9. 月末2日（前日・最終日）※マラソン無し時              → 期間限定ポイント失効注意
+ 10. W勝利/片勝利 × 特別日                               → レアチャンス
+ 11. 季節イベント（母の日・父の日・クリスマス等）       → 季節イベント告知
+ 12. ワンダフルデー（1日）/ 楽天市場の日（18日）         → 各特別日告知
+ 13. 0と5のつく日                                        → ふるさと納税アピール
+ 14. W勝利 / 片勝利                                      → 勝利ボーナス告知
+ 15. 土曜 × adidas / 日曜 × NIKE                         → 各ブランド特集
+ 16. 通常日                                              → 39ショップ・リピート・ゲリラ告知
 """
 
 import os
@@ -382,6 +389,45 @@ def tweet_triple_combo(special_days: list, season_event: str = None) -> str:
     )
 
 
+def tweet_triple_combo_adidas(special_days: list, season_event: str = None) -> str:
+    """マラソン × 特別日 × adidasセール開催中 → トリプル役満（adidas版）。
+    ポイント倍率 + adidasセール割引のダブル効果を訴求。
+    """
+    events = season_event if season_event else "・".join(special_days)
+    return (
+        "🔥🔥 トリプル役満！\n"
+        f"マラソン × {events} × adidas\n"
+        "\n"
+        "ポイント倍率×セール割引のW効果🎯\n"
+        "人気モデルは早い者勝ち！\n"
+        "\n"
+        f"50%off👟{ADIDAS_50}\n"
+        f"40%off👟{ADIDAS_40}\n"
+        "\n"
+        f"エントリー👇\n{SITE_URL}\n"
+        f" {hashtags(['core', 'marathon', 'adidas'], max_tags=3)}"
+    )
+
+
+def tweet_triple_combo_nike(special_days: list, season_event: str = None) -> str:
+    """マラソン × 特別日 × NIKEセール開催中 → トリプル役満（NIKE版）。
+    ポイント倍率 + NIKE最大60%OFFのダブル効果を訴求。
+    """
+    events = season_event if season_event else "・".join(special_days)
+    return (
+        "🔥🔥 トリプル役満！\n"
+        f"マラソン × {events} × NIKE\n"
+        "\n"
+        "ポイント倍率×最大60%OFFのW効果🎯\n"
+        "人気モデルは早い者勝ち！\n"
+        "\n"
+        f"👟{NIKE_URL}\n"
+        "\n"
+        f"エントリー👇\n{SITE_URL}\n"
+        f" {hashtags(['core', 'marathon', 'nike'], max_tags=3)}"
+    )
+
+
 def tweet_marathon_x_victory(w_victory: bool, team: str = "") -> str:
     """マラソン × 勝利（W勝利 or 片チーム）"""
     if w_victory:
@@ -579,6 +625,16 @@ def main():
     elif marathon and marathon_pointup and any_victory:
         tweet = tweet_marathon_x_victory(w_victory=False, team=victor_team)
         label = f"マラソン×{victor_team}勝利"
+
+    elif marathon and marathon_pointup and has_special and adidas_on:
+        # ポイントアップ期間中 × 特別日 × adidasセール → トリプル役満（adidas版）
+        tweet = tweet_triple_combo_adidas(special_days, season_event)
+        label = f"トリプル役満adidas（マラソン×{'・'.join(special_days) if special_days else season_event}×adidas）"
+
+    elif marathon and marathon_pointup and has_special and nike_on:
+        # ポイントアップ期間中 × 特別日 × NIKEセール → トリプル役満（NIKE版）
+        tweet = tweet_triple_combo_nike(special_days, season_event)
+        label = f"トリプル役満NIKE（マラソン×{'・'.join(special_days) if special_days else season_event}×NIKE）"
 
     elif marathon and marathon_pointup and has_special:
         # ポイントアップ期間中 × 特別日/季節イベント → ビッグチャンス

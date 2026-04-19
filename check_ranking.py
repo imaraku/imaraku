@@ -432,8 +432,19 @@ def main():
 
     # ② 定期ツイート（日曜以外の週6日 かつ 今日まだ投稿していない場合）
     # ※ ランキング取得の成否に関わらず実行する
-    # 日曜は post_daily_tweet.py 側のNIKE特集ツイートと住み分け
-    if weekday in [0, 1, 2, 3, 4, 5] and last_regular_date != today_str:
+    # 日曜は基本 post_daily_tweet.py 側のNIKE特集ツイートと住み分けで休み
+    # ただし マラソン期間中の日曜は、お祭り騒ぎなので定期ツイートも発射する
+    # （アクセスが集中して普段と違う商品がランクインしやすいため情報価値が高い）
+    marathon_active = False
+    try:
+        if os.path.exists("campaign_status.json"):
+            with open("campaign_status.json", encoding='utf-8') as f:
+                marathon_active = bool(json.load(f).get("marathon", False))
+    except Exception as e:
+        print(f"  ⚠️ campaign_status.json 読み取り失敗: {e}", file=sys.stderr)
+
+    allowed_weekdays = [0, 1, 2, 3, 4, 5, 6] if marathon_active else [0, 1, 2, 3, 4, 5]
+    if weekday in allowed_weekdays and last_regular_date != today_str:
         body, tag_categories = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
         tweet = body + "\n\n" + hashtags(tag_categories)
         print(f"\n投稿内容（定期・常連アイテム）:\n{tweet}\n")
