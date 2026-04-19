@@ -40,7 +40,9 @@ MAIL_TO            = os.environ.get("MAIL_TO", "mochiki.kengo@gmail.com").strip(
 JST                = datetime.timezone(datetime.timedelta(hours=9))
 CACHE_FILE         = "room_post_cache.json"
 CACHE_HISTORY_MAX  = 30
-AFFILIATE_SUFFIX   = "scid=af_pc_etc&sc2id=af_101_0_0"
+# ROOM経由のクリックを imaraku.html (af_101_0_0) と区別するため別 sc2id を使う。
+# 楽天アフィリエイト管理画面で「af_room_0_0」で絞ればROOM由来だけ集計できる。
+AFFILIATE_SUFFIX   = "scid=af_pc_etc&sc2id=af_room_0_0"
 CLAUDE_MODEL       = "claude-haiku-4-5-20251001"
 
 # ── ユーティリティ ─────────────────────────────────────────────────────────────
@@ -251,6 +253,7 @@ def build_email(item: dict, appeal: str, aff_url: str) -> tuple[str, str]:
 📮 {body_name}
 💰 寄付額 {item['price']:,}円
 🏪 {item['shop']}
+🔗 {aff_url}
 
 ──────────────────
 【投稿文コピペ用 ↓ここから↓】
