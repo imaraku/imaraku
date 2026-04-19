@@ -11,6 +11,7 @@ check_ranking.py
 """
 
 import os
+import re
 import sys
 import json
 import datetime
@@ -134,7 +135,59 @@ REGULAR_TWEETS = [
 ]
 
 
+# 人気IP/ブランド → ハッシュタグ 自動検出辞書
+# 商品名にキーワードが含まれていたら該当タグを付与してファン層の検索流入を狙う。
+# 最初にマッチした1タグのみ付与（多重タグで雑多な印象にしない）。
+# 並び順＝優先度: より具体的なもの（ポケカ > ポケモン）を上に。
+IP_HASHTAGS = [
+    (["鬼滅の刃", "鬼滅"],                      "#鬼滅の刃"),
+    (["ONE PIECE", "ワンピース", "OP-"],        "#ワンピース"),
+    (["ポケモンカード", "ポケカ"],              "#ポケモンカード"),
+    (["ポケットモンスター", "ポケモン"],        "#ポケモン"),
+    (["呪術廻戦"],                              "#呪術廻戦"),
+    (["推しの子"],                              "#推しの子"),
+    (["ちいかわ"],                              "#ちいかわ"),
+    (["ドラゴンボール"],                        "#ドラゴンボール"),
+    (["SPY×FAMILY", "スパイファミリー"],        "#SPYFAMILY"),
+    (["NARUTO", "ナルト"],                      "#NARUTO"),
+    (["Switch2", "Nintendo Switch"],            "#NintendoSwitch"),
+    (["PlayStation5", "PS5"],                   "#PS5"),
+    (["iPhone"],                                "#iPhone"),
+    (["iPad"],                                  "#iPad"),
+    (["AirPods"],                               "#AirPods"),
+    (["遊戯王"],                                "#遊戯王"),
+]
+
+
 # ── ユーティリティ ─────────────────────────────────────────────────────────────
+
+def strip_name_prefix(name: str) -> str:
+    """商品名の冒頭に連続する【...】プレフィックスを除去する。
+
+    例: 「【新品未開封】【楽天ブックス限定配送BOX】鬼滅の刃 …」
+        → 「鬼滅の刃 …」
+
+    全角【】・半角[]・角括弧［］のいずれにも対応。
+    剥がし過ぎて空になる事故を避けるため、最終的に空文字になったら
+    元の名前を尊重する運用にする（呼び出し側でフォールバック）。
+    """
+    pattern = re.compile(r'^[【［\[][^】］\]]*[】］\]]\s*')
+    while True:
+        m = pattern.match(name)
+        if not m:
+            break
+        name = name[m.end():]
+    return name.strip()
+
+
+def detect_ip_hashtag(name: str) -> str:
+    """商品名から人気IP/ブランドを検出してハッシュタグを返す。
+    該当なしなら空文字。最初にマッチした1件のみ返す。"""
+    for keywords, tag in IP_HASHTAGS:
+        if any(kw in name for kw in keywords):
+            return tag
+    return ""
+
 
 def add_affiliate(url: str) -> str:
     """楽天URLにアフィリエイトパラメータを付与する。"""
@@ -293,15 +346,32 @@ def fetch_ranking() -> list[dict]:
 # ── ツイート文 生成 ─────────────────────────────────────────────────────────────
 
 def tweet_rare_item(items: list) -> str:
-    """レアアイテム新規ランクインのツイートを生成する。"""
+    """レアアイテム新規ランクインのツイートを生成する。
+
+    ・冒頭の【...】プレフィックスを剥がして本題（鬼滅の刃/ワンピース等）を前面に
+    ・人気IPを検出したら専用ハッシュタグを追加してファン層の検索流入を狙う
+    ・40字で切り詰め、280字に収まるようベースタグ数を調整
+    """
     top = items[0]
-    name = top['name']
+    raw_name = top['name']
     item_url = top['url'] or RANKING_URL
 
-    # 商品名が長い場合は切り詰める（Twitter 280字制限対応）
-    # 日本語換算で約40文字を上限に（タイトル＋他要素で〜250字を目指す）
+    # ① 冒頭の【新品未開封】【楽天ブックス限定配送BOX】… を剥がす
+    cleaned = strip_name_prefix(raw_name)
+    # 剥がし過ぎて空になったら元の名前にフォールバック
+    name = cleaned if cleaned else raw_name
+
+    # ② IP検出は "剥がす前" の生データで走査（プレフィックスにヒントがあるケースも拾う）
+    ip_tag = detect_ip_hashtag(raw_name)
+
+    # ③ 40字で切り詰め
     if len(name) > 40:
         name = name[:38] + "…"
+
+    # ④ IPタグ付与時はベースタグを2個に抑えて280字を死守
+    base_max = 2 if ip_tag else 3
+    base_tags = hashtags(['core', 'ranking', 'poikatsu'], max_tags=base_max)
+    tag_line = f"{ip_tag} {base_tags}" if ip_tag else base_tags
 
     return (
         f"🚨 楽天ランキングに急上昇！\n"
@@ -312,7 +382,7 @@ def tweet_rare_item(items: list) -> str:
         "\n"
         f"▶ 商品\n{item_url}\n"
         f"▶ エントリー\n{SITE_URL}\n"
-        f" {hashtags(['core', 'ranking', 'poikatsu'], max_tags=3)}"
+        f" {tag_line}"
     )
 
 
