@@ -25,8 +25,6 @@ import requests
 
 # ── 認証情報 ─────────────────────────────────────────────────────────────────
 RAKUTEN_APP_ID     = os.environ.get("RAKUTEN_APP_ID", "").strip()
-RAKUTEN_ACCESS_KEY = os.environ.get("RAKUTEN_ACCESS_KEY", "").strip()
-RAKUTEN_ORIGIN     = os.environ.get("RAKUTEN_ORIGIN", "https://imaraku.github.io").strip()
 
 ANTHROPIC_API_KEY  = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 GMAIL_USER         = os.environ.get("GMAIL_USER", "mochiki.kengo@gmail.com").strip()
@@ -35,7 +33,6 @@ MAIL_TO            = os.environ.get("MAIL_TO", "mochiki.kengo@gmail.com").strip(
 
 # ── 定数 ─────────────────────────────────────────────────────────────────────
 JST                = datetime.timezone(datetime.timedelta(hours=9))
-FURUSATO_GENRE_ID  = 552612   # 楽天ふるさと納税カテゴリID
 CACHE_FILE         = "room_post_cache.json"
 CACHE_HISTORY_MAX  = 30
 AFFILIATE_SUFFIX   = "scid=af_pc_etc&sc2id=af_101_0_0"
@@ -98,43 +95,18 @@ def _normalize_item(it: dict) -> dict:
     }
 
 
-def fetch_via_ranking_api(hits: int = 20) -> list[dict]:
-    """新Ranking API (openapi.rakuten.co.jp) でふるさと納税ランキング取得。
-    applicationId + accessKey + Origin が必要。"""
-    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
-        return []
-    url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
-    params = {
-        "format": "json",
-        "applicationId": RAKUTEN_APP_ID,
-        "accessKey": RAKUTEN_ACCESS_KEY,
-        "genreId": FURUSATO_GENRE_ID,
-        "period": "realtime",
-        "hits": hits,
-    }
-    headers = {"Origin": RAKUTEN_ORIGIN}
-    try:
-        r = requests.get(url, params=params, headers=headers, timeout=20)
-        if r.status_code != 200:
-            print(f"⚠️ Ranking APIエラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
-            return []
-        data = r.json()
-    except Exception as e:
-        print(f"⚠️ Ranking API取得失敗: {e}", file=sys.stderr)
-        return []
-
-    items = []
-    for entry in data.get("Items", []):
-        it = _normalize_item(entry.get("Item", {}))
-        if it["name"] and it["url"]:
-            items.append(it)
-    if items:
-        print(f"  Ranking API取得: {len(items)} 件")
-    return items
+def _is_furusato(name: str) -> bool:
+    """商品名にふるさと納税らしいキーワードが含まれるか。"""
+    name_low = name
+    for kw in ("ふるさと納税", "ふるさと 納税", "【ふるさと"):
+        if kw in name_low:
+            return True
+    return False
 
 
-def fetch_via_search_api(hits: int = 30) -> list[dict]:
-    """IchibaItem Search API (公開API、applicationIdのみ) でふるさと納税キーワード検索。"""
+def fetch_via_search_api(hits: int = 30, sort: str = "-reviewCount") -> list[dict]:
+    """IchibaItem Search API (applicationIdのみ) でふるさと納税キーワード検索。
+    ヒット結果を商品名で「ふるさと納税」含有にフィルタ。"""
     if not RAKUTEN_APP_ID:
         return []
     url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
@@ -142,8 +114,7 @@ def fetch_via_search_api(hits: int = 30) -> list[dict]:
         "format": "json",
         "applicationId": RAKUTEN_APP_ID,
         "keyword": "ふるさと納税",
-        "genreId": FURUSATO_GENRE_ID,
-        "sort": "-reviewCount",  # レビュー件数降順 ≒ 人気順
+        "sort": sort,    # -reviewCount = レビュー件数降順 ≒ 人気順
         "hits": hits,
     }
     try:
@@ -159,20 +130,21 @@ def fetch_via_search_api(hits: int = 30) -> list[dict]:
     items = []
     for entry in data.get("Items", []):
         it = _normalize_item(entry.get("Item", {}))
-        if it["name"] and it["url"]:
+        if it["name"] and it["url"] and _is_furusato(it["name"]):
             items.append(it)
     if items:
-        print(f"  Search API取得: {len(items)} 件（-reviewCount ソート）")
+        print(f"  Search API取得: {len(items)} 件（sort={sort}、ふるさと納税フィルタ済）")
     return items
 
 
 def fetch_furusato_items() -> list[dict]:
-    """Ranking API を優先、失敗時は Search API にフォールバック。"""
-    items = fetch_via_ranking_api(hits=20)
+    """Search API でふるさと納税の人気商品を取得。
+    レビュー件数降順 → 空ならレビュー評価降順にフォールバック。"""
+    items = fetch_via_search_api(hits=30, sort="-reviewCount")
     if items:
         return items
-    print("  Ranking API空/失敗 → Search APIへフォールバック")
-    return fetch_via_search_api(hits=30)
+    print("  -reviewCount で空 → -reviewAverage にフォールバック")
+    return fetch_via_search_api(hits=30, sort="-reviewAverage")
 
 
 # ── 商品選出 ───────────────────────────────────────────────────────────────────
