@@ -5,7 +5,8 @@ post_room_suggestion.py
 Claude Haiku にアピール文を生成させて Gmail にメールで通知する。
 
 【動作ロジック】
-  1. 楽天APIでふるさと納税ランキングTOPを取得（新API→検索APIへフォールバック）
+  1. 楽天ふるさと納税ランキングページ(event.rakuten.co.jp/furusato/ranking/)を
+     スクレイピングして上位商品を取得
   2. キャッシュと突き合わせて未通知の上位1品を選出
   3. Claude Haiku 4.5 にアピール文(2-3行)を生成させる
   4. メール本文を組み立てて Gmail SMTP 経由で送信
@@ -13,6 +14,7 @@ Claude Haiku にアピール文を生成させて Gmail にメールで通知す
 """
 
 import os
+import re
 import sys
 import json
 import datetime
@@ -22,6 +24,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 
 import requests
+from bs4 import BeautifulSoup
 
 # ── 認証情報 ─────────────────────────────────────────────────────────────────
 RAKUTEN_APP_ID     = os.environ.get("RAKUTEN_APP_ID", "").strip()
@@ -52,7 +55,6 @@ def add_affiliate(url: str) -> str:
 
 def strip_name_prefix(name: str) -> str:
     """【...】【...】で始まる商品名プレフィックスを軽く整形。"""
-    import re
     pattern = re.compile(r'^[【［\[][^】］\]]*[】］\]]\s*')
     while True:
         m = pattern.match(name)
@@ -80,125 +82,99 @@ def save_cache(cache: dict) -> None:
         json.dump(cache, f, ensure_ascii=False, indent=2)
 
 
-# ── ランキング取得 ─────────────────────────────────────────────────────────────
+# ── ランキング取得（スクレイピング） ───────────────────────────────────────────
 
-def _normalize_item(it: dict) -> dict:
-    name = (it.get("itemName") or "").strip()
-    url  = (it.get("itemUrl") or "").strip()
-    price = it.get("itemPrice") or 0
-    shop = (it.get("shopName") or "").strip()
-    caption = (it.get("itemCaption") or "").strip()
-    return {
-        "name": name,
-        "url": url,
-        "price": int(price) if price else 0,
-        "shop": shop,
-        "caption": caption[:400],
+FURUSATO_RANKING_URL = "https://event.rakuten.co.jp/furusato/ranking/"
+# 楽天ふるさと納税の商品URLパターン: item.rakuten.co.jp/f[5-6桁数字]-[自治体名]/...
+# 「f + 数字」プレフィックスは自治体ショップの証。ブランドショップと区別できる確実な目印。
+FURUSATO_URL_RE = re.compile(r"https?://item\.rakuten\.co\.jp/f\d+-[^/]+/")
+PRICE_RE = re.compile(r"([0-9][0-9,]{2,})\s*円")
+
+
+def _extract_name_from_link(a) -> str:
+    """<a> タグから商品名を抽出。imgのaltを優先、なければテキスト。"""
+    img = a.find("img")
+    if img and img.get("alt"):
+        alt = img["alt"].strip()
+        if len(alt) >= 5:
+            return alt
+    text = a.get_text(" ", strip=True)
+    return text[:120] if text else ""
+
+
+def _extract_price_near(a) -> int:
+    """<a> の周辺テキストから寄付額を推定。親要素を2段階辿って円の数字を拾う。"""
+    for node in (a, a.parent, getattr(a.parent, "parent", None)):
+        if node is None:
+            continue
+        text = node.get_text(" ", strip=True)
+        m = PRICE_RE.search(text)
+        if m:
+            try:
+                return int(m.group(1).replace(",", ""))
+            except ValueError:
+                continue
+    return 0
+
+
+def fetch_via_scrape() -> list[dict]:
+    """楽天ふるさと納税ランキングページをスクレイピングして上位商品を取得。"""
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Accept-Language": "ja,en;q=0.9",
     }
-
-
-def _is_furusato(name: str) -> bool:
-    """商品名にふるさと納税らしいキーワードが含まれるか。"""
-    name_low = name
-    for kw in ("ふるさと納税", "ふるさと 納税", "【ふるさと"):
-        if kw in name_low:
-            return True
-    return False
-
-
-def fetch_via_search_api(hits: int = 30, sort: str = "-reviewCount") -> list[dict]:
-    """旧公開Search API (app.rakuten.co.jp) でふるさと納税キーワード検索。
-    Originヘッダ付与でOrigin制限されたappIdにも対応。"""
-    if not RAKUTEN_APP_ID:
-        return []
-    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
-    params = {
-        "format": "json",
-        "applicationId": RAKUTEN_APP_ID,
-        "keyword": "ふるさと納税",
-        "sort": sort,
-        "hits": hits,
-    }
-    headers = {"Origin": RAKUTEN_ORIGIN} if RAKUTEN_ORIGIN else {}
     try:
-        r = requests.get(url, params=params, headers=headers, timeout=20)
+        r = requests.get(FURUSATO_RANKING_URL, headers=headers, timeout=25)
         if r.status_code != 200:
-            print(f"⚠️ Search API {r.status_code}: {r.text[:200]}", file=sys.stderr)
+            print(f"⚠️ ランキングページ {r.status_code}: {r.text[:200]}", file=sys.stderr)
             return []
-        data = r.json()
     except Exception as e:
-        print(f"⚠️ Search API失敗: {e}", file=sys.stderr)
+        print(f"⚠️ ランキングページ取得失敗: {e}", file=sys.stderr)
         return []
 
-    items = []
-    for entry in data.get("Items", []):
-        it = _normalize_item(entry.get("Item", {}))
-        if it["name"] and it["url"] and _is_furusato(it["name"]):
-            items.append(it)
-    if items:
-        print(f"  Search API取得: {len(items)} 件（sort={sort}、ふるさと納税フィルタ済）")
+    soup = BeautifulSoup(r.text, "html.parser")
+    seen_base = set()
+    items: list[dict] = []
+
+    for a in soup.find_all("a", href=True):
+        href = a["href"].strip()
+        if not FURUSATO_URL_RE.match(href):
+            continue
+        base = href.split("?")[0].rstrip("/")
+        if base in seen_base:
+            continue
+        name = _extract_name_from_link(a)
+        if not name or len(name) < 5:
+            continue
+        price = _extract_price_near(a)
+        # 自治体名をURLのf000000-xxxxx部分から抽出してshopフィールドに入れる
+        shop = ""
+        m = re.match(r"https?://item\.rakuten\.co\.jp/(f\d+-[^/]+)/", href)
+        if m:
+            shop = m.group(1)
+
+        seen_base.add(base)
+        items.append({
+            "name": name.strip(),
+            "url": base + "/",
+            "price": price,
+            "shop": shop,
+            "caption": "",
+        })
+        if len(items) >= 30:
+            break
+
+    print(f"  スクレイピング取得: {len(items)} 件")
     return items
 
 
-def fetch_via_ranking_probe() -> list[dict]:
-    """Ranking API を複数条件で叩いて、商品名に「ふるさと納税」を含むものだけ集める。
-    Search APIが401/404で使えない場合のフォールバック。"""
-    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
-        return []
-    url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
-    headers = {"Origin": RAKUTEN_ORIGIN}
-    probes = [
-        (0, "realtime", 1),
-        (0, "daily", 1),
-        (0, "daily", 2),
-        (0, "daily", 3),
-        (552612, "realtime", 1),
-        (552612, "daily", 1),
-    ]
-    seen = set()
-    results = []
-    for gid, period, page in probes:
-        params = {
-            "format": "json",
-            "applicationId": RAKUTEN_APP_ID,
-            "accessKey": RAKUTEN_ACCESS_KEY,
-            "genreId": gid,
-            "period": period,
-            "hits": 30,
-            "page": page,
-        }
-        try:
-            r = requests.get(url, params=params, headers=headers, timeout=20)
-            if r.status_code != 200:
-                print(f"  ⚠️ probe gid={gid} period={period} page={page}: {r.status_code}", file=sys.stderr)
-                continue
-            data = r.json()
-        except Exception as e:
-            print(f"  ⚠️ probe err: {e}", file=sys.stderr)
-            continue
-        for entry in data.get("Items", []):
-            it = _normalize_item(entry.get("Item", {}))
-            if not (it["name"] and it["url"]):
-                continue
-            base = it["url"].split("?")[0]
-            if base in seen:
-                continue
-            if _is_furusato(it["name"]):
-                seen.add(base)
-                results.append(it)
-        print(f"  probe gid={gid} period={period} page={page}: 累計 {len(results)} 件")
-        if len(results) >= 15:
-            break
-    return results
-
-
 def fetch_furusato_items() -> list[dict]:
-    """Search API → Ranking APIプローブの順で試す。"""
-    items = fetch_via_search_api(hits=30, sort="-reviewCount")
-    if items:
-        return items
-    print("  Search API空/失敗 → Ranking APIプローブへ")
-    return fetch_via_ranking_probe()
+    """楽天ふるさと納税ランキングをスクレイピングで取得。"""
+    return fetch_via_scrape()
 
 
 # ── 商品選出 ───────────────────────────────────────────────────────────────────

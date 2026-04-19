@@ -31,7 +31,7 @@ jobs:
           python-version: '3.11'
 
       - name: 依存パッケージをインストール
-        run: pip install requests anthropic
+        run: pip install requests anthropic beautifulsoup4
 
       - name: ROOM投稿候補メール送信
         env:
