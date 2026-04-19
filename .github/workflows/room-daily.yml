@@ -1,0 +1,58 @@
+name: 楽天ROOM 日次投稿候補メール
+
+on:
+  schedule:
+    - cron: '0 22 * * *'   # 22:00 UTC = 翌 07:00 JST
+  # 手動テスト用
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'メール送信せずに標準出力へダンプ (1=DRY RUN)'
+        required: false
+        default: '0'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  post-room:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # キャッシュファイルのコミットに必要
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests anthropic
+
+      - name: ROOM投稿候補メール送信
+        env:
+          RAKUTEN_APP_ID:     ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_USER:         mochiki.kengo@gmail.com
+          MAIL_TO:            mochiki.kengo@gmail.com
+          DRY_RUN:            ${{ github.event.inputs.dry_run }}
+        run: python post_room_suggestion.py
+
+      - name: キャッシュファイルをコミット
+        if: github.event.inputs.dry_run != '1'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain room_post_cache.json)" ]; then
+            git add room_post_cache.json
+            git commit -m "chore: update room_post_cache.json"
+            git push
+          else
+            echo "キャッシュに変化なし。コミットスキップ"
+          fi
