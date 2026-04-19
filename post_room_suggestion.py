@@ -25,6 +25,8 @@ import requests
 
 # ── 認証情報 ─────────────────────────────────────────────────────────────────
 RAKUTEN_APP_ID     = os.environ.get("RAKUTEN_APP_ID", "").strip()
+RAKUTEN_ACCESS_KEY = os.environ.get("RAKUTEN_ACCESS_KEY", "").strip()
+RAKUTEN_ORIGIN     = os.environ.get("RAKUTEN_ORIGIN", "https://imaraku.github.io").strip()
 
 ANTHROPIC_API_KEY  = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 GMAIL_USER         = os.environ.get("GMAIL_USER", "mochiki.kengo@gmail.com").strip()
@@ -105,20 +107,24 @@ def _is_furusato(name: str) -> bool:
 
 
 def fetch_via_search_api(hits: int = 30, sort: str = "-reviewCount") -> list[dict]:
-    """IchibaItem Search API (applicationIdのみ) でふるさと納税キーワード検索。
+    """IchibaItem Search API (新openapi) でふるさと納税キーワード検索。
+    applicationId + accessKey + Origin が必要。
     ヒット結果を商品名で「ふるさと納税」含有にフィルタ。"""
-    if not RAKUTEN_APP_ID:
+    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
+        print("❌ RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY が未設定", file=sys.stderr)
         return []
-    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601"
+    url = "https://openapi.rakuten.co.jp/ichibaitem/api/IchibaItem/Search/20220601"
     params = {
         "format": "json",
         "applicationId": RAKUTEN_APP_ID,
+        "accessKey": RAKUTEN_ACCESS_KEY,
         "keyword": "ふるさと納税",
         "sort": sort,    # -reviewCount = レビュー件数降順 ≒ 人気順
         "hits": hits,
     }
+    headers = {"Origin": RAKUTEN_ORIGIN}
     try:
-        r = requests.get(url, params=params, timeout=20)
+        r = requests.get(url, params=params, headers=headers, timeout=20)
         if r.status_code != 200:
             print(f"⚠️ Search APIエラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
             return []

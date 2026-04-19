@@ -36,6 +36,7 @@ jobs:
       - name: ROOM投稿候補メール送信
         env:
           RAKUTEN_APP_ID:     ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           ANTHROPIC_API_KEY:  ${{ secrets.ANTHROPIC_API_KEY }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           GMAIL_USER:         mochiki.kengo@gmail.com
