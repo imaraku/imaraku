@@ -461,6 +461,75 @@ def detect_sports_wins(now: datetime.datetime) -> tuple[bool | None, bool | None
 # pokemon_lottery.json に複数の受付期間を登録できる。
 # 受付期間中(= start <= now <= end) のみ True を返す。
 POKEMON_LOTTERY_JSON = "pokemon_lottery.json"
+SEASONAL_EVENTS_JSON = "seasonal_events.json"
+
+
+def detect_seasonal_events(now: datetime.datetime) -> dict[str, bool]:
+    """seasonal_events.json に定義された季節イベントの開催状況を判定する。
+
+    判定条件（全てを満たすとき true）:
+      1. 現在時刻が active_periods のいずれかの [start, end] に入っている
+      2. URL が取得でき、verify_keywords のいずれかを含む
+      3. end_keywords のいずれも含まない
+
+    ネットワーク失敗時は期間内ならデフォルト true（安全側 = サイトに出る）。
+    戻り値: { key: bool } — 定義された全イベントに対する判定結果。
+    """
+    data = load_json(SEASONAL_EVENTS_JSON, {})
+    events = data.get("events", []) if isinstance(data, dict) else []
+    out: dict[str, bool] = {}
+    for ev in events:
+        key = ev.get("key")
+        if not key:
+            continue
+        # 期間内か
+        periods = ev.get("active_periods", [])
+        in_window = False
+        for p in periods:
+            try:
+                s = datetime.datetime.fromisoformat(p["start"])
+                e = datetime.datetime.fromisoformat(p["end"])
+            except (KeyError, ValueError, TypeError):
+                continue
+            if s <= now <= e:
+                in_window = True
+                break
+        if not in_window:
+            out[key] = False
+            print(f"  [{key}] 期間外")
+            continue
+
+        # URL 取得 → キーワード検証
+        url = ev.get("url")
+        if not url:
+            # URL 未設定なら期間判定のみで true
+            out[key] = True
+            print(f"  [{key}] ✓ 期間内（URL検証なし）")
+            continue
+
+        page = fetch(url)
+        if page is None:
+            # 取得失敗 → 期間内ならデフォルト true（安全側）
+            out[key] = True
+            print(f"  [{key}] ⚠️ 取得失敗 → 期間内のため true")
+            continue
+
+        end_kws = ev.get("end_keywords", [])
+        if any(kw in page for kw in end_kws):
+            out[key] = False
+            print(f"  [{key}] ✗ 終了キーワード検出")
+            continue
+
+        verify_kws = ev.get("verify_keywords", [])
+        if verify_kws and not any(kw in page for kw in verify_kws):
+            out[key] = False
+            print(f"  [{key}] ✗ 検証キーワード不在（ページ内容変化の可能性）")
+            continue
+
+        out[key] = True
+        print(f"  [{key}] ✓ 期間内 & ページ検証OK")
+
+    return out
 
 
 def detect_pokemon_lottery(now: datetime.datetime) -> bool:
@@ -692,6 +761,12 @@ def main():
     results["pokemon_lottery"] = detect_pokemon_lottery(now_jst)
     if not results["pokemon_lottery"]:
         print("  [pokemon_lottery] 受付期間外")
+
+    # 1-b4. シーズナル特集（母の日／父の日等）判定
+    print("\n── 1-b4. シーズナル特集 判定（seasonal_events.json） ──")
+    seasonal = detect_seasonal_events(now_jst)
+    for k, v in seasonal.items():
+        results[k] = v
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
     if not results.get("marathon", False):

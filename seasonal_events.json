@@ -1,0 +1,15 @@
+{
+  "_comment": "シーズナル特集（母の日／父の日／お中元 等）。active_periods は毎年手動で追加。end_keywords を検出した場合は期間内でも false。",
+  "events": [
+    {
+      "key": "mother_day",
+      "name": "母の日",
+      "url": "https://event.rakuten.co.jp/mother/",
+      "verify_keywords": ["母の日"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-04-01T00:00:00+09:00", "end": "2026-05-10T23:59:59+09:00" }
+      ]
+    }
+  ]
+}
