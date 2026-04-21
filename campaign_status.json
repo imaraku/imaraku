@@ -15,5 +15,12 @@
   "superdeal_4h": false,
   "mobiledeal": false,
   "pokemon_lottery": false,
-  "mother_day": true
+  "mother_day": true,
+  "father_day": false,
+  "ochugen": false,
+  "oseibo": false,
+  "osechi": false,
+  "xmas": false,
+  "valentine": false,
+  "whiteday": false
 }
