@@ -1,5 +1,6 @@
 {
-  "_comment": "シーズナル特集（母の日／父の日／お中元 等）。active_periods は毎年手動で追加。end_keywords を検出した場合は期間内でも false。",
+  "_comment": "シーズナル特集（母の日／父の日／お中元 等）。active_periods は毎年手動で追加。end_keywords を検出した場合は期間内でも false。URL 疎通失敗時も false（次cronで再判定）。",
+  "_yearly_maintenance": "毎年1月に、その年の可変日付（母の日=5月第2日曜、父の日=6月第3日曜）を翌年分まで追加すること。固定日（バレンタイン2/14、ホワイトデー3/14、クリスマス12/25）は年だけ更新。",
   "events": [
     {
       "key": "mother_day",
@@ -8,7 +9,85 @@
       "verify_keywords": ["母の日"],
       "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
       "active_periods": [
-        { "start": "2026-04-01T00:00:00+09:00", "end": "2026-05-10T23:59:59+09:00" }
+        { "start": "2026-04-01T00:00:00+09:00", "end": "2026-05-10T23:59:59+09:00" },
+        { "start": "2027-04-01T00:00:00+09:00", "end": "2027-05-09T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "father_day",
+      "name": "父の日",
+      "url": "https://event.rakuten.co.jp/father/",
+      "verify_keywords": ["父の日"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-05-15T00:00:00+09:00", "end": "2026-06-21T23:59:59+09:00" },
+        { "start": "2027-05-15T00:00:00+09:00", "end": "2027-06-20T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "ochugen",
+      "name": "お中元",
+      "url": "https://event.rakuten.co.jp/ochugen/",
+      "verify_keywords": ["お中元", "中元"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-06-01T00:00:00+09:00", "end": "2026-08-15T23:59:59+09:00" },
+        { "start": "2027-06-01T00:00:00+09:00", "end": "2027-08-15T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "oseibo",
+      "name": "お歳暮",
+      "url": "https://event.rakuten.co.jp/oseibo/",
+      "verify_keywords": ["お歳暮", "歳暮"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-11-01T00:00:00+09:00", "end": "2026-12-20T23:59:59+09:00" },
+        { "start": "2027-11-01T00:00:00+09:00", "end": "2027-12-20T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "osechi",
+      "name": "おせち",
+      "url": "https://event.rakuten.co.jp/osechi/",
+      "verify_keywords": ["おせち"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-10-01T00:00:00+09:00", "end": "2026-12-31T23:59:59+09:00" },
+        { "start": "2027-10-01T00:00:00+09:00", "end": "2027-12-31T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "xmas",
+      "name": "クリスマス",
+      "url": "https://event.rakuten.co.jp/xmas/",
+      "verify_keywords": ["クリスマス", "Xmas", "Christmas"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-11-15T00:00:00+09:00", "end": "2026-12-25T23:59:59+09:00" },
+        { "start": "2027-11-15T00:00:00+09:00", "end": "2027-12-25T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "valentine",
+      "name": "バレンタイン",
+      "url": "https://event.rakuten.co.jp/valentine/",
+      "verify_keywords": ["バレンタイン", "Valentine"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2027-01-15T00:00:00+09:00", "end": "2027-02-14T23:59:59+09:00" },
+        { "start": "2028-01-15T00:00:00+09:00", "end": "2028-02-14T23:59:59+09:00" }
+      ]
+    },
+    {
+      "key": "whiteday",
+      "name": "ホワイトデー",
+      "url": "https://event.rakuten.co.jp/whiteday/",
+      "verify_keywords": ["ホワイトデー", "White Day"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2027-02-15T00:00:00+09:00", "end": "2027-03-14T23:59:59+09:00" },
+        { "start": "2028-02-15T00:00:00+09:00", "end": "2028-03-14T23:59:59+09:00" }
       ]
     }
   ]

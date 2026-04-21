@@ -509,9 +509,9 @@ def detect_seasonal_events(now: datetime.datetime) -> dict[str, bool]:
 
         page = fetch(url)
         if page is None:
-            # 取得失敗 → 期間内ならデフォルト true（安全側）
-            out[key] = True
-            print(f"  [{key}] ⚠️ 取得失敗 → 期間内のため true")
+            # 取得失敗 → 安全側=false（壊れたURLを表示し続けない）。一時障害なら次cronで復活する
+            out[key] = False
+            print(f"  [{key}] ⚠️ 取得失敗 → false（次cronで再判定）")
             continue
 
         end_kws = ev.get("end_keywords", [])
