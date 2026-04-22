@@ -30,8 +30,11 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: 日本語フォントをインストール（画像生成用）
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+
       - name: 依存パッケージをインストール
-        run: pip install requests anthropic beautifulsoup4
+        run: pip install requests anthropic beautifulsoup4 Pillow
 
       - name: ROOM投稿候補メール送信
         env:
