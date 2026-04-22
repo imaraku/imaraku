@@ -487,7 +487,21 @@ def main():
         print(f"  ⚠️ campaign_status.json 読み取り失敗: {e}", file=sys.stderr)
 
     allowed_weekdays = [0, 1, 2, 3, 4, 5, 6] if marathon_active else [0, 1, 2, 3, 4, 5]
-    if weekday in allowed_weekdays and last_regular_date != today_str:
+
+    # プライムタイム・ゲート：人が楽天で買い物しつつXを見てる時間帯（17:00-22:59 JST）に集中投下する。
+    # 深夜帯（0/3時）に定期ツイートが飛んでしまう問題の対策でもある。
+    # ただし 22:00 の run まで投稿できてなかった場合は、翌日持ち越しを避けるため最後の保険として投げる。
+    hour = now.hour
+    in_prime_time = 17 <= hour <= 22
+    is_last_chance = hour == 22   # 22時の run = 本日最後の機会
+
+    should_post_regular = (
+        weekday in allowed_weekdays
+        and last_regular_date != today_str
+        and (in_prime_time or is_last_chance)
+    )
+
+    if should_post_regular:
         body, tag_categories = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
         tweet = body + "\n\n" + hashtags(tag_categories)
         print(f"\n投稿内容（定期・常連アイテム）:\n{tweet}\n")
@@ -496,7 +510,14 @@ def main():
         cache["last_regular_date"] = today_str
         cache["regular_index"] = regular_index
     else:
-        print(f"  定期ツイートはスキップ（weekday={weekday}, last={last_regular_date}）")
+        reason = []
+        if weekday not in allowed_weekdays:
+            reason.append(f"weekday={weekday}非対象")
+        if last_regular_date == today_str:
+            reason.append("本日投稿済")
+        if not in_prime_time:
+            reason.append(f"プライムタイム外({hour}時)")
+        print(f"  定期ツイートはスキップ（{' / '.join(reason) or '条件未達'}）")
 
     # キャッシュ更新（ランキング取得できた場合のみアイテムリストを更新）
     if current_names:
