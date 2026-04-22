@@ -189,6 +189,18 @@ def detect_ip_hashtag(name: str) -> str:
     return ""
 
 
+def is_rakuten_books(url: str) -> bool:
+    """商品URLが楽天ブックスのものか判定する。
+    楽天ブックスは独自ドメイン（books.rakuten.co.jp）と
+    item.rakuten.co.jp/book/ 配下の2パターンがある。
+    楽天ブックスで1回3,000円以上購入すると SPU+0.5% が効くため、
+    ランキングツイートで店舗キーワードを強調する価値がある。"""
+    if not url:
+        return False
+    u = url.lower()
+    return ("books.rakuten.co.jp" in u) or ("item.rakuten.co.jp/book/" in u)
+
+
 def add_affiliate(url: str) -> str:
     """楽天URLにアフィリエイトパラメータを付与する。"""
     if not url or 'rakuten' not in url:
@@ -350,6 +362,7 @@ def tweet_rare_item(items: list) -> str:
 
     ・冒頭の【...】プレフィックスを剥がして本題（鬼滅の刃/ワンピース等）を前面に
     ・人気IPを検出したら専用ハッシュタグを追加してファン層の検索流入を狙う
+    ・楽天ブックス商品は「楽天ブックスで」本文＋#楽天ブックス タグ＋SPU+0.5%特典訴求
     ・40字で切り詰め、280字に収まるようベースタグ数を調整
     """
     top = items[0]
@@ -364,26 +377,56 @@ def tweet_rare_item(items: list) -> str:
     # ② IP検出は "剥がす前" の生データで走査（プレフィックスにヒントがあるケースも拾う）
     ip_tag = detect_ip_hashtag(raw_name)
 
-    # ③ 40字で切り詰め
-    if len(name) > 40:
-        name = name[:38] + "…"
+    # ③ 楽天ブックス判定（SPU+0.5%のメリットを訴求）
+    books = is_rakuten_books(top.get('url', ''))
 
-    # ④ IPタグ付与時はベースタグを2個に抑えて280字を死守
-    base_max = 2 if ip_tag else 3
+    # ④ 切り詰め：楽天ブックス版は「📚 楽天ブックスで」分だけ短めに
+    name_cap = 35 if books else 40
+    if len(name) > name_cap:
+        name = name[:name_cap - 2] + "…"
+
+    # ⑤ タグ数調整：books+ip両方あるとタグが重くなるので段階的に削る
+    if books and ip_tag:
+        base_max = 1
+    elif books or ip_tag:
+        base_max = 2
+    else:
+        base_max = 3
     base_tags = hashtags(['core', 'ranking', 'poikatsu'], max_tags=base_max)
-    tag_line = f"{ip_tag} {base_tags}" if ip_tag else base_tags
+    tag_parts = []
+    if books:
+        tag_parts.append("#楽天ブックス")
+    if ip_tag:
+        tag_parts.append(ip_tag)
+    tag_parts.append(base_tags)
+    tag_line = " ".join(tag_parts)
 
-    return (
-        f"🚨 楽天ランキングに急上昇！\n"
-        f"「{name}」\n"
-        "\n"
-        "人気アイテムはすぐ売り切れも😰\n"
-        "気になる方はお早めに✨\n"
-        "\n"
-        f"▶ 商品\n{item_url}\n"
-        f"▶ エントリー\n{SITE_URL}\n"
-        f" {tag_line}"
-    )
+    # ⑥ 本文：楽天ブックスなら SPU+0.5% 訴求に差し替え
+    if books:
+        body = (
+            f"🚨 楽天ランキングに急上昇！\n"
+            f"📚 楽天ブックスで「{name}」\n"
+            "\n"
+            "人気アイテムはすぐ売り切れも😰\n"
+            "💡3,000円以上でSPU+0.5%🎁\n"
+            "\n"
+            f"▶ 商品\n{item_url}\n"
+            f"▶ エントリー\n{SITE_URL}\n"
+            f" {tag_line}"
+        )
+    else:
+        body = (
+            f"🚨 楽天ランキングに急上昇！\n"
+            f"「{name}」\n"
+            "\n"
+            "人気アイテムはすぐ売り切れも😰\n"
+            "気になる方はお早めに✨\n"
+            "\n"
+            f"▶ 商品\n{item_url}\n"
+            f"▶ エントリー\n{SITE_URL}\n"
+            f" {tag_line}"
+        )
+    return body
 
 
 # ── メイン ────────────────────────────────────────────────────────────────────
