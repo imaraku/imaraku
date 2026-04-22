@@ -2,7 +2,7 @@ name: 楽天ROOM 日次投稿候補メール
 
 on:
   schedule:
-    - cron: '0 21 * * *'   # 21:00 UTC = 翌 06:00 JST（GitHub Actionsのcronは最大30分遅れるため早めに）
+    - cron: '0 16 * * *'   # 16:00 UTC = 翌 01:00 JST（深夜に送って、起きた時に読む運用）
   # 手動テスト用
   workflow_dispatch:
     inputs:
