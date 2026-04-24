@@ -64,4 +64,13 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add campaign_status.json new_campaigns.json marathon_schedule.json
           git commit -m "chore: キャンペーン状態を自動更新 [skip ci]"
-          git push
+          # ranking-check 等との同時刻競合対策：rebase+retry 付き push
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then
+              echo "push 成功（試行 $i）"
+              exit 0
+            fi
+            echo "push リトライ $i..."
+            sleep $((i * 5))
+          done
+          echo "push 3回失敗" && exit 1

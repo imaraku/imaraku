@@ -201,6 +201,71 @@ def is_rakuten_books(url: str) -> bool:
     return ("books.rakuten.co.jp" in u) or ("item.rakuten.co.jp/book/" in u)
 
 
+# 売り切れ判定キーワード（商品ページ内にあれば在庫なし扱い）
+# 誤検出を避けるため、販売終了が明確な文言のみ厳選
+SOLD_OUT_KEYWORDS = [
+    "売り切れました",
+    "SOLD OUT",
+    "在庫切れ",
+    "販売を終了",
+    "販売終了しました",
+    "現在お取り扱いできません",
+    "入荷待ち",
+    "再入荷をお待ち",
+]
+
+
+def is_in_stock(url: str, timeout: int = 10):
+    """商品ページを取得して在庫があるか判定する。
+    戻り値:
+      True  = 在庫あり（または判定不能 = 安全側）
+      False = 明確に売り切れ／販売終了
+      None  = ページ取得失敗（判定不能 → 呼び出し側判断）
+
+    ⚠️ 取得失敗時は None を返す。呼び出し側で True（楽観）か False（慎重）を選ぶ。
+    """
+    if not url or 'rakuten' not in url.lower():
+        return True  # 判定不能 → 安全側で true
+
+    headers = {
+        'User-Agent': (
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/120.0.0.0 Safari/537.36'
+        ),
+        'Accept-Language': 'ja,en;q=0.9',
+    }
+    try:
+        r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+        if r.status_code != 200:
+            return None  # 404 など → 判定不能
+        text = r.text
+    except Exception as e:
+        print(f"    ⚠️ 在庫チェック取得失敗: {e}", file=sys.stderr)
+        return None
+
+    for kw in SOLD_OUT_KEYWORDS:
+        if kw in text:
+            print(f"    ✗ 売り切れ検出: 「{kw}」")
+            return False
+    return True
+
+
+def pick_in_stock_item(candidates: list):
+    """候補リストの先頭から順に在庫チェックを行い、最初の在庫ありアイテムを返す。
+    全て売り切れなら None を返す。ページ取得失敗（None）は「在庫あり扱い」にして
+    ツイート機会を逃さない（楽観側）。"""
+    for item in candidates:
+        print(f"  📦 在庫チェック: {item['name'][:30]}...")
+        status = is_in_stock(item.get('url', ''))
+        if status is False:
+            print(f"    → スキップ（売り切れ）")
+            continue
+        print(f"    → {'在庫あり' if status else '判定不能・在庫ありとみなす'}")
+        return item
+    return None
+
+
 def add_affiliate(url: str) -> str:
     """楽天URLにアフィリエイトパラメータを付与する。"""
     if not url or 'rakuten' not in url:
@@ -466,10 +531,15 @@ def main():
             ]
 
             if rare_new:
-                print(f"  🚨 レアアイテム新規ランクイン: {[i['name'] for i in rare_new]}")
-                tweet = tweet_rare_item(rare_new)
-                print(f"\n投稿内容（レアアイテム）:\n{tweet}\n")
-                post_tweet(tweet)
+                print(f"  🚨 レアアイテム新規ランクイン候補: {[i['name'] for i in rare_new]}")
+                # 売り切れ商品を紹介しても読者が失望するだけなので、在庫確認して最初の在庫ありを選ぶ
+                in_stock = pick_in_stock_item(rare_new)
+                if in_stock:
+                    tweet = tweet_rare_item([in_stock])
+                    print(f"\n投稿内容（レアアイテム・在庫あり）:\n{tweet}\n")
+                    post_tweet(tweet)
+                else:
+                    print("  全て売り切れのため、ツイートを見送り")
             else:
                 print("  新規レアアイテムなし")
 

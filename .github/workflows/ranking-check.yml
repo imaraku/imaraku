@@ -46,8 +46,21 @@ jobs:
           # ranking_cache.json が存在する場合のみ add（初回は生成されない場合もある）
           if [ -f ranking_cache.json ]; then
             git add ranking_cache.json
-            git diff --cached --quiet || git commit -m "chore: ranking cache update"
-            git push
+            if git diff --cached --quiet; then
+              echo "変更なし。push スキップ"
+              exit 0
+            fi
+            git commit -m "chore: ranking cache update"
+            # check-campaigns 等との同時刻競合対策：rebase+retry 付き push
+            for i in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                echo "push 成功（試行 $i）"
+                exit 0
+              fi
+              echo "push リトライ $i..."
+              sleep $((i * 5))
+            done
+            echo "push 3回失敗" && exit 1
           else
             echo "ranking_cache.json が見つかりません。スキップします。"
           fi
