@@ -201,31 +201,42 @@ def is_rakuten_books(url: str) -> bool:
     return ("books.rakuten.co.jp" in u) or ("item.rakuten.co.jp/book/" in u)
 
 
-# 売り切れ判定キーワード（商品ページ内にあれば在庫なし扱い）
-# 誤検出を避けるため、販売終了が明確な文言のみ厳選
-SOLD_OUT_KEYWORDS = [
-    "売り切れました",
-    "SOLD OUT",
-    "在庫切れ",
-    "販売を終了",
+# 在庫あり判定（肯定的シグナル）：商品ページに購入導線が存在すれば在庫ありとみなす
+# 楽天市場の商品ページは在庫がある時のみ「カートに入れる」「ご購入手続きへ」ボタンが表示される
+IN_STOCK_INDICATORS = [
+    "カートに入れる",
+    "ご購入手続きへ",
+    "購入手続きへ",
+    "買い物かごに入れる",
+]
+
+# 売り切れ判定（否定的シグナル）：在庫表示が明確に売り切れになっているケース
+# 注: ページ全体にこれらの文言があるだけでは判定しない。「カートに入れる」が無い時のみ参照
+SOLD_OUT_INDICATORS = [
+    "この商品は売り切れました",
+    "販売を終了しました",
     "販売終了しました",
     "現在お取り扱いできません",
-    "入荷待ち",
-    "再入荷をお待ち",
+    "入荷お待ち",
+    "再入荷お待ち",
 ]
 
 
 def is_in_stock(url: str, timeout: int = 10):
     """商品ページを取得して在庫があるか判定する。
-    戻り値:
-      True  = 在庫あり（または判定不能 = 安全側）
-      False = 明確に売り切れ／販売終了
-      None  = ページ取得失敗（判定不能 → 呼び出し側判断）
 
-    ⚠️ 取得失敗時は None を返す。呼び出し側で True（楽観）か False（慎重）を選ぶ。
+    判定ロジック（肯定的シグナル優先）:
+      1. 「カートに入れる」等の購入ボタンが存在 → 在庫あり（確定）
+      2. 購入ボタンなし & 明確な売り切れ文言あり → 売り切れ
+      3. どちらも判定できない → 在庫ありとみなす（楽観・機会損失防止）
+
+    戻り値:
+      True  = 在庫あり（楽観的に True を返す）
+      False = 明確に売り切れ
+      None  = ページ取得失敗
     """
     if not url or 'rakuten' not in url.lower():
-        return True  # 判定不能 → 安全側で true
+        return True  # 楽天以外は判定不能 → 楽観的に true
 
     headers = {
         'User-Agent': (
@@ -238,16 +249,23 @@ def is_in_stock(url: str, timeout: int = 10):
     try:
         r = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
         if r.status_code != 200:
-            return None  # 404 など → 判定不能
+            return None  # 404 など → 判定不能（呼び出し側で楽観扱い）
         text = r.text
     except Exception as e:
         print(f"    ⚠️ 在庫チェック取得失敗: {e}", file=sys.stderr)
         return None
 
-    for kw in SOLD_OUT_KEYWORDS:
-        if kw in text:
-            print(f"    ✗ 売り切れ検出: 「{kw}」")
-            return False
+    # ① 購入ボタンの存在で「在庫あり」を確定判定（最優先）
+    if any(kw in text for kw in IN_STOCK_INDICATORS):
+        return True
+
+    # ② 購入ボタンが無い & 明確な売り切れ文言がある場合のみ「売り切れ」確定
+    if any(kw in text for kw in SOLD_OUT_INDICATORS):
+        print(f"    ✗ 売り切れ確定（購入導線なし）")
+        return False
+
+    # ③ どちらも判定できない（カート系UIが特殊な店舗等）→ 楽観扱い
+    print(f"    ? 在庫判定不能 → 楽観的に在庫ありとみなす")
     return True
 
 
