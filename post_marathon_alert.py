@@ -20,7 +20,8 @@ API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
  
-CAMPAIGN_STATUS_FILE = "campaign_status.json"
+CAMPAIGN_STATUS_FILE   = "campaign_status.json"
+MARATHON_SCHEDULE_FILE = "marathon_schedule.json"
 SITE_URL  = "https://imaraku.github.io/imaraku/imaraku.html"
 RAKKEN_URL = "https://event.rakuten.co.jp/rakken/?l-id=top_normal_menu_scene69"
 APPLE_URL  = "https://event.rakuten.co.jp/computer/itunes/"
@@ -116,17 +117,69 @@ def build_tweet(special_days: list) -> str:
     )
  
  
+def is_pre_pointup_eve(now: datetime.datetime) -> bool:
+    """事前告知を流すべき「ポイントアップ開始の当日（19:50時点）」かを判定。
+    ── ガード設計（恒久対策）──
+      1. campaign_status.json の marathon_pointup が True なら既に開始済 → 流さない
+      2. marathon_schedule.json の pointup_start が読めれば、その当日のみ True
+      3. schedule が null/取得不能 → 安全側で True（従来動作）にフォールバック
+    """
+    # ① 既にポイントアップ期間中なら絶対に流さない（今回の事故の直接の原因）
+    status = {}
+    if os.path.exists(CAMPAIGN_STATUS_FILE):
+        try:
+            with open(CAMPAIGN_STATUS_FILE) as f:
+                status = json.load(f)
+        except Exception:
+            pass
+    if status.get("marathon_pointup", False):
+        print("  → marathon_pointup=true（既に開始済）→ 事前告知スキップ")
+        return False
+
+    # ② スケジュール JSON がある場合、ポイントアップ開始日と一致するときだけ True
+    sched = {}
+    if os.path.exists(MARATHON_SCHEDULE_FILE):
+        try:
+            with open(MARATHON_SCHEDULE_FILE) as f:
+                sched = json.load(f)
+        except Exception:
+            pass
+    p_start_str = sched.get("pointup_start")
+    if p_start_str:
+        try:
+            p_start = datetime.datetime.fromisoformat(p_start_str)
+            if p_start.tzinfo is None:
+                p_start = p_start.replace(tzinfo=JST)
+            if now.date() != p_start.date():
+                print(f"  → 今日({now.date()}) ≠ pointup開始日({p_start.date()}) → 事前告知スキップ")
+                return False
+            print(f"  → 今日はポイントアップ開始日({p_start.date()})！告知GO")
+            return True
+        except Exception:
+            pass
+
+    # ③ schedule null → 既存ロジック（marathon=true で告知）にフォールバック
+    print("  → schedule 未取得。marathon_pointup=false なので従来動作で告知GO")
+    return True
+
+
 def main():
     print("=== マラソン事前告知チェック ===")
- 
+
     active = check_marathon_active()
     print(f"マラソン開催状況: {'開催中/間もなく開始' if active else '非開催'}")
- 
+
     if not active:
         print("マラソン非開催のため、投稿をスキップします。")
         return
- 
+
     now = datetime.datetime.now(JST)
+
+    # 🛡️ 恒久ガード: ポイントアップ開始の前夜（=当日19:50）以外は流さない
+    if not is_pre_pointup_eve(now):
+        print("事前告知タイミングではないため、投稿をスキップします。")
+        return
+
     special_days = get_special_days(now)
     print(f"特別な日: {special_days if special_days else 'なし'}")
  

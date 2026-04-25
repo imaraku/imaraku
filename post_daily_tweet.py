@@ -82,10 +82,15 @@ def load_marathon_schedule() -> dict:
     return {}
 
 
+KICKOFF_FIRED_FILE = "kickoff_fired.json"
+
+
 def is_marathon_kickoff(now: datetime.datetime) -> bool:
     """ポイントアップ開始から 90 分以内なら True（＝ヨーイドン枠）。
-    daily-tweet は 20:00 JST に走る。ポイントアップは通常 20:00 開始。
-    cron の遅延も考慮し、開始 -10分 〜 +90分 を kickoff window とする。
+    ── 三重ガード ──
+      1. schedule.json に pointup_start が無ければ False（暴発防止）
+      2. 「pointup_start から -10分 〜 +90分」の窓内
+      3. 「同じ pointup_start に対して既に発火済」なら False（再発火防止）
     """
     sched = load_marathon_schedule()
     p_start_str = sched.get("pointup_start")
@@ -97,9 +102,38 @@ def is_marathon_kickoff(now: datetime.datetime) -> bool:
         return False
     if p_start.tzinfo is None:
         p_start = p_start.replace(tzinfo=JST)
+
+    # 当日縛り（暴発防止）
+    if now.date() != p_start.date():
+        return False
+
+    # 時間窓（-10分 〜 +90分）
     delta = (now - p_start).total_seconds()
-    # -10分（先回り）〜 +90分（後追い）
-    return -600 <= delta <= 5400
+    if not (-600 <= delta <= 5400):
+        return False
+
+    # 既に発火済かチェック（同じ pointup_start に対しては1回限り）
+    fired = {}
+    if os.path.exists(KICKOFF_FIRED_FILE):
+        try:
+            with open(KICKOFF_FIRED_FILE) as f:
+                fired = json.load(f)
+        except Exception:
+            pass
+    if fired.get("pointup_start") == p_start_str:
+        print(f"  → kickoff 既発火済（{p_start_str}）→ スキップ")
+        return False
+
+    return True
+
+
+def mark_kickoff_fired(p_start_str: str) -> None:
+    """ヨーイドン発火履歴を記録（同じ pointup_start での再発火を防ぐ）。"""
+    try:
+        with open(KICKOFF_FIRED_FILE, "w") as f:
+            json.dump({"pointup_start": p_start_str, "fired_at": datetime.datetime.now(JST).isoformat()}, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"  ⚠️ kickoff履歴の保存失敗: {e}", file=sys.stderr)
 
 
 def get_special_days(now: datetime.datetime) -> list:
@@ -669,6 +703,10 @@ def main():
     if kickoff:
         tweet = tweet_marathon_kickoff()
         label = "マラソン開始ヨーイドン（kickoff window）"
+        # 同じ pointup_start での再発火を防ぐため履歴を記録
+        sched = load_marathon_schedule()
+        if sched.get("pointup_start"):
+            mark_kickoff_fired(sched["pointup_start"])
 
     # ★ 最高優先: マラソン × W勝利 × 特別日 (年に数回の激レア役満)
     elif marathon and marathon_pointup and w_victory and has_special:
