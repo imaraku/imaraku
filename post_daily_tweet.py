@@ -38,7 +38,8 @@ API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
 
-CAMPAIGN_STATUS_FILE = "campaign_status.json"
+CAMPAIGN_STATUS_FILE   = "campaign_status.json"
+MARATHON_SCHEDULE_FILE = "marathon_schedule.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
 SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"
@@ -69,6 +70,36 @@ def load_status() -> dict:
         except Exception:
             pass
     return {}
+
+
+def load_marathon_schedule() -> dict:
+    if os.path.exists(MARATHON_SCHEDULE_FILE):
+        try:
+            with open(MARATHON_SCHEDULE_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def is_marathon_kickoff(now: datetime.datetime) -> bool:
+    """ポイントアップ開始から 90 分以内なら True（＝ヨーイドン枠）。
+    daily-tweet は 20:00 JST に走る。ポイントアップは通常 20:00 開始。
+    cron の遅延も考慮し、開始 -10分 〜 +90分 を kickoff window とする。
+    """
+    sched = load_marathon_schedule()
+    p_start_str = sched.get("pointup_start")
+    if not p_start_str:
+        return False
+    try:
+        p_start = datetime.datetime.fromisoformat(p_start_str)
+    except Exception:
+        return False
+    if p_start.tzinfo is None:
+        p_start = p_start.replace(tzinfo=JST)
+    delta = (now - p_start).total_seconds()
+    # -10分（先回り）〜 +90分（後追い）
+    return -600 <= delta <= 5400
 
 
 def get_special_days(now: datetime.datetime) -> list:
@@ -145,6 +176,24 @@ def post_tweet(text: str) -> bool:
 
 
 # ── ツイート文 生成 ────────────────────────────────────────────────────────
+
+def tweet_marathon_kickoff() -> str:
+    """マラソン開始（ポイントアップ開始）直後のヨーイドン宣言ツイート。"""
+    return (
+        "🏁 位置について、ヨーイ…\n"
+        "\n"
+        "🏃‍♂️ お買物マラソン スタート！\n"
+        "ポイント買いまわり、開幕💨\n"
+        "\n"
+        "✅ エントリー\n"
+        "✅ クーポン取得\n"
+        "✅ SPU確認\n"
+        "\n"
+        "今すぐ👇\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
+    )
+
 
 def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> str:
     events = season_event if season_event else "・".join(special_days)
@@ -612,9 +661,17 @@ def main():
     any_victory = eagles or vissel
     victor_team = "楽天イーグルス" if eagles else ("ヴィッセル神戸" if vissel else "")
 
+    kickoff = marathon and marathon_pointup and is_marathon_kickoff(now)
+    print(f"  kickoff_window={kickoff}")
+
     # ── 優先度順に判定 ──────────────────────────────────────────────────────
+    # ★★ 超最高優先: マラソン開始直後のヨーイドン枠（90分間限定・1回だけ発火）
+    if kickoff:
+        tweet = tweet_marathon_kickoff()
+        label = "マラソン開始ヨーイドン（kickoff window）"
+
     # ★ 最高優先: マラソン × W勝利 × 特別日 (年に数回の激レア役満)
-    if marathon and marathon_pointup and w_victory and has_special:
+    elif marathon and marathon_pointup and w_victory and has_special:
         tweet = tweet_triple_combo(special_days, season_event)
         label = f"トリプル役満（マラソン×W勝利×{'・'.join(special_days) if special_days else season_event}）"
 
