@@ -184,5 +184,11 @@
     "url": "https://event.rakuten.co.jp/coupon/interior",
     "point": "要確認",
     "detected_at": "2026-04-27"
+  },
+  {
+    "name": "水・ソフトドリンク",
+    "url": "https://event.rakuten.co.jp/coupon/food",
+    "point": "要確認",
+    "detected_at": "2026-04-27"
   }
 ]
