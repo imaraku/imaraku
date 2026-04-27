@@ -51,6 +51,10 @@
       mobiledeal:       false, // 楽天モバイル×スーパーDEAL +10%
     };
 
+    // 終了確定URLマップ（GitHub Actionsが自動更新する expired_entries.json で上書きされる）
+    // { "https://event.rakuten.co.jp/...": { ended_at: "2026-04-27", matched_keyword: "終了しました" } }
+    const EXPIRED_ENTRIES = {};
+
     // ============================================================
 
     // アフィリエイトURLを自動生成する関数
@@ -1205,8 +1209,11 @@
       // ② 日付限定エントリーで今日が対象日でない
       var dateInactive = showDaysAttr &&
         !showDaysAttr.split(',').map(Number).includes(todayDay);
+      // ③ URL生存チェックで終了確定（expired_entries.json）
+      var rawUrl = card.getAttribute('data-entry-url-raw');
+      var urlExpired = rawUrl && EXPIRED_ENTRIES.hasOwnProperty(rawUrl);
 
-      if (campaignInactive || dateInactive) {
+      if (campaignInactive || dateInactive || urlExpired) {
         // 非開催・対象外日 → 両モードで非表示
         card.classList.add('mode-hidden');
       } else if (mode === 'all') {
@@ -1453,7 +1460,7 @@
     };
     const campaignBadge = c.campaignKey ? (campaignBadgeMap[c.campaignKey] || '') : '';
     return `
-      <div class="campaign-card" data-entry-url="${entryUrl}" data-essential="${isEssential}"${showDaysAttr}${campaignAttr}${demoteAttr}>
+      <div class="campaign-card" data-entry-url="${entryUrl}" data-entry-url-raw="${c.url}" data-essential="${isEssential}"${showDaysAttr}${campaignAttr}${demoteAttr}>
         <div class="card-body">
           <div class="card-check-area">
             <input type="checkbox" class="bulk-check bulk-check-${group}"
@@ -1857,6 +1864,12 @@
     .then(function(schedule) {
       applyMarathonSchedule(schedule);
       updateNoticeBanner();
+      // 終了確定URL一覧を読み込んでから applyFilter（カードの非表示判定に使う）
+      return fetch('./expired_entries.json?v=' + Date.now());
+    })
+    .then(function(r) { return r && r.ok ? r.json() : null; })
+    .then(function(expired) {
+      if (expired && typeof expired === 'object') Object.assign(EXPIRED_ENTRIES, expired);
       applyFilter(currentMode);
       // 🆕 自動検出キャンペーンの表示（new_campaigns.json）
       return fetch('./new_campaigns.json?v=' + Date.now());

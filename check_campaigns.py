@@ -35,6 +35,8 @@ HEADERS = {
 STATUS_JSON    = "campaign_status.json"
 NEW_JSON       = "new_campaigns.json"
 SCHEDULE_JSON  = "marathon_schedule.json"
+EXPIRED_JSON   = "expired_entries.json"   # ハードコード済みエントリーのうち終了確定したURL一覧
+IMARAKU_HTML   = "imaraku.html"
 MARATHON_URL   = "https://event.rakuten.co.jp/campaign/point-up/marathon/"
 
 # ─── 既知キャンペーン定義 ─────────────────────────────────────────────────
@@ -177,6 +179,10 @@ SCAN_PAGES = [
     "https://www.rakuten.co.jp/",                      # 楽天市場トップ
     "https://event.rakuten.co.jp/",                    # イベントトップ
     "https://event.rakuten.co.jp/campaign/point-up/",  # ポイントアップ一覧
+    "https://event.rakuten.co.jp/coupon/",             # クーポン特集
+    "https://coupon.rakuten.co.jp/",                   # クーポンセンター
+    "https://event.rakuten.co.jp/superdeal/",          # スーパーDEAL
+    "https://event.rakuten.co.jp/campaign/sale/",      # セール特集
 ]
 
 # 既知URLのパターン（これに含まれるURLは「新規」扱いしない）
@@ -220,8 +226,12 @@ KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
 ]
 
 # 新キャンペーンとして検出する URL パターン（楽天エントリー系）
+# event.rakuten.co.jp の主要セクション + coupon.rakuten.co.jp を網羅
 NEW_CAMPAIGN_URL_RE = re.compile(
-    r'https://event\.rakuten\.co\.jp/(?:campaign|genre|coupon|superdeal/campaign)/[^"\'>\s]+'
+    r'https://(?:'
+    r'event\.rakuten\.co\.jp/(?:campaign|genre|coupon|superdeal/campaign|sale)/[^"\'>\s]+'
+    r'|coupon\.rakuten\.co\.jp/[a-zA-Z0-9_\-]+/[^"\'>\s]+'
+    r')'
 )
 
 # キャンペーン名を URL から推定する
@@ -620,6 +630,29 @@ def extract_title_near_link(html: str, url: str) -> str:
     return urlparse(url).path.strip('/').split('/')[-1]
 
 
+def extract_title_near_link_v2(html: str, url: str) -> str:
+    """v2: img alt -> リンクテキスト -> v1 フォールバック の順で名前を抽出"""
+    escaped = re.escape(url)
+    alt_match = re.search(
+        rf'<a[^>]*href=["\'](?:{escaped})["\'][^>]*>\s*<img[^>]*\salt=["\']([^"\']+)["\']',
+        html, re.IGNORECASE | re.DOTALL,
+    )
+    if alt_match:
+        alt = alt_match.group(1).strip()
+        if alt and len(alt) >= 3:
+            return alt[:50]
+    text_match = re.search(
+        rf'<a[^>]*href=["\'](?:{escaped})["\'][^>]*>(.*?)</a>',
+        html, re.IGNORECASE | re.DOTALL,
+    )
+    if text_match:
+        inner = re.sub(r'<[^>]+>', '', text_match.group(1)).strip()
+        inner = re.sub(r'\s+', ' ', inner)
+        if inner and len(inner) >= 3:
+            return inner[:50]
+    return extract_title_near_link(html, url)
+
+
 END_KEYWORDS   = [
     "終了しました", "キャンペーンは終了", "受付終了",
     "エントリー期間は終了", "エントリーは終了", "開催期間は終了",
@@ -662,6 +695,52 @@ def purge_ended_campaigns(existing_new: list) -> tuple[list, int]:
     return active, removed
 
 
+def extract_html_entry_urls(html_path: str) -> set:
+    """imaraku.html を読み、ハードコード済みエントリーの url を全部抜く。
+    `{ name: "...", ..., url: "https://..." }` の url 値だけを拾う。
+    """
+    if not os.path.exists(html_path):
+        return set()
+    with open(html_path, encoding="utf-8") as f:
+        content = f.read()
+
+    # url: "https://..."  または  url: 'https://...'
+    pattern = re.compile(r"""url:\s*["'](https?://[^"']+)["']""")
+    urls = set()
+    for m in pattern.finditer(content):
+        u = m.group(1)
+        # アンカー（#xxx）は除外
+        if u.startswith("#") or u in ("https://", "http://"):
+            continue
+        # 楽天アフィリエイト短縮URL（a.r10.to）は中身がリダイレクトで判定不能なのでスキップ
+        if "a.r10.to" in u:
+            continue
+        urls.add(u)
+    return urls
+
+
+def check_hardcoded_entry_urls(html_path: str) -> dict:
+    """imaraku.html 内の全エントリーURLを生存チェックし、終了確定したものだけ
+    {url: "ended_at": isodate} で返す。判定不能URLは含めない（楽観）。
+    """
+    urls = extract_html_entry_urls(html_path)
+    print(f"  対象URL: {len(urls)} 件")
+    expired = {}
+    today = datetime.datetime.now(JST).date().isoformat()
+    for u in sorted(urls):
+        page = fetch(u)
+        if page is None:
+            # 取得失敗 → 安全側で「終了扱いにしない」
+            continue
+        # 終了キーワード検出
+        for kw in END_KEYWORDS:
+            if kw in page:
+                print(f"  🗑️  終了確定: {kw} → {u}")
+                expired[u] = {"ended_at": today, "matched_keyword": kw}
+                break
+    return expired
+
+
 def detect_new_campaigns(existing_new: list) -> list:
     """スキャンページから新しいキャンペーンURLを検出して返す。"""
     existing_urls = {c["url"] for c in existing_new}
@@ -686,7 +765,7 @@ def detect_new_campaigns(existing_new: list) -> list:
                 # 終了済みは除外
                 if any(kw in page for kw in END_KEYWORDS):
                     continue
-                name = extract_title_near_link(html, url)
+                name = extract_title_near_link_v2(html, url)
                 print(f"  🆕 新キャンペーン候補: {name} → {url}")
                 found.append({"name": name, "url": url, "point": "要確認", "detected_at": __import__('datetime').date.today().isoformat()})
                 existing_urls.add(url)
@@ -782,6 +861,20 @@ def main():
     changed_status = save_json(STATUS_JSON, results)
     print(f"\n{'✅ campaign_status.json を更新' if changed_status else '変更なし（campaign_status.json）'}")
 
+    # 1-d. ハードコード済みエントリーのURL生存チェック
+    print("\n── 1-d. imaraku.html ハードコードURLの生存チェック ──")
+    existing_expired = load_json(EXPIRED_JSON, {})
+    new_expired = check_hardcoded_entry_urls(IMARAKU_HTML)
+    # 既存の終了URLが復活している可能性も考慮（楽天が再開した場合）
+    # → 今回 new_expired に含まれていない URL は除去
+    merged_expired = {u: v for u, v in new_expired.items()}
+    revived = [u for u in existing_expired if u not in new_expired]
+    if revived:
+        for u in revived:
+            print(f"  ♻️  復活検出（終了URL一覧から除去）: {u}")
+    changed_expired = save_json(EXPIRED_JSON, merged_expired)
+    print(f"  終了確定: {len(merged_expired)} 件 / 復活: {len(revived)} 件")
+
     # 2. 既存の自動検出キャンペーンの終了チェック → 終了済みを削除
     print("\n── 2. 自動検出キャンペーンの終了チェック ──")
     existing_new = load_json(NEW_JSON, [])
@@ -807,7 +900,7 @@ def main():
         print("変更なし（new_campaigns.json）")
 
     # 3. GitHub Actions の outputs に変更有無を出力
-    changed = changed_status or changed_new
+    changed = changed_status or changed_new or changed_expired
     env_file = os.environ.get("GITHUB_OUTPUT", "")
     if env_file:
         with open(env_file, "a") as f:
