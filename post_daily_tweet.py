@@ -83,6 +83,62 @@ def load_marathon_schedule() -> dict:
 
 
 KICKOFF_FIRED_FILE = "kickoff_fired.json"
+POSTED_SLOTS_FILE  = "posted_slots.json"
+
+
+# ── 時間帯スロット重複排除 ──────────────────────────────────────────────
+# GitHub Actions の cron は best-effort で取りこぼされることがある。
+# 各スロットに複数の cron を仕込んで冗長化する代わりに、ここで
+# 「今日のこのスロットは既に投稿済か」を判定して二重投稿を防ぐ。
+
+# 各スロットの「許容投稿時間帯」: スロット名 → (開始hour, 終了hour)
+SLOT_WINDOWS = [
+    ("0",  0,  5),   # 0:00 JST 用 (cron遅延を考慮し5時まで許容)
+    ("12", 12, 16),
+    ("18", 16, 20),  # 18時スロットは20時前まで
+    ("20", 20, 24),
+]
+
+
+def current_slot(now: datetime.datetime):
+    """現在時刻がどのスロットに該当するかを返す（該当なしなら None）。"""
+    h = now.hour
+    for name, start, end in SLOT_WINDOWS:
+        if start <= h < end:
+            return name
+    return None
+
+
+def load_posted_slots() -> dict:
+    if os.path.exists(POSTED_SLOTS_FILE):
+        try:
+            with open(POSTED_SLOTS_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def is_slot_posted(slot: str, today: str) -> bool:
+    data = load_posted_slots()
+    return slot in data.get(today, [])
+
+
+def mark_slot_posted(slot: str, today: str) -> None:
+    data = load_posted_slots()
+    today_slots = data.setdefault(today, [])
+    if slot not in today_slots:
+        today_slots.append(slot)
+    # 7日より古い履歴を掃除
+    cutoff = (datetime.datetime.now(JST) - datetime.timedelta(days=7)).strftime("%Y-%m-%d")
+    for k in list(data.keys()):
+        if k < cutoff:
+            del data[k]
+    try:
+        with open(POSTED_SLOTS_FILE, "w") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"  ⚠️ posted_slots保存失敗: {e}", file=sys.stderr)
 
 
 def is_marathon_kickoff(now: datetime.datetime) -> bool:
@@ -666,6 +722,17 @@ def main():
     weekday = now.weekday()   # 0=月 … 5=土 6=日
     print(f"=== 日次ツイート {now.strftime('%Y-%m-%d %H:%M JST')} ===")
 
+    # 🛡️ スロット重複排除: 冗長cronで取りこぼし救済しつつ、二重投稿を物理的に防ぐ
+    today = now.strftime("%Y-%m-%d")
+    slot = current_slot(now)
+    if slot is None:
+        print(f"  → 投稿対象スロット外（{now.strftime('%H:%M')} JST）→ スキップ")
+        return
+    if is_slot_posted(slot, today):
+        print(f"  → 本日のスロット {slot}時 は既に投稿済 → スキップ")
+        return
+    print(f"  → 対象スロット: {slot}時")
+
     status           = load_status()
     marathon         = status.get("marathon",         False)
     marathon_pointup = status.get("marathon_pointup", False)
@@ -806,7 +873,8 @@ def main():
 
     print(f"  種別: {label}")
     print(f"\n投稿内容:\n{tweet}\n")
-    post_tweet(tweet)
+    if post_tweet(tweet):
+        mark_slot_posted(slot, today)
 
 
 if __name__ == "__main__":

@@ -22,6 +22,7 @@ ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
  
 CAMPAIGN_STATUS_FILE   = "campaign_status.json"
 MARATHON_SCHEDULE_FILE = "marathon_schedule.json"
+PREANNOUNCE_FIRED_FILE = "preannounce_fired.json"
 SITE_URL  = "https://imaraku.github.io/imaraku/imaraku.html"
 RAKKEN_URL = "https://event.rakuten.co.jp/rakken/?l-id=top_normal_menu_scene69"
 APPLE_URL  = "https://event.rakuten.co.jp/computer/itunes/"
@@ -180,12 +181,30 @@ def main():
         print("事前告知タイミングではないため、投稿をスキップします。")
         return
 
+    # 🛡️ 冗長cron対策: 同じ日に複数のcronがfireしても1回しか投稿しない
+    today = now.strftime("%Y-%m-%d")
+    fired = {}
+    if os.path.exists(PREANNOUNCE_FIRED_FILE):
+        try:
+            with open(PREANNOUNCE_FIRED_FILE) as f:
+                fired = json.load(f)
+        except Exception:
+            pass
+    if fired.get("last_fired_date") == today:
+        print(f"  → 本日({today})は既に事前告知済 → スキップ")
+        return
+
     special_days = get_special_days(now)
     print(f"特別な日: {special_days if special_days else 'なし'}")
  
     tweet = build_tweet(special_days)
     print(f"\n投稿内容:\n{tweet}\n")
-    post_tweet(tweet)
+    if post_tweet(tweet):
+        try:
+            with open(PREANNOUNCE_FIRED_FILE, "w") as f:
+                json.dump({"last_fired_date": today, "fired_at": now.isoformat()}, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"  ⚠️ 履歴保存失敗: {e}", file=sys.stderr)
  
  
 if __name__ == "__main__":

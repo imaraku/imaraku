@@ -2,15 +2,32 @@ name: 日次キャンペーンツイート
 
 on:
   schedule:
-    - cron: '0 15 * * *'   #  0:00 JST
-    - cron: '0 3 * * *'    # 12:00 JST
-    - cron: '0 9 * * *'    # 18:00 JST
-    - cron: '0 11 * * *'   # 20:00 JST
+    # 各スロットを3本のcronで冗長化（GitHub Actions cron 取りこぼし対策）
+    # スクリプト側で posted_slots.json による重複排除を行うので、複数fireしても2発目以降はスキップ
+    # 0:00 JST スロット (UTC 15:00台)
+    - cron: '0 15 * * *'
+    - cron: '20 15 * * *'
+    - cron: '50 15 * * *'
+    # 12:00 JST スロット (UTC 3:00台)
+    - cron: '0 3 * * *'
+    - cron: '20 3 * * *'
+    - cron: '50 3 * * *'
+    # 18:00 JST スロット (UTC 9:00台)
+    - cron: '0 9 * * *'
+    - cron: '20 9 * * *'
+    - cron: '50 9 * * *'
+    # 20:00 JST スロット (UTC 11:00台)
+    - cron: '0 11 * * *'
+    - cron: '20 11 * * *'
+    - cron: '50 11 * * *'
   # 手動テスト用
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Node.js 24 を使用（将来の廃止に対応）
+
+permissions:
+  contents: write   # posted_slots.json をコミット・プッシュするため
 
 jobs:
   post-daily:
@@ -35,3 +52,25 @@ jobs:
           TWITTER_ACCESS_TOKEN:        ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
         run: python post_daily_tweet.py
+
+      - name: スロット投稿履歴をコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          for f in posted_slots.json kickoff_fired.json; do
+            [ -f "$f" ] && git add "$f"
+          done
+          if git diff --cached --quiet; then
+            echo "履歴に変更なし。スキップ"
+            exit 0
+          fi
+          git commit -m "chore: 投稿スロット履歴を更新 [skip ci]"
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then
+              echo "push 成功（試行 $i）"
+              exit 0
+            fi
+            echo "push リトライ $i..."
+            sleep $((i * 5))
+          done
+          echo "push 3回失敗" && exit 1
