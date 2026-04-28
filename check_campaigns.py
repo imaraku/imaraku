@@ -720,27 +720,32 @@ def extract_html_entry_urls(html_path: str) -> set:
 
 
 def _check_one_url(url: str) -> tuple:
-    """1URLの生存チェック。(url, ended_reason_or_None) を返す。
+    """1URLの生存チェック。(url, status) を返す。
+      status: "expired:理由" → 終了確定
+              "active"        → 取得成功（明確な終了句なし＝アクティブ扱い）
+              "unknown"       → 取得失敗（ネットワーク等）/ 判定保留
 
-    ─── 保守的判定（誤検出ゼロ優先）───
+    ── 保守的判定（誤検出ゼロ優先）──
     終了マーク条件（次のいずれか）:
       A. HTTP 404 で「ページが見つかりません」系の文言あり
       B. STRICT_END_PHRASES（「本キャンペーンは終了」等の文脈確定句）あり
-         AND ACTIVE_KEYWORDS（「エントリーする」等）が無い
-    通常の「終了しました」「次回開催」等は **過去キャンペーン言及で誤マッチ** するため
+         AND エントリーボタン等のアクティブ要素なし
+    通常の「終了しました」「次回開催」等は過去キャンペーン言及で誤マッチするため
     単独では終了マークしない。
     """
     try:
         r = requests.get(url, headers=HEADERS, timeout=8, allow_redirects=True)
-        status = r.status_code
+        status_code = r.status_code
         text = r.text
     except Exception:
-        return (url, None)  # 取得失敗 → 判定保留
+        return (url, "unknown")  # 取得失敗 → 判定保留（既存expired状態は維持）
 
     # A. HTTP 404 + ページなし系
-    if status == 404 or status >= 500:
+    if status_code == 404 or status_code >= 500:
         if any(kw in text for kw in ["ページが見つかりません", "お探しのページは", "404"]):
-            return (url, f"HTTP {status}")
+            return (url, f"expired:HTTP {status_code}")
+        # 5xxの場合は判定保留（楽天側の一時的な不調）
+        return (url, "unknown")
 
     # B. 文脈確定句（「本キャンペーンは終了」など、明らかにこのページ自身の終了）
     STRICT_END_PHRASES = [
@@ -756,36 +761,46 @@ def _check_one_url(url: str) -> tuple:
     ]
     has_strict_end = any(p in text for p in STRICT_END_PHRASES)
     if has_strict_end:
-        # ただし、エントリーボタン等のアクティブ要素がある場合は誤マッチの可能性大
-        # → エントリー可能な状態なら終了扱いしない
         active_signals = [
             'class="entryBtn"', 'class="entry-btn"',
             'エントリーする</a>', 'エントリーする</button>',
             'エントリーはこちら',
         ]
         if not any(s in text for s in active_signals):
-            return (url, "STRICT終了句検出")
+            return (url, "expired:STRICT終了句検出")
 
-    return (url, None)
+    return (url, "active")
 
 
-def check_hardcoded_entry_urls(html_path: str) -> dict:
-    """imaraku.html 内の全エントリーURLを並列で生存チェックし、終了確定URLだけ返す。
+def check_hardcoded_entry_urls(html_path: str) -> tuple:
+    """imaraku.html 内の全エントリーURLを並列で生存チェックする。
+    戻り値: (expired_dict, active_set, unknown_set)
+      expired_dict: {url: {ended_at, matched_keyword}} 終了確定
+      active_set:   取得成功で明確な終了句なし＝アクティブ確定
+      unknown_set:  取得失敗（既存expired状態を維持すべきURL）
     並列度20で高速化（77URL × 8s/URL逐次 = 600s → 並列なら ~30s）。
     """
     from concurrent.futures import ThreadPoolExecutor, as_completed
     urls = sorted(extract_html_entry_urls(html_path))
     print(f"  対象URL: {len(urls)} 件（並列20）")
     expired = {}
+    active = set()
+    unknown = set()
     today = datetime.datetime.now(JST).date().isoformat()
     with ThreadPoolExecutor(max_workers=20) as ex:
         futures = {ex.submit(_check_one_url, u): u for u in urls}
         for fut in as_completed(futures):
-            url, kw = fut.result()
-            if kw:
+            url, status = fut.result()
+            if status.startswith("expired:"):
+                kw = status.split(":", 1)[1]
                 print(f"  🗑️  終了確定: {kw} → {url}")
                 expired[url] = {"ended_at": today, "matched_keyword": kw}
-    return expired
+            elif status == "active":
+                active.add(url)
+            else:  # unknown
+                unknown.add(url)
+    print(f"  → 終了 {len(expired)} / アクティブ {len(active)} / 取得失敗 {len(unknown)}")
+    return expired, active, unknown
 
 
 def detect_new_campaigns(existing_new: list) -> list:
@@ -911,16 +926,32 @@ def main():
     # 1-d. ハードコード済みエントリーのURL生存チェック
     print("\n── 1-d. imaraku.html ハードコードURLの生存チェック ──")
     existing_expired = load_json(EXPIRED_JSON, {})
-    new_expired = check_hardcoded_entry_urls(IMARAKU_HTML)
-    # 既存の終了URLが復活している可能性も考慮（楽天が再開した場合）
-    # → 今回 new_expired に含まれていない URL は除去
-    merged_expired = {u: v for u, v in new_expired.items()}
-    revived = [u for u in existing_expired if u not in new_expired]
+    new_expired, active_set, unknown_set = check_hardcoded_entry_urls(IMARAKU_HTML)
+
+    # マージルール:
+    #  ① 今回 expired 検出 → expired 入り（最新の matched_keyword で上書き）
+    #  ② 今回 active 確定（取得成功＆終了句なし） → expired から除去（復活）
+    #  ③ 今回 unknown（取得失敗） → 既存 expired 状態を維持（一時的なネットワーク失敗で誤復活させない）
+    merged_expired = dict(new_expired)
+    revived = []
+    preserved = []
+    for u, v in existing_expired.items():
+        if u in new_expired:
+            continue  # ① 既に上書き済
+        if u in active_set:
+            revived.append(u)  # ② 復活
+        else:
+            # ③ unknown または対象URLリストから外れた → 既存状態維持
+            merged_expired[u] = v
+            preserved.append(u)
+
     if revived:
         for u in revived:
             print(f"  ♻️  復活検出（終了URL一覧から除去）: {u}")
+    if preserved:
+        print(f"  💾 取得失敗等で既存expired状態を維持: {len(preserved)} 件")
     changed_expired = save_json(EXPIRED_JSON, merged_expired)
-    print(f"  終了確定: {len(merged_expired)} 件 / 復活: {len(revived)} 件")
+    print(f"  終了確定 計: {len(merged_expired)} 件 / 復活: {len(revived)} 件")
 
     # 2. 既存の自動検出キャンペーンの終了チェック → 終了済みを削除
     print("\n── 2. 自動検出キャンペーンの終了チェック ──")
