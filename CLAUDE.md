@@ -1,5 +1,31 @@
 # 今楽（imaraku）プロジェクト — Claude Code 引き継ぎドキュメント
 
+## 👋 引き継ぎClaudeへ：最初に知っておくべきこと
+
+**運営者は @ima_raku_entry（mochiki.kengo@gmail.com）。一人称「相棒」で呼んでくる。
+カジュアルなトーンで頼むぜ系の口調。技術的な細かい指示よりも「違和感を伝える」スタイル。
+`お疲れ！相棒！` `ナイス！` `頼むぜ！` みたいなノリで返してOK。**
+
+### 必読セクション（順番に）
+1. **🚨 踏むな地雷リスト**（このすぐ下）— 過去のセッションで実際に踏んだ事故集
+2. **自動化レジストリ**（中盤）— 二重投稿の元凶になるので新規自動化前に必ず読む
+3. **ファイル構成** — JSONファイルがそれぞれ何を管理してるか
+
+### 作業時の鉄則
+- **コード論理だけでなく実挙動も毎回確認する**（過去にこの怠慢で2回事故った）
+- **デフォルト値は保守的に**（不明 = 非表示／非開催）— 攻めすぎると誤表示する
+- **大きな仕様変更は段階的に**（X投稿に直結するので、誤判定の影響が大きい）
+- **commit する前に、その変更が誤表示・誤投稿しないか想像する**
+- 相棒は git の細かい操作はやや苦手なので、push までの手順を**コピペ可能なブロック**で渡す
+
+### 環境
+- macOS / Mac mini（相棒の端末）
+- ローカル Python は 3.9（型ヒント `X | None` 不可。CIは 3.11 でOK）
+- リポジトリは `/Users/mochikikengo/Documents/imaraku/`
+- Git は `osxkeychain` 認証。PAT は `imaraku-p` トークン（`workflow` スコープ追加済 2026-04-27）
+
+---
+
 ## プロジェクト概要
 
 **今楽（imaraku）** は楽天市場のキャンペーンエントリーをまとめたアグリゲーターサイト。
@@ -11,6 +37,70 @@
 
 ---
 
+---
+
+## 🚨 引き継ぎ時 必読：踏むな地雷リスト
+
+過去のセッションで実際に踏んだ事故。同じミスを繰り返さないこと。
+
+### ⚠️ 1. 「終了しました」キーワード単独で expired 判定するな
+楽天のページは **過去キャンペーンへの言及**（例: "前回マラソンは終了しました 次回は…"）で
+このキーワードを含むため、単独マッチで判定するとアクティブなキャンペーンを大量誤検出する。
+
+✅ **正解**: STRICT_END_PHRASES（「**本**キャンペーンは終了」「**この**キャンペーンは終了」）
+                + 「お買い物ありがとうございました」等 GRATITUDE_PHRASES で判定。
+                さらに「エントリーする」ボタン等のアクティブ要素が無いことも確認。
+
+### ⚠️ 2. URL生存チェック対象に showOnDays / campaignKey 付きエントリーを含めるな
+- `showOnDays:[1]` 等の特定日URL は対象外日に 404 を返すため、誤って expired 入りする
+- `campaignKey` 持ちは campaign_status.json で別系統管理されているので二重管理になる
+
+✅ **正解**: `extract_html_entry_urls()` でブロック単位で `showOnDays|campaignKey` を含む
+              エントリーをスキップ。検査対象 77→31件に絞り込み。
+
+### ⚠️ 3. imaraku.html の CAMPAIGN_STATUS ハードコード追加し忘れ → 季節キャンペーン誤表示
+ハードコード defaults に無いキー（pokemon_lottery, ochugen 等）は `hasOwnProperty=false` で
+旧ロジックでは「表示扱い」されていた。
+
+✅ **正解**: `applyFilter` で `CAMPAIGN_STATUS[key] !== true` で判定。未定義は非表示扱い。
+
+### ⚠️ 4. detect_new_campaigns はカテゴリナビを大量誤検出する
+楽天クーポンTOPには `/coupon/sweets`, `/coupon/pc` 等のカテゴリ一覧URLが大量にある。
+これらは個別キャンペーンじゃないので追加するとサイトが汚染される。
+
+✅ **正解**: `is_category_nav_url()` で除外、`is_invalid_campaign_name()` で名前バリデーション、
+              同名重複排除、1ラン最大10件で暴走防止（6重ガード）。
+
+### ⚠️ 5. GitHub Actions の cron は best-effort で取りこぼす
+時間ピッタリの cron は混み合うほど drop される。3本冗長化しても全drop することがある。
+
+✅ **正解**: `daily-tweet.yml` は `0,30 * * * *`（毎時2回 = 48回/日）まで密化し、
+              スクリプト側 `posted_slots.json` で「対象スロット & 未投稿」のみ実投稿。
+
+### ⚠️ 6. check-campaigns が10分占有 → 他workflow を弾く
+77URL の逐次fetch で run時間が 53s → 600s に肥大化、daily-tweet の cron drop 連鎖を引き起こした。
+
+✅ **正解**: ThreadPoolExecutor max_workers=20 で並列化（~30s）。timeout-minutes も全workflow で設定済。
+
+### ⚠️ 7. fetch失敗 = expired 復活 ではない
+URL生存チェックで取得失敗（ネットワーク不調）した時に既存expired を「復活」させると、
+本物の終了URLが瞬間的に site に再表示されてしまう。
+
+✅ **正解**: `_check_one_url` は `"expired:理由" / "active" / "unknown"` の3値ステータス。
+              unknown のときは既存expired状態を維持。
+
+### ⚠️ 8. ハードコードURLから消えたエントリーは expired 一覧から自動削除する
+imaraku.html から URL を消した時、expired_entries.json に永遠に残ってしまう問題があった。
+
+✅ **正解**: マージ時に「`existing_expired` にあるが今回チェック対象 (active+unknown+new_expired) に
+              含まれない URL は削除」のロジック追加済み。
+
+### ⚠️ 9. PAT に workflow スコープが無いと .github/workflows/*.yml が push できない
+2026-04-25 にこれを踏んで、workflow ファイル変更をコミットから外す回避策で対処した。
+現在の PAT (`imaraku-p`) には workflow スコープを追加済み（2026-04-27）。
+
+---
+
 ## ファイル構成
 
 ```
@@ -18,18 +108,25 @@ imaraku/                        ← リポジトリルート
 ├── imaraku.html                ← メインサイト（GitHub Pages）
 ├── campaign_status.json        ← キャンペーン開催状況（GitHub Actionsが自動更新）
 ├── new_campaigns.json          ← 自動検出された新キャンペーン候補
+├── expired_entries.json        ← 終了確定したハードコード済みエントリーURL集合
+├── seasonal_events.json        ← 季節イベント（母の日／父の日等）の active_periods 定義
+├── marathon_schedule.json      ← マラソンの正確な開始/終了時刻（自動抽出 or 手動）
+├── posted_slots.json           ← daily-tweet の slot 別投稿実績（重複排除用）
+├── kickoff_fired.json          ← マラソン kickoff 発火履歴（再発火防止）
+├── preannounce_fired.json      ← 事前告知ツイート発火履歴（日次重複排除）
+├── pokemon_lottery.json        ← ポケカ抽選の受付期間（手動メンテ）
 ├── ranking_cache.json          ← ランキングチェック用キャッシュ（自動生成）
 ├── ogp.png                     ← X/OGPリンクプレビュー画像 (1200x630)
-├── check_campaigns.py          ← キャンペーン状態チェックスクリプト（旧: scripts/配下）
-├── post_daily_tweet.py         ← 日次ツイートスクリプト
-├── post_marathon_alert.py      ← マラソン事前告知スクリプト
-├── check_ranking.py            ← 楽天ランキングチェック＆ツイートスクリプト
+├── check_campaigns.py          ← キャンペーン状態チェック（メイン）
+├── post_daily_tweet.py         ← 日次ツイート（slot dedup ロジック含む）
+├── post_marathon_alert.py      ← マラソン事前告知ツイート
+├── check_ranking.py            ← 楽天ランキングチェック＆ツイート
 └── .github/
     └── workflows/
-        ├── check-campaigns.yml     ← 2時間ごと実行
-        ├── daily-tweet.yml         ← 0時/12時/18時/20時 JST
-        ├── marathon-preannounce.yml← 毎日19:50 JST
-        └── ranking-check.yml       ← 3時間ごと実行
+        ├── check-campaigns.yml     ← 2時間ごと実行（URL生存チェック含む）
+        ├── daily-tweet.yml         ← 毎時:00/:30 (48回/日 試行＋slot dedup)
+        ├── marathon-preannounce.yml← 19:30/19:40/19:50 JST 冗長fire
+        └── ranking-check.yml       ← :00/:30 で2倍冗長化済
 ```
 
 ---
@@ -53,6 +150,20 @@ imaraku/                        ← リポジトリルート
 | `guerrilla` | ゲリラ 全店+1倍（不定期） | false |
 | `superdeal_4h` | スーパーDEAL 4時間限定（マラソン期間中のみ開催） | false |
 | `mobiledeal` | 楽天モバイル×スーパーDEAL（マラソン期間中のみ開催） | false |
+| `pokemon_lottery` | 楽天ブックスのポケカ抽選（受付期間中のみ true） | false |
+| `mother_day` | 母の日特集（`seasonal_events.json` で期間制御） | false |
+| `father_day` | 父の日特集（同上） | false |
+| `ochugen` | お中元特集（同上） | false |
+| `oseibo` | お歳暮特集（同上） | false |
+| `osechi` | おせち特集（同上） | false |
+| `xmas` | クリスマス特集（同上） | false |
+| `valentine` | バレンタイン特集（同上） | false |
+| `whiteday` | ホワイトデー特集（同上） | false |
+
+⚠️ **注意**: 上記キーのうち `pokemon_lottery` から下は `imaraku.html` の
+ハードコード `CAMPAIGN_STATUS` defaults には**含まれていない**。
+applyFilter は `CAMPAIGN_STATUS[key] !== true` で「未定義 = 非開催扱い」にしているので
+ハードコードに追記しなくても誤表示されない設計（地雷#3 参照）。
 
 ---
 
@@ -117,16 +228,25 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 
 ---
 
-## GitHub Actionsのスケジュール
+## GitHub Actionsのスケジュール（2026-04-28 改修後）
 
-| ワークフロー | cron（UTC） | JST換算 |
+| ワークフロー | cron（UTC） | JST換算 / 戦略 |
 |---|---|---|
 | check-campaigns | `0 15,17,19,21,23,1,3,5,7,9,11,13 * * *` | 2時間ごと |
-| daily-tweet | `0 15 * * *` / `0 3 * * *` / `0 9 * * *` / `0 11 * * *`（4本） | 0時/12時/18時/20時 JST |
-| marathon-preannounce | `50 10 * * *` | 毎日19:50 JST |
-| ranking-check | `0 */3 * * *` | 3時間ごと |
+| daily-tweet | `0,30 * * * *` | **毎時:00/:30＝48回/日試行**＋slot dedup |
+| marathon-preannounce | `30 10 * * *` / `40 10 * * *` / `50 10 * * *` | 19:30/19:40/19:50 JST 冗長fire |
+| ranking-check | `0,30 0,3,6,9,11,13,15,18 * * *` | 8時刻×2 (16fire/日) |
 
-全ワークフローに `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true` 設定済み。
+**重要**: daily-tweet は cron 取りこぼし対策で毎時2回試行する設計。
+スクリプト側で `current_slot()` がスロット判定（0/12/18/20時）し、
+`posted_slots.json` が「対象スロット&未投稿」のみ実投稿に絞る。
+
+全ワークフローに：
+- `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`（Node.js 24 対応）
+- `concurrency: { group: <name>, cancel-in-progress: false }`（重なり時はキューイング）
+- `timeout-minutes`（hang防止）
+
+設定済み。
 
 ---
 
