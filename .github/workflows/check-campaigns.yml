@@ -37,9 +37,14 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Node.js 24 を使用（将来の廃止に対応）
 
+concurrency:
+  group: check-campaigns
+  cancel-in-progress: false
+
 jobs:
   check-campaigns:
     runs-on: ubuntu-latest
+    timeout-minutes: 8   # URL生存チェック並列化済みだが念のため
 
     steps:
       - name: リポジトリをチェックアウト

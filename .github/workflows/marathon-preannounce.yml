@@ -16,9 +16,14 @@ env:
 permissions:
   contents: write   # preannounce_fired.json をコミット・プッシュするため
 
+concurrency:
+  group: marathon-preannounce
+  cancel-in-progress: false
+
 jobs:
   post-alert:
     runs-on: ubuntu-latest
+    timeout-minutes: 4
 
     steps:
       - name: リポジトリをチェックアウト

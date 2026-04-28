@@ -719,25 +719,72 @@ def extract_html_entry_urls(html_path: str) -> set:
     return urls
 
 
-def check_hardcoded_entry_urls(html_path: str) -> dict:
-    """imaraku.html 内の全エントリーURLを生存チェックし、終了確定したものだけ
-    {url: "ended_at": isodate} で返す。判定不能URLは含めない（楽観）。
+def _check_one_url(url: str) -> tuple:
+    """1URLの生存チェック。(url, ended_reason_or_None) を返す。
+
+    ─── 保守的判定（誤検出ゼロ優先）───
+    終了マーク条件（次のいずれか）:
+      A. HTTP 404 で「ページが見つかりません」系の文言あり
+      B. STRICT_END_PHRASES（「本キャンペーンは終了」等の文脈確定句）あり
+         AND ACTIVE_KEYWORDS（「エントリーする」等）が無い
+    通常の「終了しました」「次回開催」等は **過去キャンペーン言及で誤マッチ** するため
+    単独では終了マークしない。
     """
-    urls = extract_html_entry_urls(html_path)
-    print(f"  対象URL: {len(urls)} 件")
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=8, allow_redirects=True)
+        status = r.status_code
+        text = r.text
+    except Exception:
+        return (url, None)  # 取得失敗 → 判定保留
+
+    # A. HTTP 404 + ページなし系
+    if status == 404 or status >= 500:
+        if any(kw in text for kw in ["ページが見つかりません", "お探しのページは", "404"]):
+            return (url, f"HTTP {status}")
+
+    # B. 文脈確定句（「本キャンペーンは終了」など、明らかにこのページ自身の終了）
+    STRICT_END_PHRASES = [
+        "本キャンペーンは終了",
+        "本キャンペーンは終了しました",
+        "このキャンペーンは終了しました",
+        "このキャンペーンは終了いたしました",
+        "本キャンペーンの受付は終了",
+        "このキャンペーンの受付は終了",
+        "ご応募の受付は終了",
+        "本特集は終了",
+        "ページの公開は終了",
+    ]
+    has_strict_end = any(p in text for p in STRICT_END_PHRASES)
+    if has_strict_end:
+        # ただし、エントリーボタン等のアクティブ要素がある場合は誤マッチの可能性大
+        # → エントリー可能な状態なら終了扱いしない
+        active_signals = [
+            'class="entryBtn"', 'class="entry-btn"',
+            'エントリーする</a>', 'エントリーする</button>',
+            'エントリーはこちら',
+        ]
+        if not any(s in text for s in active_signals):
+            return (url, "STRICT終了句検出")
+
+    return (url, None)
+
+
+def check_hardcoded_entry_urls(html_path: str) -> dict:
+    """imaraku.html 内の全エントリーURLを並列で生存チェックし、終了確定URLだけ返す。
+    並列度20で高速化（77URL × 8s/URL逐次 = 600s → 並列なら ~30s）。
+    """
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    urls = sorted(extract_html_entry_urls(html_path))
+    print(f"  対象URL: {len(urls)} 件（並列20）")
     expired = {}
     today = datetime.datetime.now(JST).date().isoformat()
-    for u in sorted(urls):
-        page = fetch(u)
-        if page is None:
-            # 取得失敗 → 安全側で「終了扱いにしない」
-            continue
-        # 終了キーワード検出
-        for kw in END_KEYWORDS:
-            if kw in page:
-                print(f"  🗑️  終了確定: {kw} → {u}")
-                expired[u] = {"ended_at": today, "matched_keyword": kw}
-                break
+    with ThreadPoolExecutor(max_workers=20) as ex:
+        futures = {ex.submit(_check_one_url, u): u for u in urls}
+        for fut in as_completed(futures):
+            url, kw = fut.result()
+            if kw:
+                print(f"  🗑️  終了確定: {kw} → {url}")
+                expired[url] = {"ended_at": today, "matched_keyword": kw}
     return expired
 
 

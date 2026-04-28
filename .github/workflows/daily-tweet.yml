@@ -2,24 +2,12 @@ name: 日次キャンペーンツイート
 
 on:
   schedule:
-    # 各スロットを3本のcronで冗長化（GitHub Actions cron 取りこぼし対策）
-    # スクリプト側で posted_slots.json による重複排除を行うので、複数fireしても2発目以降はスキップ
-    # 0:00 JST スロット (UTC 15:00台)
-    - cron: '0 15 * * *'
-    - cron: '20 15 * * *'
-    - cron: '50 15 * * *'
-    # 12:00 JST スロット (UTC 3:00台)
-    - cron: '0 3 * * *'
-    - cron: '20 3 * * *'
-    - cron: '50 3 * * *'
-    # 18:00 JST スロット (UTC 9:00台)
-    - cron: '0 9 * * *'
-    - cron: '20 9 * * *'
-    - cron: '50 9 * * *'
-    # 20:00 JST スロット (UTC 11:00台)
-    - cron: '0 11 * * *'
-    - cron: '20 11 * * *'
-    - cron: '50 11 * * *'
+    # 毎時 :00 と :30 に走らせ、スクリプト側 posted_slots.json で
+    # 「対象スロットかつ未投稿」のときだけ投稿する設計。
+    # → 1日48回試行 / 半分dropしても24回 → 4スロット余裕でカバー。
+    # GitHub Actions cron の取りこぼし耐性が劇的に向上する。
+    - cron: '0 * * * *'
+    - cron: '30 * * * *'
   # 手動テスト用
   workflow_dispatch:
 
@@ -29,9 +17,15 @@ env:
 permissions:
   contents: write   # posted_slots.json をコミット・プッシュするため
 
+# 同workflowが重なったらキューイング（既存runを生かして次をqueue）
+concurrency:
+  group: daily-tweet
+  cancel-in-progress: false
+
 jobs:
   post-daily:
     runs-on: ubuntu-latest
+    timeout-minutes: 5   # 万一ハングしても5分で打ち切り（次のcronを邪魔しない）
 
     steps:
       - name: リポジトリをチェックアウト
