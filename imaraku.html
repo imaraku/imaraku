@@ -1202,10 +1202,10 @@
       var campaignKey = card.getAttribute('data-campaign-key');
 
       // ── モード共通の非表示判定（両モードで適用）──────────────────────
-      // ① キャンペーン未開催
+      // ① キャンペーン未開催（保守的: 値が true 以外（undefined含む）なら非開催扱い）
+      // ハードコードCAMPAIGN_STATUSに季節系キーが欠けていてもJSON取得前に誤表示しない
       var campaignInactive = campaignKey &&
-        CAMPAIGN_STATUS.hasOwnProperty(campaignKey) &&
-        !CAMPAIGN_STATUS[campaignKey];
+        CAMPAIGN_STATUS[campaignKey] !== true;
       // ② 日付限定エントリーで今日が対象日でない
       var dateInactive = showDaysAttr &&
         !showDaysAttr.split(',').map(Number).includes(todayDay);
