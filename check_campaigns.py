@@ -824,8 +824,13 @@ def detect_new_campaigns(existing_new: list) -> list:
             # エントリーページかチェック
             page = fetch(url)
             if page and any(kw in page for kw in ACTIVE_KEYWORDS):
-                # 終了済みは除外
-                if any(kw in page for kw in END_KEYWORDS):
+                # 終了済みは除外（保守的判定 = STRICT終了句がある場合のみ）
+                # END_KEYWORDS は過去言及で誤マッチしやすいので、ここでも厳密判定
+                STRICT_ENDS = [
+                    "本キャンペーンは終了", "このキャンペーンは終了",
+                    "ご応募の受付は終了", "本特集は終了",
+                ]
+                if any(p in page for p in STRICT_ENDS):
                     continue
                 name = extract_title_near_link_v2(html, url)
                 print(f"  🆕 新キャンペーン候補: {name} → {url}")
@@ -931,25 +936,32 @@ def main():
     # マージルール:
     #  ① 今回 expired 検出 → expired 入り（最新の matched_keyword で上書き）
     #  ② 今回 active 確定（取得成功＆終了句なし） → expired から除去（復活）
-    #  ③ 今回 unknown（取得失敗） → 既存 expired 状態を維持（一時的なネットワーク失敗で誤復活させない）
+    #  ③ 今回 unknown（取得失敗） → 既存 expired 状態を維持（一時的失敗で誤復活させない）
+    #  ④ 既存 expired にあるが今回チェック対象外（HTMLから消えた） → 削除（自然な掃除）
     merged_expired = dict(new_expired)
     revived = []
     preserved = []
+    cleaned = []
     for u, v in existing_expired.items():
         if u in new_expired:
             continue  # ① 既に上書き済
         if u in active_set:
             revived.append(u)  # ② 復活
-        else:
-            # ③ unknown または対象URLリストから外れた → 既存状態維持
+        elif u in unknown_set:
+            # ③ unknown → 既存状態維持
             merged_expired[u] = v
             preserved.append(u)
+        else:
+            # ④ HTML から消えた URL → expired 一覧から削除
+            cleaned.append(u)
 
     if revived:
         for u in revived:
             print(f"  ♻️  復活検出（終了URL一覧から除去）: {u}")
     if preserved:
-        print(f"  💾 取得失敗等で既存expired状態を維持: {len(preserved)} 件")
+        print(f"  💾 取得失敗で既存expired状態を維持: {len(preserved)} 件")
+    if cleaned:
+        print(f"  🧹 HTMLから消えたURLをexpired一覧から削除: {len(cleaned)} 件")
     changed_expired = save_json(EXPIRED_JSON, merged_expired)
     print(f"  終了確定 計: {len(merged_expired)} 件 / 復活: {len(revived)} 件")
 

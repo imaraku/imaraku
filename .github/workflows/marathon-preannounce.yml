@@ -2,11 +2,12 @@ name: マラソン事前告知ツイート
 
 on:
   schedule:
-    # 19:50 JST（= UTC 10:50）を中心に冗長化（GitHub Actions cron 取りこぼし対策）
+    # 19:30〜19:50 JST に冗長化（GitHub Actions cron 取りこぼし対策）
     # スクリプト側 preannounce_fired.json で日次重複排除を行うため、複数fireしても2発目以降スキップ
+    # ※20:00 JSTは daily-tweet のkickoffツイートと同時刻になるため避ける
+    - cron: '30 10 * * *'   # 19:30 JST
     - cron: '40 10 * * *'   # 19:40 JST
     - cron: '50 10 * * *'   # 19:50 JST
-    - cron: '0 11 * * *'    # 20:00 JST  (※日次ツイートと同時刻だが対象が異なる)
   # 手動テスト用
   workflow_dispatch:
 
