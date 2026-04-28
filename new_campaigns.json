@@ -204,6 +204,12 @@
     "detected_at": "2026-04-28"
   },
   {
+    "name": "ペット割新規登録＆エントリー＆スーパー",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/petwari",
+    "point": "要確認",
+    "detected_at": "2026-04-28"
+  },
+  {
     "name": "お買い物マラソンはこちら",
     "url": "https://event.rakuten.co.jp/campaign/supersale",
     "point": "要確認",
@@ -212,12 +218,6 @@
   {
     "name": "お買い物マラソンはこちら",
     "url": "https://event.rakuten.co.jp/campaign/point-up/marathon",
-    "point": "要確認",
-    "detected_at": "2026-04-28"
-  },
-  {
-    "name": "ペット割新規登録＆エントリー＆スーパー",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/petwari",
     "point": "要確認",
     "detected_at": "2026-04-28"
   },
