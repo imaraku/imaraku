@@ -697,23 +697,34 @@ def purge_ended_campaigns(existing_new: list) -> tuple[list, int]:
 
 def extract_html_entry_urls(html_path: str) -> set:
     """imaraku.html を読み、ハードコード済みエントリーの url を全部抜く。
-    `{ name: "...", ..., url: "https://..." }` の url 値だけを拾う。
+    ── 除外ルール ──
+      ・a.r10.to（短縮URLは中身がリダイレクトで判定不能）
+      ・showOnDays が指定されたエントリー（特定日のみアクティブな URL は
+        対象外日に 404 や 一時リダイレクトを返すことがあり、URL生存判定不可）
+      ・campaignKey が指定されたエントリー（campaign_status.json で別系統管理）
     """
     if not os.path.exists(html_path):
         return set()
     with open(html_path, encoding="utf-8") as f:
         content = f.read()
 
-    # url: "https://..."  または  url: 'https://...'
-    pattern = re.compile(r"""url:\s*["'](https?://[^"']+)["']""")
+    # エントリーオブジェクト全体（{ ... }）を捉えてからその中身を判定する。
+    # imaraku.html はエントリーが 1 行 OR 複数行で書かれているため、
+    # 中括弧ベースで安全に抽出する。
     urls = set()
-    for m in pattern.finditer(content):
+    # `{` で始まり `},` で閉じる JS オブジェクト風ブロックを貪欲でなく拾う
+    block_re = re.compile(r"\{[^{}]*?\burl:\s*[\"'](https?://[^\"']+)[\"'][^{}]*?\}", re.DOTALL)
+    for m in block_re.finditer(content):
+        block = m.group(0)
         u = m.group(1)
-        # アンカー（#xxx）は除外
         if u.startswith("#") or u in ("https://", "http://"):
             continue
-        # 楽天アフィリエイト短縮URL（a.r10.to）は中身がリダイレクトで判定不能なのでスキップ
         if "a.r10.to" in u:
+            continue
+        # showOnDays または campaignKey が同じブロック内にあればスキップ
+        if "showOnDays" in block:
+            continue
+        if "campaignKey" in block:
             continue
         urls.add(u)
     return urls
