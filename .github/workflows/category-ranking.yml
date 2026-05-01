@@ -1,0 +1,67 @@
+name: カテゴリTOP3ツイート
+
+on:
+  schedule:
+    # JST 9:00 (UTC 0:00) と JST 9:30 (UTC 0:30) に試行（cron取りこぼし対策）
+    # スクリプト側 category_posted.json で日次重複排除されるため2回fireしても1投稿のみ
+    - cron: '0 0 * * *'
+    - cron: '30 0 * * *'
+  # 手動テスト用
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write   # category_posted.json をコミットするため
+
+concurrency:
+  group: category-ranking
+  cancel-in-progress: false
+
+jobs:
+  post-category:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests requests-oauthlib
+
+      - name: カテゴリTOP3を投稿
+        env:
+          TWITTER_API_KEY:             ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:          ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:        ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          RAKUTEN_APP_ID:              ${{ secrets.RAKUTEN_APP_ID }}
+        run: python post_category_ranking.py
+
+      - name: 投稿履歴をコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f category_posted.json ]; then
+            git add category_posted.json
+            if git diff --cached --quiet; then
+              echo "履歴に変更なし"
+              exit 0
+            fi
+            git commit -m "chore: カテゴリTOP3 投稿履歴を更新 [skip ci]"
+            for i in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                echo "push 成功（試行 $i）"
+                exit 0
+              fi
+              sleep $((i * 5))
+            done
+            echo "push 3回失敗" && exit 1
+          fi
