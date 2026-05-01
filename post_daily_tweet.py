@@ -28,9 +28,25 @@ import sys
 import json
 import datetime
 import requests
+from urllib.parse import quote
 from requests_oauthlib import OAuth1
 
 from hashtag_helper import hashtags
+
+# ── アフィリエイト ──
+RAKUTEN_AFFILIATE_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16"
+
+
+def aff(url: str) -> str:
+    """楽天URLを公式アフィリエイトハブ経由に変換（imaraku.html aff() と同形式）。
+    既に hb.afl 経由 / a.r10.to 短縮URL / 楽天以外のドメインはそのまま返す。
+    """
+    if not url or 'rakuten' not in url:
+        return url
+    if 'hb.afl.rakuten.co.jp' in url or 'a.r10.to' in url:
+        return url
+    encoded = quote(url, safe='')
+    return f"https://hb.afl.rakuten.co.jp/hgc/{RAKUTEN_AFFILIATE_ID}/?pc={encoded}&m={encoded}"
 
 # ── 認証情報（GitHub Secrets から取得）──────────────────────────────────
 API_KEY             = os.environ["TWITTER_API_KEY"]
@@ -42,20 +58,21 @@ CAMPAIGN_STATUS_FILE   = "campaign_status.json"
 MARATHON_SCHEDULE_FILE = "marathon_schedule.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
-SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"
-SPORTS_URL    = "https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160268_0&scid=af_pc_etc&sc2id=af_101_0_0"
-RAKKEN_URL    = "https://event.rakuten.co.jp/rakken/?scid=af_pc_etc&sc2id=af_101_0_0"
-APPLE_URL     = "https://event.rakuten.co.jp/computer/itunes/?scid=af_pc_etc&sc2id=af_101_0_0"
-POINTDAY_URL  = "https://event.rakuten.co.jp/card/pointday/?scid=af_pc_etc&sc2id=af_101_0_0"
+SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"   # 自サイト（ラップ不要）
+# 楽天系URLは aff() でラップして使う（直接定義は raw URL）
+SPORTS_URL    = aff("https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160268_0")
+RAKKEN_URL    = aff("https://event.rakuten.co.jp/rakken/")
+APPLE_URL     = aff("https://event.rakuten.co.jp/computer/itunes/")
+POINTDAY_URL  = aff("https://event.rakuten.co.jp/card/pointday/")
 
-# adidas（アフィリエイト込み短縮URL）
+# adidas（既に a.r10.to 短縮URL = アフィリエイトID埋め込み済）
 ADIDAS_50   = "https://a.r10.to/h5AdfJ"
 ADIDAS_40   = "https://a.r10.to/h5s1YF"
 ADIDAS_30   = "https://a.r10.to/hYB6gY"
 ADIDAS_20   = "https://a.r10.to/h5WwCG"
 
-# NIKE（アフィリエイト込み）
-NIKE_URL    = "https://item.rakuten.co.jp/nike-official/cj9583-100/?scid=af_pc_etc&sc2id=af_101_0_0"
+# NIKE
+NIKE_URL    = aff("https://item.rakuten.co.jp/nike-official/cj9583-100/")
 
 JST = datetime.timezone(datetime.timedelta(hours=9))
 
@@ -397,6 +414,55 @@ def tweet_white_day() -> str:
         "まとめて👇\n"
         f"{SITE_URL}\n"
         f" {hashtags(['core', 'whiteday', 'poikatsu'], max_tags=3)}"
+    )
+
+
+def get_mothers_day(year: int) -> datetime.date:
+    """5月の第2日曜日（母の日）を返す"""
+    first = datetime.date(year, 5, 1)
+    offset = (6 - first.weekday()) % 7
+    return first + datetime.timedelta(days=offset + 7)
+
+
+def get_fathers_day(year: int) -> datetime.date:
+    """6月の第3日曜日（父の日）を返す"""
+    first = datetime.date(year, 6, 1)
+    offset = (6 - first.weekday()) % 7
+    return first + datetime.timedelta(days=offset + 14)
+
+
+def tweet_mothers_day_countdown(days_until: int) -> str:
+    """母の日まで何日かを伝える + 早めの準備を促す"""
+    if days_until == 0:
+        return tweet_mothers_day()
+    when = "明日" if days_until == 1 else f"{days_until}日後"
+    return (
+        f"🌸 母の日は {when} （5月第2日曜）\n"
+        "\n"
+        "「気付いたら過ぎてた…」を防ぐ告知✋\n"
+        "お花は早めに注文すると確実に届くよ！\n"
+        "\n"
+        "🎁 ギフト・お花・スイーツ etc.\n"
+        "楽天で買うならエントリー忘れずに👇\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', 'mothers', 'poikatsu'], max_tags=3)}"
+    )
+
+
+def tweet_fathers_day_countdown(days_until: int) -> str:
+    """父の日まで何日かを伝える"""
+    if days_until == 0:
+        return tweet_fathers_day()
+    when = "明日" if days_until == 1 else f"{days_until}日後"
+    return (
+        f"👔 父の日は {when} （6月第3日曜）\n"
+        "\n"
+        "「気付いたら過ぎてた…」を防ぐ告知✋\n"
+        "ビール・お酒・グルメは早めの準備が吉🍺\n"
+        "\n"
+        "🎁 楽天で買うならエントリーから👇\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', 'fathers', 'poikatsu'], max_tags=3)}"
     )
 
 
@@ -812,6 +878,22 @@ def main():
         # エントリー期間のみ → まずエントリーを促す（まだ買わなくてOK）
         tweet = tweet_marathon_entry_only()
         label = "マラソン（エントリー期間のみ・ポイントアップ未開始）"
+
+    # ★ 母の日カウントダウン（D-14, D-7, D-3, D-1 の特定日のみ発火）
+    elif (lambda d: d > 0 and d in (14, 7, 3, 1))(
+        (get_mothers_day(now.year) - now.date()).days
+    ):
+        days_left = (get_mothers_day(now.year) - now.date()).days
+        tweet = tweet_mothers_day_countdown(days_left)
+        label = f"母の日カウントダウン（D-{days_left}）"
+
+    # ★ 父の日カウントダウン（同上）
+    elif (lambda d: d > 0 and d in (14, 7, 3, 1))(
+        (get_fathers_day(now.year) - now.date()).days
+    ):
+        days_left = (get_fathers_day(now.year) - now.date()).days
+        tweet = tweet_fathers_day_countdown(days_left)
+        label = f"父の日カウントダウン（D-{days_left}）"
 
     # ★ 月末2日（マラソン無し時）→ 期間限定ポイント失効注意
     elif month_end_phase == "eve":

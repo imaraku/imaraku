@@ -16,6 +16,7 @@ import sys
 import json
 import datetime
 import requests
+from urllib.parse import quote
 from bs4 import BeautifulSoup
 from requests_oauthlib import OAuth1
 
@@ -284,12 +285,24 @@ def pick_in_stock_item(candidates: list):
     return None
 
 
+RAKUTEN_AFFILIATE_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16"
+
+
 def add_affiliate(url: str) -> str:
-    """楽天URLにアフィリエイトパラメータを付与する。"""
+    """楽天URLを公式アフィリエイトハブ経由のURLに変換する。
+    imaraku.html の aff() と同じ形式で、@ima_raku_entry のアフィリエイト
+    アカウントにクリックを帰属させる。
+    """
     if not url or 'rakuten' not in url:
         return url
-    sep = '&' if '?' in url else '?'
-    return url + sep + 'scid=af_pc_etc&sc2id=af_101_0_0'
+    # 既に hb.afl 経由の URL なら二重ラップしない
+    if 'hb.afl.rakuten.co.jp' in url:
+        return url
+    # a.r10.to 短縮URLは内部にアフィリエイトID埋め込み済みなのでそのまま返す
+    if 'a.r10.to' in url:
+        return url
+    encoded = quote(url, safe='')
+    return f"https://hb.afl.rakuten.co.jp/hgc/{RAKUTEN_AFFILIATE_ID}/?pc={encoded}&m={encoded}"
 
 
 def load_cache() -> dict:
