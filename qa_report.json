@@ -1,0 +1,48 @@
+{
+  "audited_at": "2026-05-02T14:13:40.011877+09:00",
+  "summary": {
+    "fail": 0,
+    "warn": 1,
+    "total_checks": 6
+  },
+  "results": [
+    {
+      "name": "new_campaigns ノイズチェック",
+      "status": "PASS",
+      "count": 2,
+      "issues": []
+    },
+    {
+      "name": "expired_entries 鮮度",
+      "status": "PASS",
+      "count": 1,
+      "issues": []
+    },
+    {
+      "name": "marathon 整合性",
+      "status": "PASS",
+      "issues": []
+    },
+    {
+      "name": "pay_campaigns URL生存",
+      "status": "PASS",
+      "count": 4,
+      "issues": []
+    },
+    {
+      "name": "posted_slots カバレッジ",
+      "status": "WARN",
+      "issues": [
+        "2026-04-30: 欠スロット ['0', '12', '18']",
+        "2026-04-27: 投稿0件",
+        "2026-04-26: 投稿0件"
+      ]
+    },
+    {
+      "name": "seasonal_events 期間カバレッジ",
+      "status": "PASS",
+      "count": 8,
+      "issues": []
+    }
+  ]
+}

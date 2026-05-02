@@ -656,7 +656,11 @@ def is_invalid_campaign_name(name: str) -> bool:
 
 
 def is_category_nav_url(url: str) -> bool:
-    """event.rakuten.co.jp/coupon/<カテゴリ短縮名> 形式を検出してスキップ"""
+    """event.rakuten.co.jp/coupon/ 系のクーポンTOP・カテゴリナビをスキップ"""
+    # クーポンTOPページ自体（/coupon, /coupon/）は個別キャンペーンではない
+    if re.match(r'^https?://event\.rakuten\.co\.jp/coupon/?$', url):
+        return True
+    # /coupon/<カテゴリ短縮名> 形式
     m = re.match(r'^https?://event\.rakuten\.co\.jp/coupon/([^/]+)/?$', url)
     if not m:
         return False

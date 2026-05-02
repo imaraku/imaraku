@@ -1,0 +1,58 @@
+name: 点検係（QA監査）
+
+on:
+  schedule:
+    # 毎日 8:00 JST (UTC 23:00 前日) に走らせる
+    - cron: '0 23 * * *'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write   # qa_report.json をコミットするため
+
+concurrency:
+  group: qa-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests
+
+      - name: 点検係を実行
+        run: python qa_audit.py
+
+      - name: レポートをコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f qa_report.json ]; then
+            git add qa_report.json
+            if git diff --cached --quiet; then
+              echo "レポートに変更なし"
+              exit 0
+            fi
+            git commit -m "chore: 点検係レポート更新 [skip ci]"
+            for i in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                echo "push 成功（試行 $i）"
+                exit 0
+              fi
+              sleep $((i * 5))
+            done
+            echo "push 3回失敗" && exit 1
+          fi
