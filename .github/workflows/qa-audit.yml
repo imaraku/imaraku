@@ -1,4 +1,4 @@
-name: 点検係（QA監査）
+name: カナの点検
 
 on:
   schedule:
@@ -33,7 +33,7 @@ jobs:
       - name: 依存パッケージをインストール
         run: pip install requests
 
-      - name: 点検係を実行
+      - name: カナを実行
         run: python qa_audit.py
 
       - name: レポートをコミット
@@ -46,7 +46,7 @@ jobs:
               echo "レポートに変更なし"
               exit 0
             fi
-            git commit -m "chore: 点検係レポート更新 [skip ci]"
+            git commit -m "chore: カナの点検レポート更新 [skip ci]"
             for i in 1 2 3; do
               if git pull --rebase origin main && git push; then
                 echo "push 成功（試行 $i）"

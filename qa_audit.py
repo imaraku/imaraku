@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
-qa_audit.py — 「点検係」スクリプト
+qa_audit.py — 「カナ」: 点検係スタッフ
 今楽プロジェクトの自動運用状態を毎朝チェックし、異常があれば報告する。
+
+カナの仕事は、相棒と俺（相棒2号）が見落としたエラー・取りこぼしを
+別の目で拾い上げること。ガンガン進める2人を後ろから支える役回り。
 
 【点検項目】
   ① new_campaigns.json: ノイズパターン混入チェック
-  ② expired_entries.json: 鮮度チェック（30日以上更新なし＝怪しい）
-  ③ imaraku.html ハードコードURL: 主要URL生存確認（サンプル抽出）
-  ④ campaign_status.json: 季節キーの整合性
-  ⑤ pay_campaigns.json: URL生存確認
-  ⑥ posted_slots.json: 直近7日の投稿カバレッジ
-  ⑦ aff() 経由URL の一貫性
+  ② expired_entries.json: 鮮度チェック（45日以上更新なし＝怪しい）
+  ③ marathon_schedule.json: campaign_status との整合性
+  ④ pay_campaigns.json: URL生存確認
+  ⑤ posted_slots.json: 直近7日の投稿カバレッジ
+  ⑥ seasonal_events.json: 来年分の active_periods カバー
 """
 
 import os
@@ -213,7 +215,7 @@ def check_seasonal_events() -> dict:
 def main():
     now = datetime.datetime.now(JST)
     print(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-    print(f"📋 点検係レポート  {now.strftime('%Y-%m-%d %H:%M JST')}")
+    print(f"📋 カナ → 点検レポート  {now.strftime('%Y-%m-%d %H:%M JST')}")
     print(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
     checks = [
@@ -250,19 +252,20 @@ def main():
         for issue in r.get("issues", []):
             print(f"   • {issue}")
 
-    # 総括
+    # 総括（カナのコメント）
     print(f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     if fail_count == 0 and warn_count == 0:
-        print("🟢 全項目クリア。今楽は健康だ。")
+        print("🟢 カナ：全項目クリアです。今楽は健康ですよ ✨")
     elif fail_count > 0:
-        print(f"🔴 緊急 {fail_count} 件 / ⚠️ 注意 {warn_count} 件 → 相棒に確認依頼")
+        print(f"🔴 カナ：緊急 {fail_count} 件 / 注意 {warn_count} 件 → 相棒さん確認お願いします")
     else:
-        print(f"🟡 注意 {warn_count} 件 → 様子見")
+        print(f"🟡 カナ：注意 {warn_count} 件 → しばらく様子見でいいかも")
     print(f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
     # JSON 保存（履歴・通知連携用）
     report = {
         "audited_at": now.isoformat(),
+        "auditor": "カナ",
         "summary": {"fail": fail_count, "warn": warn_count, "total_checks": len(results)},
         "results": results,
     }
