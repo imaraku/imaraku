@@ -6,7 +6,7 @@
   "biccamera": true,
   "superdeal": true,
   "returnpurchaser": false,
-  "newpurchaser": false,
+  "newpurchaser": true,
   "adidas": false,
   "nike": false,
   "mobilebonus": false,
