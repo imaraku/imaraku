@@ -203,7 +203,6 @@ def build_tweet_routine(now: datetime.datetime) -> str:
         "\n"
         f"💳 {month}月の楽天ペイ初期設定\n"
         "\n"
-        "✅ SPU楽天ペイ条件 → 今月もエントリー\n"
         "✅ 楽天キャッシュ経由チャージ +0.5%\n"
         "✅ 5と0のつく日は楽天ペイ払いに\n"
         "\n"
