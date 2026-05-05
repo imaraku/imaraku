@@ -1,0 +1,22 @@
+{
+  "_comment": "0と5のつく日（マラソン非開催日）に紹介する楽天トラベル系キャンペーン。各URLは生URL（短縮URLを介さない）で記載し、スクリプトが自動でアフィリエイトハブにラッピングする。新キャンペーンが出たら手動で追加・更新。",
+  "_maintenance": "items[].url にYOSSYさん等の他人アフィリエイトリンクを直接コピペしないこと。必ず travel.rakuten.co.jp 等の生URLを使用。label は20字以内が安全。",
+  "tweets": [
+    {
+      "title": "楽天トラベル 主要キャンペーン",
+      "items": [
+        {"label": "✈️ アーリーサマー 最大25%OFF", "url": "https://event.travel.rakuten.co.jp/special/sales/"},
+        {"label": "🏨 高級宿50LUX 最大20%OFF", "url": "https://travel.rakuten.co.jp/camp/50luxday/"},
+        {"label": "🚗 レンタカー ポイント最大10倍", "url": "https://travel.rakuten.co.jp/cars/campaign/pointday/"}
+      ]
+    },
+    {
+      "title": "楽天トラベル ツアー&海外&クーポン",
+      "items": [
+        {"label": "🗺️ 国内ツアー 5%OFF & 5,000円", "url": "https://travel.rakuten.co.jp/package/campaign/50pointday/"},
+        {"label": "🌏 海外旅行 最大+3%", "url": "https://travel.rakuten.co.jp/camp/50luxday/overseas.html"},
+        {"label": "🎫 宿クーポンまとめ", "url": "https://travel.rakuten.co.jp/coupon/yado/"}
+      ]
+    }
+  ]
+}

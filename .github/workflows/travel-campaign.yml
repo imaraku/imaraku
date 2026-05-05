@@ -1,0 +1,65 @@
+name: 楽天トラベル特集（0と5のつく日）
+
+on:
+  schedule:
+    # 毎月 5,10,15,20,25,30日 の 17:00 JST と 17:30 JST に冗長fire
+    # スクリプト側で（マラソン非開催 & 月2回まで）の条件チェック
+    - cron: '0 8 5,10,15,20,25,30 * *'
+    - cron: '30 8 5,10,15,20,25,30 * *'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: travel-campaign
+  cancel-in-progress: false
+
+jobs:
+  post-travel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests requests-oauthlib
+
+      - name: 楽天トラベル特集を投稿
+        env:
+          TWITTER_API_KEY:             ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:          ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:        ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+        run: python post_travel_campaign.py
+
+      - name: 投稿履歴をコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f travel_posted.json ]; then
+            git add travel_posted.json
+            if git diff --cached --quiet; then
+              echo "履歴に変更なし"
+              exit 0
+            fi
+            git commit -m "chore: 楽天トラベル特集 投稿履歴を更新 [skip ci]"
+            for i in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                echo "push 成功（試行 $i）"
+                exit 0
+              fi
+              sleep $((i * 5))
+            done
+            echo "push 3回失敗" && exit 1
+          fi
