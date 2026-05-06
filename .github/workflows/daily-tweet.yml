@@ -2,12 +2,12 @@ name: 日次キャンペーンツイート
 
 on:
   schedule:
-    # 毎時 :00 と :30 に走らせ、スクリプト側 posted_slots.json で
-    # 「対象スロットかつ未投稿」のときだけ投稿する設計。
-    # → 1日48回試行 / 半分dropしても24回 → 4スロット余裕でカバー。
-    # GitHub Actions cron の取りこぼし耐性が劇的に向上する。
+    # 【2026-05-06】毎時 :00 のみに変更（前は :00/:30 だったが、
+    # concurrency=cancel-in-progress:false 環境下で waiting キューに
+    # :00 と :30 が立て続けに溜まると古い方が cancelled になり
+    # GitHub Actions failure メールが多発したため）。
+    # 1時間間隔でも各スロット(0/12/18/20時)に 4-6 fire ある余裕設計。
     - cron: '0 * * * *'
-    - cron: '30 * * * *'
   # 手動テスト用
   workflow_dispatch:
 

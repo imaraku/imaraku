@@ -3,12 +3,10 @@ name: 楽天ランキングチェック＆ツイート
 on:
   schedule:
     # 【2026-04-30 削減】X API クレジット節約のため8時刻→4時刻に絞り込み。
+    # 【2026-05-06】:30 cron を削除（concurrency キュー取り合いで cancelled
+    # メール多発のため）。各時刻 :00 のみで運用。
     # JST 12, 18, 20, 22時（昼休み + プライムタイム）= UTC 3, 9, 11, 13
-    # 各時刻に :00 と :30 を仕込み GitHub Actions の cron 取りこぼし対策。
-    # 2回fireしてもスクリプト側 ranking_cache.json による重複排除で二重投稿は防がれる。
-    # 合計8 fires/日（旧16fires/日の半分）。
     - cron: '0 3,9,11,13 * * *'
-    - cron: '30 3,9,11,13 * * *'
   workflow_dispatch:         # 手動テスト用
 
 permissions:
