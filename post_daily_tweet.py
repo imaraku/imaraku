@@ -957,6 +957,11 @@ def main():
     print(f"\n投稿内容:\n{tweet}\n")
     if post_tweet(tweet):
         mark_slot_posted(slot, today)
+    else:
+        # サイレントフェイル防止: post_tweet 失敗時は workflow を failure にして
+        # GitHub から失敗通知メールが届くようにする
+        print("❌ post_tweet が False を返したため exit 1（GitHub Actions failure 通知用）", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -209,6 +209,9 @@ def main():
                 json.dump({"last_fired_date": today, "fired_at": now.isoformat()}, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"  ⚠️ 履歴保存失敗: {e}", file=sys.stderr)
+    else:
+        print("❌ post_tweet が False → exit 1（failure 通知用）", file=sys.stderr)
+        sys.exit(1)
  
  
 if __name__ == "__main__":

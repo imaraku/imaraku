@@ -205,6 +205,9 @@ def main():
         posted["last_tip"] = tip_func.__name__
         with open(POSTED_FILE, 'w', encoding='utf-8') as f:
             json.dump(posted, f, ensure_ascii=False, indent=2)
+    else:
+        print("❌ post_tweet が False → exit 1（failure 通知用）", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

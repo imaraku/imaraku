@@ -326,6 +326,9 @@ def main():
         posted["last_category"] = cat.get("name")
         save_posted(posted)
         print(f"✅ 完了")
+    else:
+        print("❌ post_tweet が False → exit 1（failure 通知用）", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
