@@ -270,10 +270,11 @@ _DATE_RE = re.compile(
     r'\s*(\d{1,2})[:：](\d{2})'                     # 時刻
 )
 
-# 期間表記: 「開始 〜 終了」 (〜や～、-の揺れに対応)
+# 期間表記: 「開始 〜 終了」（〜・～・~・-・–・— の揺れに対応）
+# ※ HTMLエンティティ（&#65374; 等）は extract_marathon_schedule() で先にデコードする
 _RANGE_RE = re.compile(
     r'((?:\d{4}年)?\d{1,2}月\d{1,2}日(?:[（(][^）)]{1,3}[）)])?\s*\d{1,2}[:：]\d{2})'
-    r'\s*[〜～\-]\s*'
+    r'\s*[〜～~\-–—]\s*'
     r'((?:\d{4}年)?\d{1,2}月\d{1,2}日(?:[（(][^）)]{1,3}[）)])?\s*\d{1,2}[:：]\d{2})'
 )
 
@@ -292,8 +293,11 @@ def _parse_jst(text: str, fallback_year: int) -> datetime.datetime | None:
 
 def extract_marathon_schedule(html: str) -> dict | None:
     """マラソンページHTMLから開催期間を抽出。見つからなければNone。"""
-    # タグ除去してテキスト化
-    text = re.sub(r'<[^>]+>', ' ', html)
+    # ① HTMLエンティティをデコード（&#65374; → 〜, &nbsp; → 空白, &#126; → ~）
+    import html as _html
+    text = _html.unescape(html)
+    # ② タグ除去してテキスト化
+    text = re.sub(r'<[^>]+>', ' ', text)
     text = re.sub(r'\s+', ' ', text)
 
     now = datetime.datetime.now(JST)

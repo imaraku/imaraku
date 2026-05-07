@@ -120,12 +120,14 @@ def build_tweet(special_days: list) -> str:
  
 def is_pre_pointup_eve(now: datetime.datetime) -> bool:
     """事前告知を流すべき「ポイントアップ開始の当日（19:50時点）」かを判定。
-    ── ガード設計（恒久対策）──
+    ── 厳格ガード設計（誤発信ゼロ優先・2026-05-06 改訂）──
       1. campaign_status.json の marathon_pointup が True なら既に開始済 → 流さない
       2. marathon_schedule.json の pointup_start が読めれば、その当日のみ True
-      3. schedule が null/取得不能 → 安全側で True（従来動作）にフォールバック
+      3. schedule が null/取得不能 → False（誤発信を避ける）
+         以前は「True フォールバック」だったが、entry-only 期間中の毎日に
+         「今夜20時から開始」と誤発信する事故があり方針転換。
     """
-    # ① 既にポイントアップ期間中なら絶対に流さない（今回の事故の直接の原因）
+    # ① 既にポイントアップ期間中なら絶対に流さない
     status = {}
     if os.path.exists(CAMPAIGN_STATUS_FILE):
         try:
@@ -159,9 +161,11 @@ def is_pre_pointup_eve(now: datetime.datetime) -> bool:
         except Exception:
             pass
 
-    # ③ schedule null → 既存ロジック（marathon=true で告知）にフォールバック
-    print("  → schedule 未取得。marathon_pointup=false なので従来動作で告知GO")
-    return True
+    # ③ schedule 未取得 → 誤発信回避のためスキップ
+    # check_campaigns.py の extract_marathon_schedule() が抽出失敗を続ける場合は
+    # marathon_schedule.json を手動編集（source: "manual"）するか、抽出ロジック改善を。
+    print("  → schedule 未取得 → 安全のため事前告知スキップ（誤発信防止）")
+    return False
 
 
 def main():
