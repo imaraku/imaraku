@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-05-08T08:59:57.077730+09:00",
+  "audited_at": "2026-05-09T09:01:38.068666+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "PASS",
-      "count": 2,
+      "count": 3,
       "issues": []
     },
     {
