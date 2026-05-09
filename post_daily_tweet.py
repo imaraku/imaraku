@@ -322,7 +322,7 @@ def tweet_marathon_kickoff() -> str:
     return (
         "🏁 位置について、ヨーイ…\n"
         "\n"
-        "🏃‍♂️ お買物マラソン スタート！\n"
+        "🏃‍♂️ お買い物マラソン スタート！\n"
         "ポイント買いまわり、開幕💨\n"
         "\n"
         "✅ エントリー\n"
@@ -353,7 +353,7 @@ def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> s
 def tweet_marathon_entry_only() -> str:
     """エントリー期間中だがポイントアップ期間まだ開始していない場合"""
     return (
-        "🏃 お買物マラソン、エントリー受付中！\n"
+        "🏃 お買い物マラソン、エントリー受付中！\n"
         "\n"
         "⚠️ 今はまだ「エントリー期間」\n"
         "ポイントアップはまだだが、\n"
@@ -369,7 +369,7 @@ def tweet_marathon_entry_only() -> str:
 
 def tweet_marathon_normal() -> str:
     return (
-        "🏃 お買物マラソン開催中！\n"
+        "🏃 お買い物マラソン開催中！\n"
         "\n"
         "買いたいものがない方も\n"
         "📦 楽券(eギフト)→コンビニ・コメダ等OK\n"

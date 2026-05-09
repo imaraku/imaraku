@@ -144,7 +144,7 @@ imaraku/                        ← リポジトリルート
 
 | キー | 説明 | デフォルト |
 |---|---|---|
-| `marathon` | お買物マラソン（エントリー期間含む） | false |
+| `marathon` | お買い物マラソン（エントリー期間含む） | false |
 | `marathon_pointup` | マラソン ポイントアップ期間中のみ true | false |
 | `eagles` | 楽天イーグルス勝利ボーナス | false |
 | `vissel` | ヴィッセル神戸勝利ボーナス | false |

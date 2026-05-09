@@ -95,7 +95,7 @@ def build_tweet(special_days: list) -> str:
         # マラソン × 特別日 → ビッグチャンス！
         events = "・".join(special_days)
         return (
-            f"🔥 今夜20時からマラソン開始 & {events}！\n"
+            f"🔥 今夜20時からお買い物マラソン開始 & {events}！\n"
             "ポイントを最大限稼げるビッグチャンス🎯\n"
             "\n"
             "エントリーまとめ👇\n"
@@ -105,7 +105,7 @@ def build_tweet(special_days: list) -> str:
 
     # 通常のマラソン事前告知（SPU控えめ、eギフト追記）
     return (
-        "🏃 今夜20時からお買物マラソン開始！\n"
+        "🏃 今夜20時からお買い物マラソン開始！\n"
         "\n"
         "注文前に必ずエントリーを✅\n"
         "\n"
