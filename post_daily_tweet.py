@@ -104,22 +104,32 @@ POSTED_SLOTS_FILE  = "posted_slots.json"
 
 
 # ── スロット別の時間帯挨拶（X の重複検出を回避するための差分化） ──
-# 全く同じテキストを1日4回投稿すると X 側で2発目以降が重複拒否される。
-# 各スロットの先頭にユニークな1行を加えることで、テキスト全体が異なる扱いになる。
-SLOT_INTROS = {
-    "0":  "🌙 おやすみ前のエントリーチェック",
-    "12": "☀️ お昼のエントリー忘れずに",
-    "18": "🌆 夕方の買い物前にエントリー",
-    "20": "🌃 今夜の買い物前にエントリー",
+# 【方針】単純な固定intro だけでは X の重複検出を回避しきれなかったため、
+# 日付（M/D） + 曜日 + 時間帯 を組み合わせて毎回100%ユニークなintroを生成する。
+# 4スロット × 365日 = 1460種類の組み合わせが自動生成される。
+SLOT_TIME_PHRASES = {
+    "0":  ("🌙", "おやすみ前のエントリーチェック"),
+    "12": ("☀️", "お昼のエントリー忘れずに"),
+    "18": ("🌆", "夕方の買い物前にエントリー"),
+    "20": ("🌃", "今夜の買い物前にエントリー"),
 }
 
+WEEKDAY_JP = ["月", "火", "水", "木", "金", "土", "日"]
 
-def with_slot_intro(tweet: str, slot: str) -> str:
+
+def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str:
     """スロット別の挨拶を先頭に付けて、テキストを毎回ユニークにする。
-    X の重複投稿検出（24h 以内の同一テキスト拒否）を回避するため。"""
-    intro = SLOT_INTROS.get(slot, "")
-    if not intro:
+    日付＋曜日を含めることで、X の重複投稿検出を確実に回避する。
+    例: 🌃 5/9(土) 今夜の買い物前にエントリー
+    """
+    pair = SLOT_TIME_PHRASES.get(slot)
+    if not pair:
         return tweet
+    emoji, phrase = pair
+    if now is None:
+        now = datetime.datetime.now(JST)
+    weekday_jp = WEEKDAY_JP[now.weekday()]
+    intro = f"{emoji} {now.month}/{now.day}({weekday_jp}) {phrase}"
     # 既に同じ intro が含まれていれば二重付与しない
     if tweet.startswith(intro):
         return tweet
@@ -981,7 +991,7 @@ def main():
     # スロット別の挨拶を冒頭に付与（X 重複検出回避）
     # kickoff のみ既に独自フォーマットで「位置について…」と始まるため除外
     if not label.startswith("マラソン開始ヨーイドン"):
-        tweet = with_slot_intro(tweet, slot)
+        tweet = with_slot_intro(tweet, slot, now)
 
     print(f"\n投稿内容:\n{tweet}\n")
     if post_tweet(tweet):
