@@ -48,47 +48,80 @@ def load_json(path: str, default):
     return default
 
 
-def is_mega_chance_today(now: datetime.datetime) -> bool:
-    """今日が「月初回マラソン × 最初の0/5の日」かを判定"""
-    # ① マラソン買いまわり期間中？
+def _parse_iso(s: str):
+    """ISO8601 文字列をJST aware に変換"""
+    try:
+        dt = datetime.datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=JST)
+        return dt
+    except Exception:
+        return None
+
+
+def get_active_event(now: datetime.datetime):
+    """今アクティブな「月一級大型イベント」を返す。
+    優先順位: marathon > スーパーセール等 extra_events
+    戻り値: (label, pointup_start_dt) or (None, None)
+    """
+    # ① マラソン（buy-around 期間中）
     status = load_json("campaign_status.json", {})
-    if not status.get("marathon_pointup"):
+    if status.get("marathon_pointup"):
+        sched = load_json("marathon_schedule.json", {})
+        p_start = _parse_iso(sched.get("pointup_start", "") or "")
+        p_end = _parse_iso(sched.get("pointup_end", "") or "")
+        if p_start and p_end and p_start <= now <= p_end:
+            return ("お買い物マラソン", p_start)
+
+    # ② extra_events.json に登録された大型イベント
+    extra = load_json("extra_events.json", {"events": []})
+    for ev in extra.get("events", []):
+        p_start = _parse_iso(ev.get("pointup_start", "") or "")
+        p_end = _parse_iso(ev.get("pointup_end", "") or "")
+        if p_start and p_end and p_start <= now <= p_end:
+            label = ev.get("label") or ev.get("name") or "大型イベント"
+            return (label, p_start)
+
+    return (None, None)
+
+
+def is_mega_chance_today(now: datetime.datetime) -> bool:
+    """今日が「月一級イベント × 最初の0/5の日」かを判定"""
+    # ① 今アクティブな大型イベントがあるか
+    event_label, p_start = get_active_event(now)
+    if not event_label:
         return False
 
     # ② 今日が0/5の日？
     if now.day % 5 != 0:
         return False
 
-    # ③ マラソン pointup_start が読めて、今日が最初の0/5の日か？
-    sched = load_json("marathon_schedule.json", {})
-    p_start_str = sched.get("pointup_start")
-    if not p_start_str:
-        return False
-    try:
-        p_start = datetime.datetime.fromisoformat(p_start_str)
-        if p_start.tzinfo is None:
-            p_start = p_start.replace(tzinfo=JST)
-    except Exception:
-        return False
-
-    # マラソン開始日から今日まで、毎日チェック
-    # → 「今日より前に既に0/5の日があった」なら False
+    # ③ イベント開始日から今日まで、毎日チェック
+    # → 「今日より前に既に0/5の日があった」なら False（最初の0/5日のみ最強）
     cur = p_start.date()
     today = now.date()
     while cur < today:
         if cur.day % 5 == 0:
-            return False  # 既に過去の0/5日が当該マラソン中にあった
+            return False
         cur += datetime.timedelta(days=1)
 
     return True
 
 
-def build_tweet(now: datetime.datetime) -> str:
-    """最強日アナウンスツイート"""
+def build_tweet(now: datetime.datetime, event_label: str) -> str:
+    """最強日アナウンスツイート（アクティブイベントに応じて文言を切替）"""
+    # イベント別 emoji
+    emoji_map = {
+        "お買い物マラソン": "🏃",
+        "スーパーセール": "🌟",
+        "ポイントバック感謝祭": "🎁",
+        "楽天大感謝祭": "🎊",
+    }
+    ev_emoji = emoji_map.get(event_label, "🎯")
     return (
         f"💎 {now.month}/{now.day} は月一の最強日🔥\n"
         "\n"
-        "🏃 お買い物マラソン買いまわり中\n"
+        f"{ev_emoji} {event_label}開催中\n"
         "🎯 0と5のつく日 +1%\n"
         "\n"
         "💡 SPU上限がまだ残ってる初回が最強。\n"
@@ -96,7 +129,7 @@ def build_tweet(now: datetime.datetime) -> str:
         "\n"
         "今日のキャンペーン👇\n"
         f"{SITE_URL}\n"
-        f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
+        f" {hashtags(['core', 'poikatsu', 'rakuten'], max_tags=3)}"
     )
 
 
@@ -132,15 +165,17 @@ def main():
         print("  → 今日は最強日ではない → スキップ")
         return
 
-    print("  → 今日は月一の最強日！🔥")
+    # アクティブイベントを取得（ツイート文言用）
+    event_label, _ = get_active_event(now)
+    print(f"  → 今日は月一の最強日！🔥 ({event_label})")
 
-    # 月次重複排除（同じマラソンの最初の0/5日に複数回投稿しない）
+    # 月次重複排除（同じイベント中の最初の0/5日に複数回投稿しない）
     posted = load_json(POSTED_FILE, {})
     if posted.get("last_posted_date") == today_str:
         print(f"  → 今日({today_str})は既に投稿済 → スキップ")
         return
 
-    tweet = build_tweet(now)
+    tweet = build_tweet(now, event_label)
     print(f"\n投稿内容 ({weighted_length(tweet)}字):\n{tweet}\n")
 
     if post_tweet(tweet):
