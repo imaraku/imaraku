@@ -196,69 +196,55 @@ def weighted_length(text: str) -> int:
     return n
 
 
-def _compose(header: str, items: list, footer: str, name_limit: int, feature_limit: int = 0, with_rating: bool = True) -> str:
-    """1ツイート組み立て。
-      - with_rating=True なら商品名末尾に ⭐評価をインライン表示
-      - feature_limit>0 なら 👍ライン に推しポイント本文を追加
+def _compose_single_url(header: str, items: list, footer: str, name_limit: int) -> str:
+    """1ツイート組み立て（URL は TOP1 商品のみ、TOP2/3 はテキストのみ）。
+    X の spam検出回避のため、ツイート内URLは1本に抑える。
+    消費者心理に応えるため、商品名+評価は3商品ぶん全部見せる。
     """
     rank_emojis = ["①", "②", "③"]
     body_lines = []
     for i, item in enumerate(items):
         item_name = shorten_name(item['name'], name_limit)
-        rating = short_rating(item) if with_rating else ""
+        rating = short_rating(item)
         if rating:
             body_lines.append(f"{rank_emojis[i]} {item_name} {rating}")
         else:
             body_lines.append(f"{rank_emojis[i]} {item_name}")
-        if feature_limit > 0:
-            f = extract_feature(item)
-            if f and len(f) > feature_limit:
-                f = f[:feature_limit] + "…"
-            if f:
-                body_lines.append(f"👍 {f}")
-        body_lines.append(aff(item["url"]))
+        # URL は TOP1（最初の商品）にだけ付ける
+        if i == 0:
+            body_lines.append("👇 ①の商品ページ")
+            body_lines.append(aff(item["url"]))
         body_lines.append("")
     return header + "\n".join(body_lines).rstrip() + "\n\n" + footer
 
 
 def build_tweet(category: dict, items: list) -> str:
     """カテゴリ＋上位アイテムからツイート文を作る。
-    URL（重み23固定）×3 + 装飾 で 280字に収まりにくいので、段階的にフォールバック。
+    URL は TOP1 商品の1本のみに集約（403 spam検出回避）。
+    商品名+⭐評価は3商品分すべて表示して、消費者の好奇心を満たす。
+
     フォールバック順:
-      ① TOP3 + 各 feature + 通常 footer
-      ② TOP3 + 各 feature + コンパクト footer
-      ③ TOP3 (商品名30字) + feature なし + コンパクト footer
-      ④ TOP3 (商品名25字) + feature なし + 最小 footer
-      ⑤ TOP2 + feature なし + 最小 footer
+      ① TOP3 + ⭐ + TOP1のみURL + tags
+      ② TOP3 + ⭐ (短名) + TOP1のみURL + tags
+      ③ TOP3 + ⭐ (極短名) + TOP1のみURL + tags (最終)
     """
     name = category.get("name", "TOP")
     emoji = category.get("emoji", "🏆")
-    tail = category.get("tail_message", "")
     tags = hashtags(category.get("hashtags", ["core", "poikatsu"]), max_tags=3)
 
-    # ヘッダー（コンパクト版もあり）
-    header_full   = f"{emoji} 楽天 {name} ランキングTOP3\n\n"
-    header_short  = f"{emoji} {name} TOP3\n\n"
-    header_top2   = f"{emoji} 楽天 {name} 人気TOP2\n\n"
-    header_top2s  = f"{emoji} {name} TOP2\n\n"
-    # フッター（compact / min / minimal）
-    footer_full    = f"\n{tail}\n\nまとめ👇\n{SITE_URL}\n {tags}" if tail else f"\nまとめ👇\n{SITE_URL}\n {tags}"
-    footer_compact = f"\nまとめ👇\n{SITE_URL}\n {tags}"
-    footer_min     = f"\n{SITE_URL}\n {tags}"
+    header = f"{emoji} {name} TOP3\n\n"
+    footer = f"\n {tags}"
 
-    # 商品名末尾に ⭐評価をインライン表示し、feature は任意で追加
+    # name_limit を段階的に短くしてフィット試行
     candidates = [
-        _compose(header_short, items[:3], footer_min,    16, feature_limit=0,  with_rating=True),   # ① TOP3 +⭐ 短名
-        _compose(header_short, items[:3], footer_min,    14, feature_limit=0,  with_rating=True),   # ② TOP3 +⭐ 極短名
-        _compose(header_short, items[:3], footer_min,    25, feature_limit=0,  with_rating=False),  # ③ TOP3 名前のみ
-        _compose(header_top2s, items[:2], footer_min,    20, feature_limit=10, with_rating=True),   # ④ TOP2 +⭐ +短feat
-        _compose(header_top2s, items[:2], footer_min,    25, feature_limit=0,  with_rating=True),   # ⑤ TOP2 +⭐
-        _compose(header_top2s, items[:2], footer_min,    30, feature_limit=0,  with_rating=False),  # ⑥ TOP2 名前のみ
+        _compose_single_url(header, items[:3], footer, name_limit=22),
+        _compose_single_url(header, items[:3], footer, name_limit=18),
+        _compose_single_url(header, items[:3], footer, name_limit=14),
+        _compose_single_url(header, items[:3], footer, name_limit=10),
     ]
     for c in candidates:
         if weighted_length(c) <= 280:
             return c
-    # それでも収まらない → 最後の候補を返す（投稿APIでエラー時は呼び出し側で検知）
     return candidates[-1]
 
 
