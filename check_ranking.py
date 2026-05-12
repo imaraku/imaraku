@@ -378,7 +378,7 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
                 "accessKey": RAKUTEN_ACCESS_KEY,
                 "genreId": 0,
                 "period": period,
-                "hits": 30,
+                "hits": 20,  # 楽天ランキングAPI（realtime）は hits 上限 20。30 を渡すと 400 になる
                 "sex": sex,
             }
             # realtime は page 渡すと 400。1ページ目はキーごと省略する。
