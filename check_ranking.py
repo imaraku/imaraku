@@ -387,7 +387,7 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
             try:
                 r = requests.get(url, params=params, headers=headers, timeout=20)
                 if r.status_code != 200:
-                    print(f"  ⚠️ ランキング({sex_labels[sex]} {period} p{page}) 取得エラー: {r.status_code}", file=sys.stderr)
+                    print(f"  ⚠️ ランキング({sex_labels[sex]} {period} p{page}) 取得エラー: {r.status_code} body={r.text[:250]}", file=sys.stderr)
                     continue
                 data = r.json()
             except Exception as e:
