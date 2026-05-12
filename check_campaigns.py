@@ -155,18 +155,20 @@ CAMPAIGNS = [
         "default": False,
     },
     {
-        # スーパーDEAL 4時間限定ポイントバック
+        # スーパーDEAL 4時間限定ポイントバック（マラソン kickoff 日の 20:00-23:59 のみ）
+        # 終了後もページは残るので「期間が終了しております」も明示的に end_kw に含める
         "key": "superdeal_4h",
         "url": "https://event.rakuten.co.jp/superdeal/campaign/pointback10/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
+        "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了"],
         "active_kw": ["エントリーする", "エントリー受付中", "ポイントバック", "4時間", "+10%", "10%バック"],
         "default": False,
     },
     {
-        # 楽天モバイル×スーパーDEAL +10%
+        # 楽天モバイル×スーパーDEAL +10%（マラソン全期間有効。4時間限定ではない）
+        # URL は最新マラソンの日付付きパスへ更新。古いURLだと404扱いで誤って終了判定される可能性あり
         "key": "mobiledeal",
-        "url": "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260404/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
+        "url": "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260509/",
+        "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
         "active_kw": ["エントリーする", "エントリー受付中", "モバイル", "+10%", "10%"],
         "default": False,
     },
