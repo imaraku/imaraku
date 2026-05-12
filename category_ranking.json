@@ -1,46 +1,45 @@
 {
-  "_comment": "曜日別カテゴリTOP3。新ランキングAPIでは大ジャンル(top-level)のgenreIdしかランキング取得できないため、top-level + keyword_filter の組み合わせで絞り込む。",
-  "_top_level_genre_ids": "100533=食品, 100939=日用品雑貨, 100934=医薬品コンタクト, 100938=ダイエット健康, 101213=ペット, 100916=美容コスメ, 100804=スイーツ菓子",
+  "_comment": "曜日別カテゴリTOP3。新ランキングAPI(openapi)では大ジャンルのみランキング取得可能のため、top-level genreId のリアルタイムランキング上位を素直に出す。filter は精密にやると0件になるので軽め or 無し。",
   "categories": {
     "0": {
-      "name": "コンタクトレンズ",
-      "emoji": "👁️",
+      "name": "医薬品・コンタクト",
+      "emoji": "💊",
       "genreId": 100934,
-      "keyword_filter": "コンタクト",
-      "hits": 30,
+      "keyword_filter": "",
+      "hits": 20,
       "min_review_count": 0,
-      "tail_message": "定期購入勢に人気の上位商品✨",
+      "tail_message": "定期消耗品はネットでサクッと注文✨",
       "hashtags": ["core", "contact", "poikatsu"]
     },
     "1": {
-      "name": "トイレットペーパー",
-      "emoji": "🚽",
+      "name": "日用品雑貨",
+      "emoji": "🧻",
       "genreId": 100939,
-      "keyword_filter": "トイレット",
-      "hits": 30,
+      "keyword_filter": "",
+      "hits": 20,
       "min_review_count": 0,
-      "tail_message": "重い物こそネット注文で家まで届けてもらおう🚚",
+      "tail_message": "重い物・かさばる物こそネット注文で家まで届けてもらおう🚚",
       "hashtags": ["core", "daily", "poikatsu"]
     },
     "2": {
-      "name": "ミネラルウォーター",
-      "emoji": "💧",
+      "name": "食品TOP3",
+      "emoji": "🍱",
       "genreId": 100533,
-      "keyword_filter": "水",
-      "hits": 30,
+      "keyword_filter": "",
+      "hits": 20,
       "min_review_count": 0,
-      "tail_message": "夏前にストックがおすすめ🌞",
-      "hashtags": ["core", "drink", "poikatsu"]
+      "tail_message": "ランキング上位は外れにくい安心の選択肢✨",
+      "hashtags": ["core", "food", "poikatsu"]
     },
     "3": {
-      "name": "お米",
-      "emoji": "🍚",
-      "genreId": 100533,
-      "keyword_filter": "米",
-      "hits": 30,
+      "name": "スイーツ・お菓子",
+      "emoji": "🍰",
+      "genreId": 100804,
+      "keyword_filter": "",
+      "hits": 20,
       "min_review_count": 0,
-      "tail_message": "重い米こそ楽天で🍚",
-      "hashtags": ["core", "food", "poikatsu"]
+      "tail_message": "おやつタイムのお供に🍵",
+      "hashtags": ["core", "sweets", "poikatsu"]
     },
     "4": {
       "name": "ペット用品",
@@ -64,13 +63,13 @@
       "active_months": [4, 5]
     },
     "6": {
-      "name": "プロテイン",
+      "name": "ダイエット・健康",
       "emoji": "💪",
       "genreId": 100938,
-      "keyword_filter": "プロテイン",
-      "hits": 30,
+      "keyword_filter": "",
+      "hits": 20,
       "min_review_count": 0,
-      "tail_message": "GW明けの体作り応援🏃",
+      "tail_message": "週末に体調管理を整えよう🏃",
       "hashtags": ["core", "health", "poikatsu"]
     }
   }
