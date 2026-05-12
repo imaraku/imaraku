@@ -351,55 +351,58 @@ def post_tweet(text: str) -> bool:
 
 # ── ランキング取得 ─────────────────────────────────────────────────────────────
 
-def fetch_ranking_via_api() -> list[dict]:
-    """楽天ランキングAPI を 総合・男性・女性 の3軸で取得し合算する。
-    人気の偏り（女性層は Snow Man、男性層は ONE PIECE 等）を捕捉するため、
-    男女別の上位もまとめて検出対象に含める。
+def fetch_ranking_via_api(pages: list = None) -> list[dict]:
+    """楽天ランキングAPI を 総合・男性・女性 × 指定ページ数で取得し合算する。
+    pages: 取得するページ番号リスト。デフォルト [1]（=各軸 TOP30、計90件）。
+           [1, 2, 3] にすると各軸 TOP90、計270件取得（深掘りモード）。
     新API（openapi.rakuten.co.jp）は applicationId + accessKey + Origin が必須。
     """
+    if pages is None:
+        pages = [1]
     if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
         return []
     url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
     headers = {"Origin": RAKUTEN_ORIGIN}
-    # sex: 0=全体, 1=男性, 2=女性
     sex_labels = {0: "総合", 1: "男性", 2: "女性"}
     seen_urls = set()
     items = []
     for sex in (0, 1, 2):
-        params = {
-            "format": "json",
-            "applicationId": RAKUTEN_APP_ID,
-            "accessKey": RAKUTEN_ACCESS_KEY,
-            "genreId": 0,
-            "period": "realtime",
-            "hits": 30,
-            "sex": sex,
-        }
-        try:
-            r = requests.get(url, params=params, headers=headers, timeout=20)
-            if r.status_code != 200:
-                print(f"  ⚠️ ランキング({sex_labels[sex]}) 取得エラー: {r.status_code}", file=sys.stderr)
+        per_axis = 0
+        for page in pages:
+            params = {
+                "format": "json",
+                "applicationId": RAKUTEN_APP_ID,
+                "accessKey": RAKUTEN_ACCESS_KEY,
+                "genreId": 0,
+                "period": "realtime",
+                "hits": 30,
+                "page": page,
+                "sex": sex,
+            }
+            try:
+                r = requests.get(url, params=params, headers=headers, timeout=20)
+                if r.status_code != 200:
+                    print(f"  ⚠️ ランキング({sex_labels[sex]} p{page}) 取得エラー: {r.status_code}", file=sys.stderr)
+                    continue
+                data = r.json()
+            except Exception as e:
+                print(f"  ⚠️ ランキング({sex_labels[sex]} p{page}) 取得失敗: {e}", file=sys.stderr)
                 continue
-            data = r.json()
-        except Exception as e:
-            print(f"  ⚠️ ランキング({sex_labels[sex]}) 取得失敗: {e}", file=sys.stderr)
-            continue
 
-        before = len(items)
-        for entry in data.get("Items", []):
-            it = entry.get("Item", {})
-            name = (it.get("itemName") or "").strip()
-            item_url = (it.get("itemUrl") or "").strip()
-            if not name or not item_url:
-                continue
-            # URL重複を排除（男女別と総合で同じ商品が含まれることがある）
-            normalized = item_url.split('?')[0]
-            if normalized in seen_urls:
-                continue
-            seen_urls.add(normalized)
-            items.append({"name": name[:80], "url": add_affiliate(item_url)})
-        print(f"  API取得({sex_labels[sex]}): +{len(items) - before} 件")
-    print(f"  API取得 合計: {len(items)} 件（ユニーク）")
+            for entry in data.get("Items", []):
+                it = entry.get("Item", {})
+                name = (it.get("itemName") or "").strip()
+                item_url = (it.get("itemUrl") or "").strip()
+                if not name or not item_url:
+                    continue
+                normalized = item_url.split('?')[0]
+                if normalized in seen_urls:
+                    continue
+                seen_urls.add(normalized)
+                items.append({"name": name[:80], "url": add_affiliate(item_url)})
+                per_axis += 1
+        print(f"  API取得({sex_labels[sex]}): +{per_axis} 件")
+    print(f"  API取得 合計: {len(items)} 件（ユニーク, pages={pages}）")
     return items
 
 
@@ -585,11 +588,30 @@ def main():
         if not prev_names:
             print("  初回実行（キャッシュ空）のため、レアアイテム検出はスキップ")
         else:
-            new_items = [i for i in ranking_items if i['name'] not in prev_names]
-            rare_new = [
-                i for i in new_items
-                if any(kw in i['name'] for kw in RARE_KEYWORDS)
-            ]
+            def detect_rare(items_pool):
+                new_items = [i for i in items_pool if i['name'] not in prev_names]
+                return [
+                    i for i in new_items
+                    if any(kw in i['name'] for kw in RARE_KEYWORDS)
+                ]
+
+            # step.1: 現状ロジック（各軸TOP30＝最大90件）で検出
+            rare_new = detect_rare(ranking_items)
+
+            # step.2: 見つからなければランキングを各軸TOP100まで広げて再検出（深掘りモード）
+            if not rare_new:
+                print("  step.1で新規レアアイテムなし → step.2: TOP100まで広げて再検出")
+                deep_items = fetch_ranking_via_api(pages=[1, 2, 3, 4])
+                if deep_items:
+                    # 深掘り結果をランキングアイテム集合に合流（キャッシュ更新用）
+                    existing_names = {i['name'] for i in ranking_items}
+                    for di in deep_items:
+                        if di['name'] not in existing_names:
+                            ranking_items.append(di)
+                            current_names.append(di['name'])
+                            existing_names.add(di['name'])
+                    rare_new = detect_rare(deep_items)
+                    print(f"  step.2 取得: {len(deep_items)} 件 / レア候補: {len(rare_new)} 件")
 
             if rare_new:
                 print(f"  🚨 レアアイテム新規ランクイン候補: {[i['name'] for i in rare_new]}")
@@ -602,7 +624,7 @@ def main():
                 else:
                     print("  全て売り切れのため、ツイートを見送り")
             else:
-                print("  新規レアアイテムなし")
+                print("  step.1/step.2 ともに新規レアアイテムなし")
 
     # ② 定期ツイート（日曜以外の週6日 かつ 今日まだ投稿していない場合）
     # ※ ランキング取得の成否に関わらず実行する
