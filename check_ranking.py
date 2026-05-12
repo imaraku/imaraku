@@ -368,15 +368,12 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
     headers = {"Origin": RAKUTEN_ORIGIN}
     # 取得軸: (ラベル, クエリ追加項目)
     # ※ 2026-05-12 にRakuten API側で validation が厳格化:
-    #    - genreId と sex を同時に渡すと 400 ("no permit setting genreId and sex parameter at the same time")
+    #    - genreId と sex を同時に渡すと 400
     #    - sex は 0 か 1 のみ受け付け (0=男性, 1=女性)
-    #    なので、総合は genreId=0 のみ／男女は sex のみ で叩く必要がある。
-    # sex を渡すときは age (20/30/40) も必須 ("must set age parameter in 20,30,40 when set period parameter")
-    # → 30代を代表値として採用（楽天市場の主要購買層）
+    #    - sex+age 組み合わせは realtime にはデータが存在せず 404 ("DataNotFound")
+    #    → 男女別ランキングは諦め、総合 realtime 一本に絞る。それでも 30件×realtime更新で十分情報量はある。
     axes = [
         ("総合", {"genreId": 0}),
-        ("男性30代", {"sex": 0, "age": 30}),
-        ("女性30代", {"sex": 1, "age": 30}),
     ]
     seen_urls = set()
     items = []
@@ -613,21 +610,11 @@ def main():
             # step.1: 現状ロジック（各軸TOP30＝最大90件）で検出
             rare_new = detect_rare(ranking_items)
 
-            # step.2: 見つからなければランキングを各軸TOP100まで広げて再検出（深掘りモード）
-            # realtime は pagination 非対応なので daily で広域取得する
-            if not rare_new:
-                print("  step.1で新規レアアイテムなし → step.2: daily TOP120 まで広げて再検出")
-                deep_items = fetch_ranking_via_api(pages=[1, 2, 3, 4], period="daily")
-                if deep_items:
-                    # 深掘り結果をランキングアイテム集合に合流（キャッシュ更新用）
-                    existing_names = {i['name'] for i in ranking_items}
-                    for di in deep_items:
-                        if di['name'] not in existing_names:
-                            ranking_items.append(di)
-                            current_names.append(di['name'])
-                            existing_names.add(di['name'])
-                    rare_new = detect_rare(deep_items)
-                    print(f"  step.2 取得: {len(deep_items)} 件 / レア候補: {len(rare_new)} 件")
+            # step.2 (旧深掘り) は廃止: openapi.rakuten.co.jp の Ranking API は realtime 専用で、
+            # period=daily/weekly/monthly はすべて 400 "set period from realtime" を返す。
+            # realtime は pagination もサポートしないため、TOP30（総合 hits=20×実質1ページ）が上限。
+            # 代替案として将来 app.rakuten.co.jp/services/api/IchibaItem/Search で keyword 検索する
+            # 案もあるが、リアルタイム性が落ちるので current run の総合TOP30で十分とする。
 
             if rare_new:
                 print(f"  🚨 レアアイテム新規ランクイン候補: {[i['name'] for i in rare_new]}")
