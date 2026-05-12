@@ -352,38 +352,54 @@ def post_tweet(text: str) -> bool:
 # ── ランキング取得 ─────────────────────────────────────────────────────────────
 
 def fetch_ranking_via_api() -> list[dict]:
-    """楽天ウェブサービス API でランキングを取得する。
-    新API（openapi.rakuten.co.jp）は applicationId + accessKey + Origin が必須。"""
+    """楽天ランキングAPI を 総合・男性・女性 の3軸で取得し合算する。
+    人気の偏り（女性層は Snow Man、男性層は ONE PIECE 等）を捕捉するため、
+    男女別の上位もまとめて検出対象に含める。
+    新API（openapi.rakuten.co.jp）は applicationId + accessKey + Origin が必須。
+    """
     if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
         return []
     url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
-    params = {
-        "format": "json",
-        "applicationId": RAKUTEN_APP_ID,
-        "accessKey": RAKUTEN_ACCESS_KEY,
-        "genreId": 0,            # 総合ランキング
-        "period": "realtime",    # リアルタイム
-        "hits": 20,
-    }
     headers = {"Origin": RAKUTEN_ORIGIN}
-    try:
-        r = requests.get(url, params=params, headers=headers, timeout=20)
-        if r.status_code != 200:
-            print(f"⚠️ 楽天API エラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
-            return []
-        data = r.json()
-    except Exception as e:
-        print(f"⚠️ 楽天API 取得失敗: {e}", file=sys.stderr)
-        return []
-
+    # sex: 0=全体, 1=男性, 2=女性
+    sex_labels = {0: "総合", 1: "男性", 2: "女性"}
+    seen_urls = set()
     items = []
-    for entry in data.get("Items", []):
-        it = entry.get("Item", {})
-        name = (it.get("itemName") or "").strip()
-        url  = add_affiliate(it.get("itemUrl") or "")
-        if name:
-            items.append({"name": name[:80], "url": url})
-    print(f"  API取得: {len(items)} 件")
+    for sex in (0, 1, 2):
+        params = {
+            "format": "json",
+            "applicationId": RAKUTEN_APP_ID,
+            "accessKey": RAKUTEN_ACCESS_KEY,
+            "genreId": 0,
+            "period": "realtime",
+            "hits": 30,
+            "sex": sex,
+        }
+        try:
+            r = requests.get(url, params=params, headers=headers, timeout=20)
+            if r.status_code != 200:
+                print(f"  ⚠️ ランキング({sex_labels[sex]}) 取得エラー: {r.status_code}", file=sys.stderr)
+                continue
+            data = r.json()
+        except Exception as e:
+            print(f"  ⚠️ ランキング({sex_labels[sex]}) 取得失敗: {e}", file=sys.stderr)
+            continue
+
+        before = len(items)
+        for entry in data.get("Items", []):
+            it = entry.get("Item", {})
+            name = (it.get("itemName") or "").strip()
+            item_url = (it.get("itemUrl") or "").strip()
+            if not name or not item_url:
+                continue
+            # URL重複を排除（男女別と総合で同じ商品が含まれることがある）
+            normalized = item_url.split('?')[0]
+            if normalized in seen_urls:
+                continue
+            seen_urls.add(normalized)
+            items.append({"name": name[:80], "url": add_affiliate(item_url)})
+        print(f"  API取得({sex_labels[sex]}): +{len(items) - before} 件")
+    print(f"  API取得 合計: {len(items)} 件（ユニーク）")
     return items
 
 
