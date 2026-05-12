@@ -85,17 +85,25 @@ def fetch_top_items(genre_id: int, keyword: str = "", hits: int = 20, min_review
     if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
         print("⚠️ RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY が未設定", file=sys.stderr)
         return []
-    params = {
-        "format": "json",
-        "applicationId": RAKUTEN_APP_ID,
-        "accessKey": RAKUTEN_ACCESS_KEY,
-        "genreId": genre_id,
-        "period": "realtime",
-        "hits": hits,
-    }
     headers = {"Origin": RAKUTEN_ORIGIN}
+
+    def _call(gid: int):
+        params = {
+            "format": "json",
+            "applicationId": RAKUTEN_APP_ID,
+            "accessKey": RAKUTEN_ACCESS_KEY,
+            "genreId": gid,
+            "period": "realtime",
+            "hits": hits,
+        }
+        return requests.get(RAKUTEN_API, params=params, headers=headers, timeout=20)
+
     try:
-        r = requests.get(RAKUTEN_API, params=params, headers=headers, timeout=20)
+        r = _call(genre_id)
+        # genreId にランキングデータが無い場合は genreId=0 にフォールバック
+        if r.status_code == 404 and genre_id != 0:
+            print(f"  ⚠️ genreId={genre_id} ランキング無し → genreId=0 で再取得", file=sys.stderr)
+            r = _call(0)
         if r.status_code != 200:
             print(f"⚠️ 楽天API エラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
             return []

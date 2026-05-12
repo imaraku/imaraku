@@ -1,14 +1,13 @@
 {
-  "_comment": "曜日別カテゴリTOP3ツイートの設定。weekday は Python datetime.weekday() (0=月..6=日)。",
-  "_migration_note": "2026-05-12: 旧 Search API が applicationId 拒否のため、新 Ranking API + genreId へ移行。genreId は楽天のジャンル番号。keyword_filter は itemName 部分一致での絞り込み（任意）。",
-  "_genre_ids_reference": "楽天市場ジャンルID は https://webservice.rakuten.co.jp/documentation/genre-search/ で検索可能",
+  "_comment": "曜日別カテゴリTOP3。新ランキングAPIでは大ジャンル(top-level)のgenreIdしかランキング取得できないため、top-level + keyword_filter の組み合わせで絞り込む。",
+  "_top_level_genre_ids": "100533=食品, 100939=日用品雑貨, 100934=医薬品コンタクト, 100938=ダイエット健康, 101213=ペット, 100916=美容コスメ, 100804=スイーツ菓子",
   "categories": {
     "0": {
       "name": "コンタクトレンズ",
       "emoji": "👁️",
-      "genreId": 559881,
-      "keyword_filter": "",
-      "hits": 20,
+      "genreId": 100934,
+      "keyword_filter": "コンタクト",
+      "hits": 30,
       "min_review_count": 0,
       "tail_message": "定期購入勢に人気の上位商品✨",
       "hashtags": ["core", "contact", "poikatsu"]
@@ -16,9 +15,9 @@
     "1": {
       "name": "トイレットペーパー",
       "emoji": "🚽",
-      "genreId": 113604,
-      "keyword_filter": "",
-      "hits": 20,
+      "genreId": 100939,
+      "keyword_filter": "トイレット",
+      "hits": 30,
       "min_review_count": 0,
       "tail_message": "重い物こそネット注文で家まで届けてもらおう🚚",
       "hashtags": ["core", "daily", "poikatsu"]
@@ -26,9 +25,9 @@
     "2": {
       "name": "ミネラルウォーター",
       "emoji": "💧",
-      "genreId": 100316,
-      "keyword_filter": "",
-      "hits": 20,
+      "genreId": 100533,
+      "keyword_filter": "水",
+      "hits": 30,
       "min_review_count": 0,
       "tail_message": "夏前にストックがおすすめ🌞",
       "hashtags": ["core", "drink", "poikatsu"]
@@ -36,9 +35,9 @@
     "3": {
       "name": "お米",
       "emoji": "🍚",
-      "genreId": 510901,
-      "keyword_filter": "",
-      "hits": 20,
+      "genreId": 100533,
+      "keyword_filter": "米",
+      "hits": 30,
       "min_review_count": 0,
       "tail_message": "重い米こそ楽天で🍚",
       "hashtags": ["core", "food", "poikatsu"]
@@ -67,7 +66,7 @@
     "6": {
       "name": "プロテイン",
       "emoji": "💪",
-      "genreId": 502910,
+      "genreId": 100938,
       "keyword_filter": "プロテイン",
       "hits": 30,
       "min_review_count": 0,
