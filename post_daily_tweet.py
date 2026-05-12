@@ -839,7 +839,9 @@ def main():
     any_victory = eagles or vissel
     victor_team = "楽天イーグルス" if eagles else ("ヴィッセル神戸" if vissel else "")
 
-    kickoff = marathon and marathon_pointup and is_marathon_kickoff(now)
+    # kickoff は schedule.pointup_start から直接判定（marathon_pointup は
+    # check-campaigns の 2h cron 更新ラグで信頼できないため除外）
+    kickoff = is_marathon_kickoff(now)
     print(f"  kickoff_window={kickoff}")
 
     # ── 優先度順に判定 ──────────────────────────────────────────────────────
