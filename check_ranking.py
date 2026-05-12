@@ -351,10 +351,13 @@ def post_tweet(text: str) -> bool:
 
 # ── ランキング取得 ─────────────────────────────────────────────────────────────
 
-def fetch_ranking_via_api(pages: list = None) -> list[dict]:
+def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[dict]:
     """楽天ランキングAPI を 総合・男性・女性 × 指定ページ数で取得し合算する。
+
     pages: 取得するページ番号リスト。デフォルト [1]（=各軸 TOP30、計90件）。
-           [1, 2, 3] にすると各軸 TOP90、計270件取得（深掘りモード）。
+           [1, 2, 3, 4] で各軸 TOP120 まで深掘り。
+    period: "realtime" がデフォルト。リアルタイムは pagination 非対応のため
+            page>1 を渡すと 400 になる → step.2 の深掘り時は "daily" を指定する。
     新API（openapi.rakuten.co.jp）は applicationId + accessKey + Origin が必須。
     """
     if pages is None:
@@ -374,19 +377,21 @@ def fetch_ranking_via_api(pages: list = None) -> list[dict]:
                 "applicationId": RAKUTEN_APP_ID,
                 "accessKey": RAKUTEN_ACCESS_KEY,
                 "genreId": 0,
-                "period": "realtime",
+                "period": period,
                 "hits": 30,
-                "page": page,
                 "sex": sex,
             }
+            # realtime は page 渡すと 400。1ページ目はキーごと省略する。
+            if page > 1:
+                params["page"] = page
             try:
                 r = requests.get(url, params=params, headers=headers, timeout=20)
                 if r.status_code != 200:
-                    print(f"  ⚠️ ランキング({sex_labels[sex]} p{page}) 取得エラー: {r.status_code}", file=sys.stderr)
+                    print(f"  ⚠️ ランキング({sex_labels[sex]} {period} p{page}) 取得エラー: {r.status_code}", file=sys.stderr)
                     continue
                 data = r.json()
             except Exception as e:
-                print(f"  ⚠️ ランキング({sex_labels[sex]} p{page}) 取得失敗: {e}", file=sys.stderr)
+                print(f"  ⚠️ ランキング({sex_labels[sex]} {period} p{page}) 取得失敗: {e}", file=sys.stderr)
                 continue
 
             for entry in data.get("Items", []):
@@ -401,8 +406,8 @@ def fetch_ranking_via_api(pages: list = None) -> list[dict]:
                 seen_urls.add(normalized)
                 items.append({"name": name[:80], "url": add_affiliate(item_url)})
                 per_axis += 1
-        print(f"  API取得({sex_labels[sex]}): +{per_axis} 件")
-    print(f"  API取得 合計: {len(items)} 件（ユニーク, pages={pages}）")
+        print(f"  API取得({sex_labels[sex]} {period}): +{per_axis} 件")
+    print(f"  API取得 合計: {len(items)} 件（ユニーク, period={period}, pages={pages}）")
     return items
 
 
@@ -599,9 +604,10 @@ def main():
             rare_new = detect_rare(ranking_items)
 
             # step.2: 見つからなければランキングを各軸TOP100まで広げて再検出（深掘りモード）
+            # realtime は pagination 非対応なので daily で広域取得する
             if not rare_new:
-                print("  step.1で新規レアアイテムなし → step.2: TOP100まで広げて再検出")
-                deep_items = fetch_ranking_via_api(pages=[1, 2, 3, 4])
+                print("  step.1で新規レアアイテムなし → step.2: daily TOP120 まで広げて再検出")
+                deep_items = fetch_ranking_via_api(pages=[1, 2, 3, 4], period="daily")
                 if deep_items:
                     # 深掘り結果をランキングアイテム集合に合流（キャッシュ更新用）
                     existing_names = {i['name'] for i in ranking_items}
