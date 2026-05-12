@@ -36,6 +36,7 @@ STATUS_JSON    = "campaign_status.json"
 NEW_JSON       = "new_campaigns.json"
 SCHEDULE_JSON  = "marathon_schedule.json"
 EXPIRED_JSON   = "expired_entries.json"   # ハードコード済みエントリーのうち終了確定したURL一覧
+DYNAMIC_URLS_JSON = "dynamic_urls.json"   # 楽天側で月毎に URL 末尾日付が変わる動的URL（例: mobiledeal/20260509/）
 IMARAKU_HTML   = "imaraku.html"
 MARATHON_URL   = "https://event.rakuten.co.jp/campaign/point-up/marathon/"
 
@@ -988,8 +989,59 @@ def save_json(path: str, data) -> bool:
 
 # ─── メイン ───────────────────────────────────────────────────────────────
 
+def discover_dynamic_urls() -> dict:
+    """楽天側で月毎に URL 末尾の日付が変わるキャンペーンURLを自動追従する。
+
+    対象例:
+      - mobiledeal/YYYYMMDD/  （楽天モバイル×スーパーDEAL）
+
+    実装: superdeal トップページから mobiledeal/<日付>/ パターンを正規表現で抽出し、
+    日付が一番新しい URL を採用する。失敗時は空 dict を返し、呼び出し側は
+    フォールバック（既存のハードコードURL）を使う想定。
+
+    将来別の日付付き URL も同様にここへ追加していく。
+    """
+    discovered: dict = {}
+
+    # スクレイプ対象: スーパーDEAL トップに最新マラソン分のリンクが必ず載る
+    SUPERDEAL_INDEX = "https://event.rakuten.co.jp/superdeal/"
+    html = fetch(SUPERDEAL_INDEX)
+    if not html:
+        print("  ⚠️ superdeal トップ取得失敗。動的URL自動追従はスキップ。")
+        return discovered
+
+    # mobiledeal/YYYYMMDD/ パターンを総取り → 最大の日付（=最新）を採用
+    matches = re.findall(r"superdeal/campaign/mobiledeal/(\d{8})/", html)
+    if matches:
+        latest = max(matches)  # YYYYMMDD は辞書順 = 時系列順なので max でOK
+        discovered["mobiledeal"] = f"https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/{latest}/"
+        print(f"  🔗 mobiledeal 最新URL: {discovered['mobiledeal']}")
+    else:
+        print("  ⚠️ mobiledeal の日付付きURLを発見できず。フォールバック使用。")
+
+    return discovered
+
+
 def main():
     print("=== キャンペーン状態チェック開始 ===\n")
+
+    # 0. 動的URL（月毎に日付が変わるキャンペーン）の最新URLを自動追従
+    print("── 0. 動的URLの自動追従 ──")
+    dynamic_urls = discover_dynamic_urls()
+    changed_dynamic = False
+    if dynamic_urls:
+        # 検出した最新URLを CAMPAIGNS 定義に反映してから状況チェックする
+        for camp in CAMPAIGNS:
+            if camp["key"] in dynamic_urls:
+                old = camp["url"]
+                new = dynamic_urls[camp["key"]]
+                if old != new:
+                    print(f"  [{camp['key']}] URL更新: {old} → {new}")
+                camp["url"] = new
+        changed_dynamic = save_json(DYNAMIC_URLS_JSON, dynamic_urls)
+        print(f"  ✅ dynamic_urls.json に書き出し（{len(dynamic_urls)} 件 / 差分={changed_dynamic}）")
+    else:
+        print("  動的URL検出なし（既存のハードコードURLを使用）")
 
     # 1. 既知キャンペーンの開催状況チェック
     print("── 1. 開催状況チェック ──")
@@ -1111,7 +1163,7 @@ def main():
         print("変更なし（new_campaigns.json）")
 
     # 3. GitHub Actions の outputs に変更有無を出力
-    changed = changed_status or changed_new or changed_expired
+    changed = changed_status or changed_new or changed_expired or changed_dynamic
     env_file = os.environ.get("GITHUB_OUTPUT", "")
     if env_file:
         with open(env_file, "a") as f:

@@ -140,6 +140,21 @@ axes = [
   系の検知ロジックを将来的に足すと再発防止になる
 - 「コードは正しく動いてる風」「成功で返ってる」≠「ユーザー価値が出ている」
 
+### 🔗 補足: 動的URL（月毎に日付が変わるキャンペーン）の自動追従
+楽天の一部キャンペーンは URL 末尾が `/YYYYMMDD/` 形式で月毎に変わる
+（例: `mobiledeal/20260509/`）。次のマラソンで URL が変わると、ハードコード
+URL を踏むユーザーが 404 を見る + `check_campaigns.py` が「終了」誤判定する事故が起きる。
+
+✅ **対策**: `discover_dynamic_urls()` が `superdeal/` トップから最新の日付付きURL
+を正規表現で抽出し、`dynamic_urls.json` に書き出す。
+- `check_campaigns.py` 側: CAMPAIGNS 定義の URL を実行時に上書き → 状況チェックも常に最新URLで実施
+- `imaraku.html` 側: ページロード時に `dynamic_urls.json` を fetch し、
+  `data-campaign-key` 一致するカードの href / data-entry-url / bulk-check data-url
+  を最新URLに差し替え
+
+新しい日付付きキャンペーン（superdeal_4h 系等）を増やすときは `discover_dynamic_urls()`
+内に正規表現を追加するだけ。
+
 ### 🛠️ 補足: Rakuten ランキングAPI デバッグの定石
 - ローカルに RAKUTEN_APP_ID/ACCESS_KEY が無いので、検証は GitHub Actions の
   `workflow_dispatch` で manual run → raw logs 確認 が最速ループ
@@ -163,6 +178,7 @@ imaraku/                        ← リポジトリルート
 ├── kickoff_fired.json          ← マラソン kickoff 発火履歴（再発火防止）
 ├── preannounce_fired.json      ← 事前告知ツイート発火履歴（日次重複排除）
 ├── pokemon_lottery.json        ← ポケカ抽選の受付期間（手動メンテ）
+├── dynamic_urls.json           ← 月毎に日付が変わる動的URL（mobiledeal 等）。check_campaigns.py が自動更新
 ├── ranking_cache.json          ← ランキングチェック用キャッシュ（自動生成）
 ├── ogp.png                     ← X/OGPリンクプレビュー画像 (1200x630)
 ├── check_campaigns.py          ← キャンペーン状態チェック（メイン）

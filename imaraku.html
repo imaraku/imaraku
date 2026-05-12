@@ -1914,8 +1914,30 @@
     })
     .then(function(r) { return r && r.ok ? r.json() : null; })
     .then(function(newItems) {
-      if (!newItems || !newItems.length) return;
-      renderNewCampaigns(newItems);
+      if (newItems && newItems.length) renderNewCampaigns(newItems);
+      // 動的URL（mobiledeal 等、楽天側で月毎に日付が変わる）を最新へ追従
+      return fetch('./dynamic_urls.json?v=' + Date.now());
+    })
+    .then(function(r) { return r && r.ok ? r.json() : null; })
+    .then(function(dynUrls) {
+      if (!dynUrls || typeof dynUrls !== 'object') return;
+      // 各 campaignKey に該当するカード/リンクを最新URLに差し替え
+      Object.keys(dynUrls).forEach(function(key) {
+        var newUrl = dynUrls[key];
+        if (!newUrl) return;
+        var newHref = newUrl.includes('?scid=') ? newUrl : aff(newUrl);
+        document.querySelectorAll('[data-campaign-key="' + key + '"]').forEach(function(card) {
+          // data-entry-url-raw（原本URL）と data-entry-url（アフィ付き）を両方更新
+          card.setAttribute('data-entry-url-raw', newUrl);
+          card.setAttribute('data-entry-url', newHref);
+          // 内部の <a>（エントリーボタン等）の href も差し替え
+          card.querySelectorAll('a[href]').forEach(function(a) { a.setAttribute('href', newHref); });
+          // チェックボックスの data-url も更新（"選択したものをまとめて開く" で正しく飛ばすため）
+          card.querySelectorAll('input.bulk-check[data-url]').forEach(function(cb) {
+            cb.setAttribute('data-url', newHref);
+          });
+        });
+      });
     })
     .catch(function() { /* ネット接続なし等のフォールバック：デフォルト値のまま */ });
 
