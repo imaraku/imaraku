@@ -56,6 +56,12 @@ RARE_KEYWORDS = [
     "ポケカ", "遊戯王", "マジック：ザ・ギャザリング",
     # 推し活・コレクター人気
     "たまごっち", "サンリオ", "ちいかわ", "ドロップシール", "ぬいぐるみ ぬいば",
+    # 音楽・アイドル（リリース日にランキング急上昇する人気アクト）
+    "Snow Man", "SnowMan", "なにわ男子", "King & Prince", "SixTONES",
+    "Travis Japan", "Aぇ! group", "Number_i", "timelesz",
+    "BTS", "NewJeans", "TWICE", "SEVENTEEN", "Stray Kids",
+    "YOASOBI", "Mrs. GREEN APPLE", "King Gnu", "Ado", "米津玄師",
+    "Official髭男dism", "back number",
     # イベント・抽選系
     "抽選販売", "予約受付", "先行予約",
 ]
