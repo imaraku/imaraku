@@ -371,10 +371,12 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
     #    - genreId と sex を同時に渡すと 400 ("no permit setting genreId and sex parameter at the same time")
     #    - sex は 0 か 1 のみ受け付け (0=男性, 1=女性)
     #    なので、総合は genreId=0 のみ／男女は sex のみ で叩く必要がある。
+    # sex を渡すときは age (20/30/40) も必須 ("must set age parameter in 20,30,40 when set period parameter")
+    # → 30代を代表値として採用（楽天市場の主要購買層）
     axes = [
         ("総合", {"genreId": 0}),
-        ("男性", {"sex": 0}),
-        ("女性", {"sex": 1}),
+        ("男性30代", {"sex": 0, "age": 30}),
+        ("女性30代", {"sex": 1, "age": 30}),
     ]
     seen_urls = set()
     items = []
