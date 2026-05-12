@@ -119,7 +119,11 @@ def fetch_top_items(genre_id: int, keyword: str = "", hits: int = 20, min_review
         # キーワードフィルタ（任意・絞り込み用）
         if keyword and keyword not in name:
             continue
-        review_count = it.get("reviewCount", 0)
+        # 新ランキングAPIは値を文字列で返すため数値変換
+        try:
+            review_count = int(it.get("reviewCount") or 0)
+        except (ValueError, TypeError):
+            review_count = 0
         if review_count < min_reviews:
             continue
         items.append({
@@ -159,9 +163,14 @@ def clean_text(text: str) -> str:
 
 
 def short_rating(item: dict) -> str:
-    """⭐4.6(1.2万) のような超短い評価表記を返す（インライン表示用）"""
-    avg = item.get("reviewAverage", 0)
-    count = item.get("reviewCount", 0)
+    """⭐4.6(1.2万) のような超短い評価表記を返す（インライン表示用）。
+    楽天新ランキングAPIは reviewAverage/reviewCount を文字列で返すため
+    数値変換が必須。"""
+    try:
+        avg = float(item.get("reviewAverage") or 0)
+        count = int(item.get("reviewCount") or 0)
+    except (ValueError, TypeError):
+        return ""
     if count <= 0 or avg <= 0:
         return ""
     if count >= 10000:
