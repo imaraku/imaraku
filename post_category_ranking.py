@@ -31,7 +31,9 @@ API_KEY             = os.environ["TWITTER_API_KEY"]
 API_SECRET          = os.environ["TWITTER_API_SECRET"]
 ACCESS_TOKEN        = os.environ["TWITTER_ACCESS_TOKEN"]
 ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
-RAKUTEN_APP_ID      = os.environ.get("RAKUTEN_APP_ID", "")
+RAKUTEN_APP_ID      = os.environ.get("RAKUTEN_APP_ID", "").strip()
+RAKUTEN_ACCESS_KEY  = os.environ.get("RAKUTEN_ACCESS_KEY", "").strip()
+RAKUTEN_ORIGIN      = os.environ.get("RAKUTEN_ORIGIN", "https://imaraku.github.io").strip()
 
 # ── 定数 ──
 JST = datetime.timezone(datetime.timedelta(hours=9))
@@ -39,7 +41,8 @@ SITE_URL = "https://imaraku.github.io/imaraku/imaraku.html"
 CONFIG_FILE = "category_ranking.json"
 POSTED_FILE = "category_posted.json"
 RAKUTEN_AFFILIATE_ID = "1c52abea.36641b1e.1c52abeb.f5f67f16"
-RAKUTEN_API = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706"
+# 新ランキングAPI（旧 Search API は applicationId 拒否で動かないため移行）
+RAKUTEN_API = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
 
 
 # ── アフィリエイト ──
@@ -76,22 +79,23 @@ def save_posted(data: dict):
 
 
 # ── 楽天API ──
-def fetch_top_items(keyword: str, sort: str, hits: int = 5, min_reviews: int = 100) -> list:
-    """楽天 Ichiba Item Search API で keyword に該当するアイテムを取得し、
-    レビュー数 >= min_reviews でフィルタしたものを返す。"""
-    if not RAKUTEN_APP_ID:
-        print("⚠️ RAKUTEN_APP_ID が未設定", file=sys.stderr)
+def fetch_top_items(genre_id: int, keyword: str = "", hits: int = 20, min_reviews: int = 0) -> list:
+    """楽天 Ichiba Ranking API で genreId のジャンル別ランキングを取得。
+    keyword が指定されていれば itemName で部分一致フィルタも適用。"""
+    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
+        print("⚠️ RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY が未設定", file=sys.stderr)
         return []
     params = {
         "format": "json",
         "applicationId": RAKUTEN_APP_ID,
-        "keyword": keyword,
-        "sort": sort,
+        "accessKey": RAKUTEN_ACCESS_KEY,
+        "genreId": genre_id,
+        "period": "realtime",
         "hits": hits,
-        "imageFlag": 1,
     }
+    headers = {"Origin": RAKUTEN_ORIGIN}
     try:
-        r = requests.get(RAKUTEN_API, params=params, timeout=20)
+        r = requests.get(RAKUTEN_API, params=params, headers=headers, timeout=20)
         if r.status_code != 200:
             print(f"⚠️ 楽天API エラー: {r.status_code} {r.text[:200]}", file=sys.stderr)
             return []
@@ -103,11 +107,15 @@ def fetch_top_items(keyword: str, sort: str, hits: int = 5, min_reviews: int = 1
     items = []
     for entry in data.get("Items", []):
         it = entry.get("Item", {})
+        name = (it.get("itemName") or "").strip()
+        # キーワードフィルタ（任意・絞り込み用）
+        if keyword and keyword not in name:
+            continue
         review_count = it.get("reviewCount", 0)
         if review_count < min_reviews:
             continue
         items.append({
-            "name": (it.get("itemName") or "").strip(),
+            "name": name,
             "url": it.get("itemUrl") or "",
             "caption": (it.get("itemCaption") or "").strip(),
             "reviewAverage": it.get("reviewAverage", 0),
@@ -290,14 +298,19 @@ def main():
         print(f"  → 今月({now.month})は対象外（active_months={active_months}）")
         return
 
-    print(f"  カテゴリ: {cat.get('name')} (keyword={cat.get('keyword')})")
+    genre_id = cat.get("genreId")
+    if not genre_id:
+        print(f"  ⚠️ {cat.get('name')} に genreId 未設定 → スキップ")
+        return
+    keyword_filter = cat.get("keyword_filter", "")
+    print(f"  カテゴリ: {cat.get('name')} (genreId={genre_id}, filter={keyword_filter!r})")
 
-    # 楽天APIで上位アイテム取得
+    # 楽天ランキングAPIで上位アイテム取得（リアルタイムランキング）
     items = fetch_top_items(
-        keyword=cat["keyword"],
-        sort=cat.get("sort", "-reviewCount"),
-        hits=10,
-        min_reviews=cat.get("min_review_count", 100),
+        genre_id=genre_id,
+        keyword=keyword_filter,
+        hits=cat.get("hits", 20),
+        min_reviews=cat.get("min_review_count", 0),
     )
     if len(items) < 3:
         print(f"  ⚠️ 該当アイテム不足: {len(items)} 件 → スキップ")
