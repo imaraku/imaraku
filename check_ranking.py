@@ -46,8 +46,11 @@ CACHE_FILE   = "ranking_cache.json"
 # 注: 「カード」「グッズ」「限定」などの一般名詞は誤検出を招くため、
 # 固有名詞・プラットフォーム名に絞り込んでいる
 RARE_KEYWORDS = [
-    # ゲーム機・ソフト関連
-    "Nintendo Switch", "Switch2", "PlayStation", "PS5", "Xbox",
+    # ゲーム機・ソフト関連（Nintendo は単体でも対応、商品名【Switch】等の括弧記号回避）
+    "Nintendo", "Switch2", "PlayStation", "PS5", "Xbox",
+    # 人気ゲームソフトフランチャイズ
+    "ゼルダ", "スーパーマリオ", "どうぶつの森", "スプラトゥーン", "スマブラ",
+    "トモダチコレクション", "ファイアーエムブレム", "ポケモンSV", "ポケモンレジェンズ",
     # ポケモン・鬼滅・ジャンプ系人気IP（英字・カナ両対応）
     "ポケモン", "ポケットモンスター", "鬼滅", "ワンピース", "ONE PIECE", "推しの子",
     "ドラゴンボール", "DRAGON BALL", "呪術廻戦",
@@ -62,6 +65,8 @@ RARE_KEYWORDS = [
     "BTS", "NewJeans", "TWICE", "SEVENTEEN", "Stray Kids",
     "YOASOBI", "Mrs. GREEN APPLE", "King Gnu", "Ado", "米津玄師",
     "Official髭男dism", "back number",
+    # マラソン期に急上昇しがちな注目ショップ（相棒お気に入り）
+    "DRIP COFFEE FACTORY",
     # イベント・抽選系
     "抽選販売", "予約受付", "先行予約",
 ]
