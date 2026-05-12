@@ -1094,6 +1094,21 @@ def main():
                 print(f"  [{k}] マラソン非開催のため false に補正")
                 results[k] = False
 
+    # 1-c2. superdeal_4h は「マラソン kickoff 日の 20:00-23:59」限定キャンペーン。
+    # ページにキーワードが残ってると false positive が出続けるので、
+    # マラソン pointup_start 当日以外は強制 false にする。
+    try:
+        pointup_start_str = schedule.get("pointup_start") if isinstance(schedule, dict) else None
+        if pointup_start_str:
+            kickoff_dt = datetime.datetime.fromisoformat(pointup_start_str)
+            kickoff_day = kickoff_dt.astimezone(JST).date()
+            today = now_jst.date()
+            if today != kickoff_day and results.get("superdeal_4h"):
+                print(f"  [superdeal_4h] 今日({today})はkickoff日({kickoff_day})ではないため false に補正")
+                results["superdeal_4h"] = False
+    except Exception as e:
+        print(f"  ⚠️ superdeal_4h kickoff判定スキップ: {e}")
+
     print("\n── 結果まとめ ──")
     for key, val in results.items():
         print(f"  {key:<20} {'✓ 開催中' if val else '✗ 終了/非開催'}")
