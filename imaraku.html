@@ -1192,12 +1192,21 @@
 
   function applyFilter(mode) {
     var todayDay = day; // 既に定義済みの日付変数
+    // 現在のJST時刻と日付（time-of-day / specific-date ゲート用）
+    var nowJst = new Date();
+    var jstHour = nowJst.getHours(); // ブラウザtzに依存するが、日本のユーザーがアクセスする前提で問題ない
+    var jstDateStr =
+      nowJst.getFullYear() + '-' +
+      String(nowJst.getMonth() + 1).padStart(2, '0') + '-' +
+      String(nowJst.getDate()).padStart(2, '0');
     document.querySelectorAll('[data-essential]').forEach(function(card) {
       // dismissedアイテムはそのまま非表示維持
       if (card.style.display === 'none') return;
 
       var isEssential = card.getAttribute('data-essential') === 'true';
       var showDaysAttr = card.getAttribute('data-show-days');
+      var showHoursAttr = card.getAttribute('data-show-hours');
+      var showDatesAttr = card.getAttribute('data-show-dates');
 
       var campaignKey = card.getAttribute('data-campaign-key');
 
@@ -1209,11 +1218,17 @@
       // ② 日付限定エントリーで今日が対象日でない
       var dateInactive = showDaysAttr &&
         !showDaysAttr.split(',').map(Number).includes(todayDay);
+      // ②-2 時刻限定エントリーで現在が対象時間外（例: 4時間限定の 20-23時）
+      var hourInactive = showHoursAttr &&
+        !showHoursAttr.split(',').map(Number).includes(jstHour);
+      // ②-3 特定日限定エントリーで今日がその日付でない（例: マラソン開始日のみ）
+      var specificDateInactive = showDatesAttr &&
+        !showDatesAttr.split(',').includes(jstDateStr);
       // ③ URL生存チェックで終了確定（expired_entries.json）
       var rawUrl = card.getAttribute('data-entry-url-raw');
       var urlExpired = rawUrl && EXPIRED_ENTRIES.hasOwnProperty(rawUrl);
 
-      if (campaignInactive || dateInactive || urlExpired) {
+      if (campaignInactive || dateInactive || hourInactive || specificDateInactive || urlExpired) {
         // 非開催・対象外日 → 両モードで非表示
         card.classList.add('mode-hidden');
       } else if (mode === 'all') {
@@ -1448,10 +1463,15 @@
     const entryUrl = c.noAffiliate ? c.url : aff(c.url);
     const isEssential = c.essential !== false; // デフォルトtrue
     const showDaysAttr = c.showOnDays ? ` data-show-days="${c.showOnDays.join(',')}"` : '';
+    const showHoursAttr = c.showOnHours ? ` data-show-hours="${c.showOnHours.join(',')}"` : '';
+    const showDatesAttr = c.showOnDates ? ` data-show-dates="${c.showOnDates.join(',')}"` : '';
     const campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
     const demoteAttr = c.demoteMarathon ? ' data-demote-marathon' : '';
     const dayBadge = c.showOnDays
       ? `<span style="font-size:0.65rem;background:var(--gold);color:#5C3B00;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">📅 今日限定</span>`
+      : '';
+    const hourBadge = c.showOnHours
+      ? `<span style="font-size:0.65rem;background:#FF6B35;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">⏰ ${c.showOnHours[0]}-${c.showOnHours[c.showOnHours.length-1]+1}時</span>`
       : '';
     // キャンペーンキー別バッジ
     const campaignBadgeMap = {
@@ -1460,14 +1480,14 @@
     };
     const campaignBadge = c.campaignKey ? (campaignBadgeMap[c.campaignKey] || '') : '';
     return `
-      <div class="campaign-card" data-entry-url="${entryUrl}" data-entry-url-raw="${c.url}" data-essential="${isEssential}"${showDaysAttr}${campaignAttr}${demoteAttr}>
+      <div class="campaign-card" data-entry-url="${entryUrl}" data-entry-url-raw="${c.url}" data-essential="${isEssential}"${showDaysAttr}${showHoursAttr}${showDatesAttr}${campaignAttr}${demoteAttr}>
         <div class="card-body">
           <div class="card-check-area">
             <input type="checkbox" class="bulk-check bulk-check-${group}"
                    data-url="${entryUrl}" checked
                    onchange="updateBulkCount('${group}')">
             <div>
-              <div class="card-name">${c.name}${c.showOnDays ? dayBadge : ''}${campaignBadge}</div>
+              <div class="card-name">${c.name}${c.showOnDays ? dayBadge : ''}${c.showOnHours ? hourBadge : ''}${campaignBadge}</div>
               <div class="card-point">🎁 ${c.point}</div>
             </div>
             <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
@@ -1606,8 +1626,8 @@
     // ── 🏃 マラソン期間中のみ表示（おすすめ） ──
     { name: "🏃 リピート購入 +1倍", point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "repeat_purchase" },
     { name: "🏃 (ゲリラ)全店+1倍", point: "+1%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "guerrilla" },
-    { name: "🏃 スーパーDEAL（4時間限定）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/pointback10/", essential: true, campaignKey: "superdeal_4h" },
-    { name: "📱 楽天モバイル×スーパーDEAL +10%", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260404/", essential: true, campaignKey: "mobiledeal" },
+    { name: "🏃 スーパーDEAL（4時間限定）", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/pointback10/", essential: true, campaignKey: "superdeal_4h", showOnHours: [20, 21, 22, 23] },
+    { name: "📱 楽天モバイル×スーパーDEAL +10%", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260404/", essential: true, campaignKey: "mobiledeal", showOnHours: [20, 21, 22, 23] },
     // ── 🏃 マラソン期間中のサブキャンペーン（条件達成型・クーポン型） ──
     { name: "🚗 マイカー割×マラソン +4%", point: "+4%", url: "https://a.r10.to/h5WTY0", essential: true, campaignKey: "marathon", noAffiliate: true },
     { name: "🎓 楽天学割×マラソン +1%", point: "+1%", url: "https://a.r10.to/hgzPvH", essential: true, campaignKey: "marathon", noAffiliate: true },
@@ -1619,8 +1639,9 @@
     // ── 5月マラソン追加（マイルドさんブログ参考） ──
     { name: "💎 ダイヤモンド・プラチナ会員 777円クーポン", point: "777円OFF", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/rankcoupon/", essential: true, campaignKey: "marathon" },
     { name: "🏷️ マラソン 最大半額クーポン", point: "最大半額", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/itemcoupon/", essential: true, campaignKey: "marathon" },
-    { name: "⚡ 開始2時間限定 50%OFFクーポン", point: "50%OFF", url: "https://a.r10.to/h5isCx", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "⚡ 開始4時間DEAL +10%", point: "+10%", url: "https://a.r10.to/hNElpg", essential: true, campaignKey: "marathon", noAffiliate: true },
+    // マラソン kickoff day（pointup_start の日）にのみ表示。今回は 2026-05-09 開始。
+    { name: "⚡ 開始2時間限定 50%OFFクーポン", point: "50%OFF", url: "https://a.r10.to/h5isCx", essential: true, campaignKey: "marathon", noAffiliate: true, showOnDates: ["2026-05-09"], showOnHours: [20, 21] },
+    { name: "⚡ 開始4時間DEAL +10%", point: "+10%", url: "https://a.r10.to/hNElpg", essential: true, campaignKey: "marathon", noAffiliate: true, showOnDates: ["2026-05-09"], showOnHours: [20, 21, 22, 23] },
     { name: "💎 PREMIUM DAYS +8.5%", point: "+8.5%", url: "https://a.r10.to/h5KH7D", essential: true, campaignKey: "marathon", noAffiliate: true },
     { name: "📚 本・雑誌 マラソン +9%", point: "+9%", url: "https://a.r10.to/hkANFr", essential: true, campaignKey: "marathon", noAffiliate: true },
     { name: "💿 DVD・ブルーレイ +9%", point: "+9%", url: "https://a.r10.to/h5i3P6", essential: true, campaignKey: "marathon", noAffiliate: true },
@@ -1709,7 +1730,7 @@
   // essential: true → おすすめモードで表示（誰でも使えるクーポン）
   const coupons = [
     { name: "何度でも使える2,000円クーポン（マラソン）", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
-    { name: "開始2時間限定50%offクーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
+    { name: "開始2時間限定50%offクーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon", showOnDates: ["2026-05-09"], showOnHours: [20, 21] },
     { name: "最大半額クーポン", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/", essential: true, campaignKey: "marathon" },
     { name: "楽天久しぶりの買い物1,000円クーポン", url: "https://event.rakuten.co.jp/campaign/returnpurchaser/", essential: true, campaignKey: "returnpurchaser" },
     { name: "楽天初めての買い物2,000円クーポン", url: "https://event.rakuten.co.jp/campaign/newpurchaser/", essential: true, campaignKey: "newpurchaser" },
@@ -1726,13 +1747,15 @@
   document.getElementById("couponSection").innerHTML = coupons.map(c => {
     const isEssential = c.essential !== false;
     const campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
+    const showHoursAttr = c.showOnHours ? ` data-show-hours="${c.showOnHours.join(',')}"` : '';
+    const showDatesAttr = c.showOnDates ? ` data-show-dates="${c.showOnDates.join(',')}"` : '';
     const couponBadgeMap = {
       marathon: `<span style="font-size:0.65rem;background:#1A7F37;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">🏃 マラソン中</span>`,
     };
     const badge = c.campaignKey ? (couponBadgeMap[c.campaignKey] || '') : '';
     return `
     <div class="compact-row" style="background:white;border-radius:10px;margin-bottom:6px;padding:10px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);"
-         data-entry-url="${aff(c.url)}" data-essential="${isEssential}"${campaignAttr}>
+         data-entry-url="${aff(c.url)}" data-essential="${isEssential}"${campaignAttr}${showHoursAttr}${showDatesAttr}>
       <input type="checkbox" class="bulk-check bulk-check-coupons"
              data-url="${aff(c.url)}" checked
              onchange="updateBulkCount('coupons')">
