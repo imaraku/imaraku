@@ -366,32 +366,40 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
         return []
     url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
     headers = {"Origin": RAKUTEN_ORIGIN}
-    sex_labels = {0: "総合", 1: "男性", 2: "女性"}
+    # 取得軸: (ラベル, クエリ追加項目)
+    # ※ 2026-05-12 にRakuten API側で validation が厳格化:
+    #    - genreId と sex を同時に渡すと 400 ("no permit setting genreId and sex parameter at the same time")
+    #    - sex は 0 か 1 のみ受け付け (0=男性, 1=女性)
+    #    なので、総合は genreId=0 のみ／男女は sex のみ で叩く必要がある。
+    axes = [
+        ("総合", {"genreId": 0}),
+        ("男性", {"sex": 0}),
+        ("女性", {"sex": 1}),
+    ]
     seen_urls = set()
     items = []
-    for sex in (0, 1, 2):
+    for label, axis_params in axes:
         per_axis = 0
         for page in pages:
             params = {
                 "format": "json",
                 "applicationId": RAKUTEN_APP_ID,
                 "accessKey": RAKUTEN_ACCESS_KEY,
-                "genreId": 0,
                 "period": period,
                 "hits": 20,  # 楽天ランキングAPI（realtime）は hits 上限 20。30 を渡すと 400 になる
-                "sex": sex,
             }
+            params.update(axis_params)
             # realtime は page 渡すと 400。1ページ目はキーごと省略する。
             if page > 1:
                 params["page"] = page
             try:
                 r = requests.get(url, params=params, headers=headers, timeout=20)
                 if r.status_code != 200:
-                    print(f"  ⚠️ ランキング({sex_labels[sex]} {period} p{page}) 取得エラー: {r.status_code} body={r.text[:250]}", file=sys.stderr)
+                    print(f"  ⚠️ ランキング({label} {period} p{page}) 取得エラー: {r.status_code} body={r.text[:250]}", file=sys.stderr)
                     continue
                 data = r.json()
             except Exception as e:
-                print(f"  ⚠️ ランキング({sex_labels[sex]} {period} p{page}) 取得失敗: {e}", file=sys.stderr)
+                print(f"  ⚠️ ランキング({label} {period} p{page}) 取得失敗: {e}", file=sys.stderr)
                 continue
 
             for entry in data.get("Items", []):
@@ -406,7 +414,7 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
                 seen_urls.add(normalized)
                 items.append({"name": name[:80], "url": add_affiliate(item_url)})
                 per_axis += 1
-        print(f"  API取得({sex_labels[sex]} {period}): +{per_axis} 件")
+        print(f"  API取得({label} {period}): +{per_axis} 件")
     print(f"  API取得 合計: {len(items)} 件（ユニーク, period={period}, pages={pages}）")
     return items
 
