@@ -11,7 +11,7 @@
   "nike": false,
   "mobilebonus": false,
   "repeat_purchase": false,
-  "guerrilla": false,
+  "guerrilla": true,
   "superdeal_4h": false,
   "mobiledeal": true,
   "pokemon_lottery": false,

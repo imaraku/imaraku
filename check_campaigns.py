@@ -148,11 +148,12 @@ CAMPAIGNS = [
     },
     {
         # マラソン内ゲリラキャンペーン：(ゲリラ)全店+1倍
-        # 性質上の自動検出は困難。ゲリラ開催日のみマラソンページに文言が出ることがある
+        # 専用ページ (pointdouble) が立ち上がるとそこに「エントリー」「ポイント」表記が出る。
+        # ※ URL末尾の "20260509fhqao" は今回マラソン分のID。次回マラソンで変わる可能性あり。
         "key": "guerrilla",
-        "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
-        "active_kw": ["ゲリラ", "全店＋1倍", "全店+1倍", "ゲリラキャンペーン"],
+        "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/pointdouble/",
+        "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
+        "active_kw": ["エントリーする", "エントリー受付中", "ゲリラ", "全店＋1倍", "全店+1倍", "ポイント2倍", "+1倍"],
         "default": False,
     },
     {
