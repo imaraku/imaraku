@@ -1,9 +1,9 @@
 {
-  "audited_at": "2026-05-17T08:59:15.700214+09:00",
+  "audited_at": "2026-05-18T09:02:54.673977+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
-    "warn": 1,
+    "warn": 0,
     "total_checks": 6
   },
   "results": [
@@ -32,10 +32,8 @@
     },
     {
       "name": "posted_slots カバレッジ",
-      "status": "WARN",
-      "issues": [
-        "2026-05-11: 欠スロット ['0', '12']"
-      ]
+      "status": "PASS",
+      "issues": []
     },
     {
       "name": "seasonal_events 期間カバレッジ",
