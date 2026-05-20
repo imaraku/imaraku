@@ -9,8 +9,6 @@ on:
     - cron: '0 3,4,5,6,7,8,9,10 * * *'
   # 手動テスト用
   workflow_dispatch:
-  # 手動テスト用
-  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # Node.js 24 を使用（将来の廃止に対応）
