@@ -371,9 +371,21 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
     #    - genreId と sex を同時に渡すと 400
     #    - sex は 0 か 1 のみ受け付け (0=男性, 1=女性)
     #    - sex+age 組み合わせは realtime にはデータが存在せず 404 ("DataNotFound")
-    #    → 男女別ランキングは諦め、総合 realtime 一本に絞る。それでも 30件×realtime更新で十分情報量はある。
+    #    → sex/age 軸は諦め、ジャンル別 realtime ランキングを並列取得して
+    #      レア検出範囲を広げる方針へ転換（2026-05-20改修）。
+    #
+    # 【ジャンル選定の狙い】
+    # 総合 TOP30 は楽天全体のトラフィックが集中して "上位=即売り切れ" になりやすい。
+    # カテゴリ別ランキングは細分化されてるので、ポケカ/Snow Man/ONE PIECE 系の
+    # ヒット商品が「ジャンル内 TOP10-30」に来た段階で = まだ在庫がある段階で
+    # 拾える期待値が高い（在庫切れツイートで読者を失望させないため）。
     axes = [
-        ("総合", {"genreId": 0}),
+        ("総合",        {"genreId": 0}),       # 楽天市場全体
+        ("おもちゃ",    {"genreId": 562637}),  # ポケカ・たまごっち・ドロップシール・キャラグッズ
+        ("CD/DVD",      {"genreId": 101240}),  # Snow Man/アイドル/邦楽
+        ("本雑誌",      {"genreId": 200163}),  # ONE PIECE magazine 等
+        ("テレビ家電",  {"genreId": 200162}),  # Switch ソフト・新作ガジェット
+        ("食品",        {"genreId": 100533}),  # 限定スイーツ・コラボ食品
     ]
     seen_urls = set()
     items = []
