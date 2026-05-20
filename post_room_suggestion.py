@@ -48,7 +48,8 @@ MAIL_TO            = os.environ.get("MAIL_TO", "mochiki.kengo@gmail.com").strip(
 # ── 定数 ─────────────────────────────────────────────────────────────────────
 JST                = datetime.timezone(datetime.timedelta(hours=9))
 CACHE_FILE         = "room_post_cache.json"
-CACHE_HISTORY_MAX  = 30
+CACHE_HISTORY_MAX  = 1000   # 投稿済みは事実上ずっと覚えておく（重複投稿防止）
+                            # 80KB前後で済むのでサイズ問題なし。3年分の余裕あり。
 # ROOM経由のクリックを imaraku.html (af_101_0_0) と区別するため別 sc2id を使う。
 # 楽天アフィリエイト管理画面で「af_room_0_0」で絞ればROOM由来だけ集計できる。
 AFFILIATE_SUFFIX   = "scid=af_pc_etc&sc2id=af_room_0_0"
@@ -220,7 +221,7 @@ def fetch_via_scrape() -> list[dict]:
             "image_url": image_url,
             "caption": "",
         })
-        if len(items) >= 30:
+        if len(items) >= 60:
             break
 
     print(f"  スクレイピング取得: {len(items)} 件")
@@ -456,9 +457,6 @@ def build_email(item: dict, appeal: str, aff_url: str) -> tuple[str, str]:
 🏪 {item['shop']}
 🔗 {aff_url}
 
-📎 オリジナル画像を添付したぜ（room_post.png）
-   → ROOM投稿時に画像として選択するとC→Bランクアップ条件クリア
-
 ──────────────────
 【投稿文コピペ用 ↓ここから↓】
 
@@ -506,6 +504,30 @@ def send_email(subject: str, body: str, image_path: "str | None" = None) -> None
 
 # ── メイン ─────────────────────────────────────────────────────────────────────
 
+def build_all_sent_email(items: list) -> tuple:
+    """ランキング上位が全件投稿済みだった日の通知メール。"""
+    top3 = [strip_name_prefix(it["name"])[:50] for it in items[:3]]
+    subject = "【ROOM投稿】今日は全件投稿済みだぜ、お休みしよう"
+    body = f"""━━━ 今日の楽天ROOM投稿 ━━━
+
+📭 今日のランキング上位は全件投稿済み（重複防止のためスキップ）
+
+──────────────────
+今日のランキングTOP3（参考）:
+1. {top3[0] if len(top3) > 0 else '-'}
+2. {top3[1] if len(top3) > 1 else '-'}
+3. {top3[2] if len(top3) > 2 else '-'}
+──────────────────
+
+🛌 今日はROOM投稿お休みでOK
+🔄 ランキングが更新されれば新しい商品が出てくるはず
+📅 生成: {datetime.datetime.now(JST).strftime('%Y-%m-%d %H:%M')} JST
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+    return subject, body
+
+
 def main() -> int:
     print("🚀 post_room_suggestion.py 開始")
 
@@ -516,10 +538,19 @@ def main() -> int:
 
     cache = load_cache()
     item = pick_item(items, cache.get("sent_urls", []))
+
     if item is None:
-        print("  全て送信済み → キャッシュをリセットしてTOPを採用")
-        cache["sent_urls"] = []
-        item = items[0]
+        # 全件投稿済み → 「お休み通知」だけ送ってキャッシュは触らない
+        print("  全件投稿済み → お休み通知メールを送信")
+        subject, body = build_all_sent_email(items)
+        if os.environ.get("DRY_RUN") == "1":
+            print("── DRY RUN (メール送信スキップ) ──")
+            print(f"件名: {subject}")
+            print(body)
+            return 0
+        send_email(subject, body)
+        print("🏁 完了（お休み日）")
+        return 0
 
     print(f"  選出: {item['name'][:60]}")
     print(f"  寄付額: {item['price']:,}円")
@@ -528,8 +559,10 @@ def main() -> int:
     appeal = generate_appeal(item)
     print(f"  アピール文: {appeal}")
 
-    # オリジナル画像生成（C→Bランクアップ条件対応）
-    image_path = generate_post_image(item)
+    # オリジナル画像生成は一旦停止（ROOM上の「オリジナル写真」の趣旨と合わないため）
+    # 復活させたい時は下記コメントアウトを外す
+    # image_path = generate_post_image(item)
+    image_path = None
 
     subject, body = build_email(item, appeal, aff_url)
 
