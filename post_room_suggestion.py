@@ -235,21 +235,64 @@ def fetch_furusato_items() -> list[dict]:
 
 # ── 商品選出 ───────────────────────────────────────────────────────────────────
 
-def pick_item(items: list[dict], sent_urls: list[str]) -> dict | None:
-    """未送信の最上位アイテムを返す。"""
+SEASONAL_FILE = "seasonal_pre_peak.json"
+
+
+def load_seasonal_keywords(month: int) -> list[str]:
+    """現在の月の『旬のちょっと前』キーワード配列を返す。失敗時は空リスト。"""
+    if not os.path.exists(SEASONAL_FILE):
+        return []
+    try:
+        with open(SEASONAL_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("months", {}).get(str(month), [])
+    except Exception as e:
+        print(f"  ⚠️ 季節カレンダー読み込み失敗: {e}", file=sys.stderr)
+        return []
+
+
+def pick_item(items: list[dict], sent_urls: list[str], seasonal_keywords: list[str] = None) -> tuple:
+    """未送信アイテムを選出。返値は (item, matched_keyword_or_None)。
+
+    挙動:
+      1. 季節キーワードが指定されてれば、キーワード一致の上位アイテムを優先（位相リード戦略）
+      2. 一致が無い、もしくはキーワード未指定 → ランキング順の最上位未送信
+      3. 全て送信済み → (None, None)
+    """
     sent_set = set(sent_urls)
+    keywords = seasonal_keywords or []
+
+    # Phase 1: 季節キーワード一致 を優先
+    if keywords:
+        for it in items:
+            base_url = it["url"].split("?")[0]
+            if base_url in sent_set:
+                continue
+            name = it.get("name", "")
+            for kw in keywords:
+                if kw in name:
+                    return it, kw
+
+    # Phase 2: ランキング順フォールバック
     for it in items:
         base_url = it["url"].split("?")[0]
         if base_url not in sent_set:
-            return it
-    return None
+            return it, None
+
+    # Phase 3: 全て送信済み
+    return None, None
 
 
 # ── アピール文生成 ─────────────────────────────────────────────────────────────
 
-def generate_appeal(item: dict) -> str:
-    """Claude Haiku にアピール文を生成させる。失敗時はフォールバック文を返す。"""
-    fallback = "人気ランキングから厳選！ふるさと納税でお得に手に入れるチャンスだよ。"
+def generate_appeal(item: dict, seasonal_keyword: str = None) -> str:
+    """Claude Haiku にアピール文を生成させる。失敗時はフォールバック文を返す。
+    seasonal_keyword が指定されていれば「旬の先取り」軸を訴求に追加。
+    """
+    if seasonal_keyword:
+        fallback = f"これからが旬の{seasonal_keyword}！ふるさと納税で今から予約しておこう。"
+    else:
+        fallback = "人気ランキングから厳選！ふるさと納税でお得に手に入れるチャンスだよ。"
     if not ANTHROPIC_API_KEY:
         print("  ⚠️ ANTHROPIC_API_KEY 未設定 → フォールバック", file=sys.stderr)
         return fallback
@@ -262,6 +305,15 @@ def generate_appeal(item: dict) -> str:
 
     client = Anthropic(api_key=ANTHROPIC_API_KEY)
 
+    seasonal_hint = ""
+    if seasonal_keyword:
+        seasonal_hint = f"""
+
+# 特記事項（重要）
+- この商品は「旬の少し前」のタイミングで紹介する戦略商品です（キーワード: {seasonal_keyword}）
+- 「これから旬」「予約しておくとお得」「シーズン前にゲット」等、先取り感を強調してください
+- 旬を待つワクワク感、家族で楽しむシーン等、温かみのある先取り訴求を"""
+
     prompt = f"""以下は楽天ふるさと納税の人気商品です。楽天ROOM投稿用のアピール文を日本語で生成してください。
 
 # 商品情報
@@ -269,6 +321,7 @@ def generate_appeal(item: dict) -> str:
 - ショップ: {item['shop']}
 - 寄付額: {item['price']:,}円
 - 商品説明(冒頭): {item['caption'][:200]}
+{seasonal_hint}
 
 # 要件
 - 2〜3行、合計100文字以内
@@ -442,17 +495,25 @@ def generate_post_image(item: dict) -> "str | None":
 
 # ── メール組み立て & 送信 ──────────────────────────────────────────────────────
 
-def build_email(item: dict, appeal: str, aff_url: str) -> tuple[str, str]:
+def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = None) -> tuple[str, str]:
     clean_name = strip_name_prefix(item["name"])
     short_name = clean_name[:50]
-    subject = f"【今日のROOM投稿】{short_name}"
+
+    if seasonal_keyword:
+        subject = f"【今日のROOM投稿/旬先取り🌱】{short_name}"
+        season_tag = f" #{seasonal_keyword}"
+        season_note = f"🌱 今日は『{seasonal_keyword}』の旬先取りピックだぜ！需要が立ち上がる前に投稿しとくと第一想起取れる\n\n"
+    else:
+        subject = f"【今日のROOM投稿】{short_name}"
+        season_tag = ""
+        season_note = ""
 
     body_name = clean_name[:80]
-    tags = "#楽天ROOM #ふるさと納税 #楽天ふるさと納税 #節税 #お得"
+    tags = f"#楽天ROOM #ふるさと納税 #楽天ふるさと納税 #節税 #お得{season_tag}"
 
     body = f"""━━━ 今日の楽天ROOM投稿候補 ━━━
 
-📮 {body_name}
+{season_note}📮 {body_name}
 💰 寄付額 {item['price']:,}円
 🏪 {item['shop']}
 🔗 {aff_url}
@@ -537,7 +598,13 @@ def main() -> int:
         return 1
 
     cache = load_cache()
-    item = pick_item(items, cache.get("sent_urls", []))
+    # 季節先取りキーワードを取得（現在の月）
+    current_month = datetime.datetime.now(JST).month
+    seasonal_keywords = load_seasonal_keywords(current_month)
+    if seasonal_keywords:
+        print(f"  🌱 {current_month}月の旬先取りキーワード: {seasonal_keywords}")
+
+    item, matched_kw = pick_item(items, cache.get("sent_urls", []), seasonal_keywords)
 
     if item is None:
         # 全件投稿済み → 「お休み通知」だけ送ってキャッシュは触らない
@@ -552,11 +619,13 @@ def main() -> int:
         print("🏁 完了（お休み日）")
         return 0
 
+    if matched_kw:
+        print(f"  🌱 旬先取りピック！ キーワード『{matched_kw}』 一致")
     print(f"  選出: {item['name'][:60]}")
     print(f"  寄付額: {item['price']:,}円")
 
     aff_url = add_affiliate(item["url"])
-    appeal = generate_appeal(item)
+    appeal = generate_appeal(item, seasonal_keyword=matched_kw)
     print(f"  アピール文: {appeal}")
 
     # オリジナル画像生成は一旦停止（ROOM上の「オリジナル写真」の趣旨と合わないため）
@@ -564,7 +633,7 @@ def main() -> int:
     # image_path = generate_post_image(item)
     image_path = None
 
-    subject, body = build_email(item, appeal, aff_url)
+    subject, body = build_email(item, appeal, aff_url, seasonal_keyword=matched_kw)
 
     if os.environ.get("DRY_RUN") == "1":
         print("── DRY RUN (メール送信スキップ) ──")
