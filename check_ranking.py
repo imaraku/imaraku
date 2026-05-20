@@ -383,7 +383,7 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
         ("総合",        {"genreId": 0}),       # 楽天市場全体
         ("おもちゃ",    {"genreId": 562637}),  # ポケカ・たまごっち・ドロップシール・キャラグッズ
         ("CD/DVD",      {"genreId": 101240}),  # Snow Man/アイドル/邦楽
-        ("本雑誌",      {"genreId": 200163}),  # ONE PIECE magazine 等
+        ("本雑誌",      {"genreId": 101266}),  # ONE PIECE magazine / 漫画 / アイドル写真集 等（200163は誤り→パソコン関連だった）
         ("テレビ家電",  {"genreId": 200162}),  # Switch ソフト・新作ガジェット
         ("食品",        {"genreId": 100533}),  # 限定スイーツ・コラボ食品
     ]
