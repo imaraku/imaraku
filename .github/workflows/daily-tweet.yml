@@ -2,12 +2,13 @@ name: 日次キャンペーンツイート
 
 on:
   schedule:
-    # 【2026-05-06】毎時 :00 のみに変更（前は :00/:30 だったが、
-    # concurrency=cancel-in-progress:false 環境下で waiting キューに
-    # :00 と :30 が立て続けに溜まると古い方が cancelled になり
-    # GitHub Actions failure メールが多発したため）。
-    # 1時間間隔でも各スロット(0/12/18/20時)に 4-6 fire ある余裕設計。
-    - cron: '0 * * * *'
+    # 【2026-05-20】X APIクレジット節約のためスロットを 4→2 に圧縮（12時 / 18時 のみ）。
+    # それに合わせて cron も該当時間帯のみに narrow（前は毎時 24fire/日 → 9fire/日）。
+    # 12時スロット (JST 12-15時) = UTC 3-6時 / 18時スロット (JST 16-19時) = UTC 7-10時
+    # 取りこぼし対策で各スロットに複数 fire を残し、posted_slots.json で重複排除する設計。
+    - cron: '0 3,4,5,6,7,8,9,10 * * *'
+  # 手動テスト用
+  workflow_dispatch:
   # 手動テスト用
   workflow_dispatch:
 
