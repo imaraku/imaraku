@@ -147,7 +147,38 @@ axes = [
 6軸並列で ~140 件取得。総合 TOP30 だけだと売り切れ商品ばかり拾うが、
 **カテゴリ別 TOP30 はトラフィック分散でまだ在庫がある段階で検出**できる。
 
-### ⚠️ 10-b. 「前回NGだった」結論は周期的に再検証する
+### ⚠️ 11. YAML/JSON を Edit ツールで操作したら必ず構文検証してから push
+2026-05-20 に daily-tweet スロット節約のため Edit でcron 行差し替えをしたが、
+古い `# 手動テスト用 / workflow_dispatch:` 2行を残したまま新しい同じ2行も
+追加してしまい、`on:` 直下に `workflow_dispatch:` が**2回出現**する状態でpush。
+
+YAML はマッピング内のキー重複を許容しないため `on:` ブロック全体が無効化、
+GitHub Actions が「No jobs were run」を返し、5/20 18:19 〜 19:35 の **約75分間に
+8 run 全てが失敗**した（cron も workflow_dispatch も発火不能）。
+
+✅ **正解（運用ルール化）**:
+```bash
+# YAML
+python3 -c "import yaml; yaml.safe_load(open('.github/workflows/X.yml'))"
+# venv に yaml が無ければ簡易チェック:
+python3 -c "
+import sys
+lines = open('.github/workflows/X.yml').read().split('\\n')
+keys = [l.strip().rstrip(':') for l in lines if l.startswith('  ') and l.rstrip().endswith(':')]
+from collections import Counter
+dup = {k:c for k,c in Counter(keys).items() if c > 1}
+assert not dup, f'duplicate keys: {dup}'
+"
+# JSON
+python3 -m json.tool < path/to/file.json > /dev/null
+```
+
+✅ **異常検知のヒント**:
+- 「Run failed: ...workflow.yml ... No jobs were run」メールが連発したら
+  **真っ先に workflow ファイルの構文を疑う** (run の中ではなく workflow 自体が壊れてる)
+- Edit で複数行の差し替えをした直後は、変更前後の行数を git diff で確認する
+
+### ⚠️ 12. 「前回NGだった」結論は周期的に再検証する
 2026-05-12 → 12 に「sex+genreId は無理」「カテゴリ別ランキングは無理」と
 結論づけた結果、1週間「総合 TOP30 のみ」運用で売り切れ通知が頻発していた。
 2026-05-20 に相棒の違和感センサーで再チャレンジ → 「genreId 単体なら OK」を発見、
