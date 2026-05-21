@@ -89,13 +89,21 @@ def post_tweet(text: str) -> bool:
  
  
 def build_tweet(special_days: list) -> str:
-    """状況に応じたツイート文を生成する。"""
- 
+    """状況に応じたツイート文を生成する。
+
+    ※ X 重複検出回避: 今夜の日付を本文に埋め込みマラソン毎にユニークに。
+       マラソンは月2回程度なので 30日窓で複数回ヒットする可能性が高い。
+    """
+    now = datetime.datetime.now(JST)
+    day_jp = "日月火水木金土"[now.weekday()]
+    date_prefix = f"📅 今夜 {now.month}/{now.day}({day_jp}) 20:00 START!\n\n"
+
     if special_days:
         # マラソン × 特別日 → ビッグチャンス！
         events = "・".join(special_days)
         return (
-            f"🔥 今夜20時からお買い物マラソン開始 & {events}！\n"
+            f"{date_prefix}"
+            f"🔥 お買い物マラソン × {events}！\n"
             "ポイントを最大限稼げるビッグチャンス🎯\n"
             "\n"
             "エントリーまとめ👇\n"
@@ -105,7 +113,8 @@ def build_tweet(special_days: list) -> str:
 
     # 通常のマラソン事前告知（SPU控えめ、eギフト追記）
     return (
-        "🏃 今夜20時からお買い物マラソン開始！\n"
+        f"{date_prefix}"
+        "🏃 お買い物マラソン、もうすぐ開幕！\n"
         "\n"
         "注文前に必ずエントリーを✅\n"
         "\n"
