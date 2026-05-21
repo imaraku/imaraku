@@ -308,6 +308,7 @@ imaraku/                        ← リポジトリルート
 | `superdeal_4h` | スーパーDEAL 4時間限定（マラソン期間中のみ開催） | false |
 | `mobiledeal` | 楽天モバイル×スーパーDEAL（マラソン期間中のみ開催） | false |
 | `pokemon_lottery` | 楽天ブックスのポケカ抽選（受付期間中のみ true） | false |
+| `shop39` | 39ショップ キャンペーン（マラソン期と同期間で開催されることが多いが、開催されない月もあるため個別判定） | false |
 | `mother_day` | 母の日特集（`seasonal_events.json` で期間制御） | false |
 | `father_day` | 父の日特集（同上） | false |
 | `ochugen` | お中元特集（同上） | false |

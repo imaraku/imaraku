@@ -49,6 +49,7 @@
       guerrilla:        false, // (ゲリラ)全店+1倍（マラソン内ゲリラキャンペーン）
       superdeal_4h:     false, // スーパーDEAL 4時間限定（マラソン内サブキャンペーン）
       mobiledeal:       false, // 楽天モバイル×スーパーDEAL +10%
+      shop39:           false, // 39ショップ キャンペーン（マラソン期と同期間が多いが個別判定）
     };
 
     // 終了確定URLマップ（GitHub Actionsが自動更新する expired_entries.json で上書きされる）
@@ -1634,7 +1635,7 @@
     { name: "🎴 楽天ブックス ポケカ抽選 受付中（👇下の全17種）", point: "抽選", url: "https://books.rakuten.co.jp/search?sitem=%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%E3%82%AB%E3%83%BC%E3%83%89+%E6%8A%BD%E9%81%B8&g=006", essential: true, campaignKey: "pokemon_lottery" },
     { name: "🏃 お買い物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/?l-id=top_normal_bigbnr_pc_JBEFGGIB_161861_1", essential: true, campaignKey: "marathon" },
     { name: "⚾ 楽天勝利 勝ったら倍", point: "+1%〜", url: "https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160292_0_irrcp", essential: true, campaignKey: "eagles" },
-    { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/?l-id=top_normal_flashbnr_10_EECGIGEA_162459_0_irrcp", essential: true, campaignKey: "marathon" },
+    { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/?l-id=top_normal_flashbnr_10_EECGIGEA_162459_0_irrcp", essential: true, campaignKey: "shop39" },
     { name: "📅 0と5のつく日 +1%（楽天カード）", point: "+1%", url: "https://event.rakuten.co.jp/card/pointday/?scid=af_pc_etc&sc2id=af_101_0_0", essential: true, showOnDays: [5,10,15,20,25,30] },
     { name: "📱 楽天モバイル限定：+２倍", point: "+2倍", url: "https://network.mobile.rakuten.co.jp/lp/link/event/20260404/?scid=wi_ich_rmb_jsbanner_pc_bt&l-id=top_normal_flashbnr_10_EFIGFBFC_162327_1", essential: true, noAffiliate: true, campaignKey: "mobilebonus" },
     // ── 🌸 シーズナル特集（seasonal_events.json で期間制御） ──

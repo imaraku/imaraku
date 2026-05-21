@@ -166,6 +166,16 @@ CAMPAIGNS = [
         "default": False,
     },
     {
+        # 39ショップ キャンペーン（送料無料ライン対象ショップ +1倍）
+        # マラソン期間と同期間に開催されることが多いが、開催されない月もある
+        # → 個別 campaign key で自動判定し、マラソン中でも開催してなければ非表示にする
+        "key": "shop39",
+        "url": "https://event.rakuten.co.jp/guide/freeshippingline/campaign/",
+        "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
+        "active_kw": ["エントリーする", "エントリー受付中", "送料無料ライン39", "39ショップ", "ポイント2倍"],
+        "default": False,
+    },
+    {
         # 楽天モバイル×スーパーDEAL +10%（マラソン全期間有効。4時間限定ではない）
         # URL は最新マラソンの日付付きパスへ更新。古いURLだと404扱いで誤って終了判定される可能性あり
         "key": "mobiledeal",
@@ -1090,7 +1100,7 @@ def main():
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
     if not results.get("marathon", False):
-        for k in ["repeat_purchase", "guerrilla", "superdeal_4h", "mobiledeal"]:
+        for k in ["repeat_purchase", "guerrilla", "superdeal_4h", "mobiledeal", "shop39"]:
             if results.get(k):
                 print(f"  [{k}] マラソン非開催のため false に補正")
                 results[k] = False
