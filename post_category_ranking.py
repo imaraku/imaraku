@@ -320,7 +320,10 @@ def main():
         print(f"  ⚠️ {cat.get('name')} に genreId 未設定 → スキップ")
         return
     keyword_filter = cat.get("keyword_filter", "")
-    print(f"  カテゴリ: {cat.get('name')} (genreId={genre_id}, filter={keyword_filter!r})")
+    name_whitelist = cat.get("name_must_contain_any", []) or []
+    name_blacklist = cat.get("name_must_not_contain_any", []) or []
+    print(f"  カテゴリ: {cat.get('name')} (genreId={genre_id}, filter={keyword_filter!r}, "
+          f"whitelist={len(name_whitelist)}語, blacklist={len(name_blacklist)}語)")
 
     # 楽天ランキングAPIで上位アイテム取得（リアルタイムランキング）
     items = fetch_top_items(
@@ -329,6 +332,33 @@ def main():
         hits=cat.get("hits", 20),
         min_reviews=cat.get("min_review_count", 0),
     )
+
+    # ── カテゴリゲーミング対策フィルタ ─────────────────────────────────
+    # 楽天は出店者が任意ジャンルでランキング登録できる。たとえばマッサージ商品を
+    # 「スイーツ・お菓子」ジャンルでランキングインさせるショップが実在する。
+    # 商品名で2段フィルタしてカテゴリミスマッチを弾く:
+    #   1. blacklist のいずれか1語でも商品名に含まれていれば除外（誤爆ストッパー）
+    #   2. whitelist が指定されている場合、いずれか1語が商品名に含まれている必要あり
+    if name_blacklist or name_whitelist:
+        before = len(items)
+        filtered = []
+        rejected_examples = []
+        for it in items:
+            nm = it.get("name", "")
+            if any(bw in nm for bw in name_blacklist):
+                if len(rejected_examples) < 3:
+                    rejected_examples.append(f"NG(blacklist): {nm[:50]}")
+                continue
+            if name_whitelist and not any(ww in nm for ww in name_whitelist):
+                if len(rejected_examples) < 3:
+                    rejected_examples.append(f"NG(not in whitelist): {nm[:50]}")
+                continue
+            filtered.append(it)
+        items = filtered
+        print(f"  カテゴリゲーミング対策フィルタ: {before} → {len(items)} 件")
+        for ex in rejected_examples:
+            print(f"    {ex}")
+
     if len(items) < 3:
         print(f"  ⚠️ 該当アイテム不足: {len(items)} 件 → スキップ")
         return
