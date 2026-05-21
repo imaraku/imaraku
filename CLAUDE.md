@@ -178,7 +178,38 @@ python3 -m json.tool < path/to/file.json > /dev/null
   **真っ先に workflow ファイルの構文を疑う** (run の中ではなく workflow 自体が壊れてる)
 - Edit で複数行の差し替えをした直後は、変更前後の行数を git diff で確認する
 
-### ⚠️ 12. 「前回NGだった」結論は周期的に再検証する
+### ⚠️ 12. X (Twitter) は同一テンプレ文章を約30日窓で 403 で弾く
+2026-05-21 14:53 JST に daily-tweet の `tweet_marathon_entry_only()` が
+"403 You are not permitted to perform this action" で失敗した。
+
+【真因】
+完全固定文のテンプレートは、前回マラソンのエントリー期間に同じ文章を 4-6 回
+投稿済 → X の重複投稿検出（~30日窓）にヒット。
+
+✅ **正解（運用済）**:
+`post_daily_tweet.py` に `daily_lead_in()` ヘルパーを定義し、全テンプレ先頭に
+「📅 5/21(木) 🌞 お昼チェック」「📅 5/21(木) 🌆 帰り道チェック」の日替わり×
+スロット別文脈行を挿入。これで:
+- 日付が変わる → 翌日同じテンプレでもユニーク
+- 12時/18時で挨拶絵文字が変わる → 同日2回投稿でもユニーク
+
+【適用済テンプレ】21 種類:
+marathon_kickoff / big_chance / entry_only / normal / wonderful_day / ichiba_day /
+zero_five_day / month_end_eve / month_end_last / triple_combo (3種) /
+marathon_x_victory / w_victory_x_special / single_victory_x_special /
+w_victory / eagles / vissel / adidas / nike / normal
+
+【適用しないもの】
+- 年1回テンプレ (new_year / valentine / white_day / christmas 等) → 365日空くから安全
+- countdown 系 (`days_until` で自然にユニーク) → 既に変動的
+- 急上昇ランキングツイート (商品名で自然にユニーク)
+- カテゴリTOP3 (毎日カテゴリが回るので自然にユニーク)
+
+【今後新しいテンプレを足すとき】
+**完全固定文は禁止**。daily_lead_in() を必ず先頭に挿入するか、可変要素を
+本文に組み込む。新テンプレ追加時は dedup リスクを必ず確認。
+
+### ⚠️ 13. 「前回NGだった」結論は周期的に再検証する
 2026-05-12 → 12 に「sex+genreId は無理」「カテゴリ別ランキングは無理」と
 結論づけた結果、1週間「総合 TOP30 のみ」運用で売り切れ通知が頻発していた。
 2026-05-20 に相棒の違和感センサーで再チャレンジ → 「genreId 単体なら OK」を発見、

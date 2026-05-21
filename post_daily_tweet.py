@@ -319,9 +319,35 @@ def post_tweet(text: str) -> bool:
 
 # ── ツイート文 生成 ────────────────────────────────────────────────────────
 
+# 現在実行中のスロット名（"12" / "18"）。main() から set される。
+# テンプレ側の daily_lead_in() がスロット別の挨拶を出すために参照。
+_CURRENT_SLOT: str = ""
+
+
+def daily_lead_in() -> str:
+    """全テンプレ先頭に挿入する日替わり文脈行。
+    X の重複投稿検出（〜30日窓）回避が主目的。同時に読者に
+    「今日いつ流れてきたツイートか」が一目で分かる情報価値も提供する。
+
+    出力例:
+      📅 5/21(木) 🌞 お昼チェック
+      📅 5/21(木) 🌆 帰り道チェック
+    """
+    now = datetime.datetime.now(JST)
+    day_jp = "日月火水木金土"[now.weekday()]
+    if _CURRENT_SLOT == "12":
+        slot_label = " 🌞 お昼チェック"
+    elif _CURRENT_SLOT == "18":
+        slot_label = " 🌆 帰り道チェック"
+    else:
+        slot_label = ""
+    return f"📅 {now.month}/{now.day}({day_jp}){slot_label}\n\n"
+
+
 def tweet_marathon_kickoff() -> str:
     """マラソン開始（ポイントアップ開始）直後のヨーイドン宣言ツイート。"""
     return (
+        f"{daily_lead_in()}"
         "🏁 位置について、ヨーイ…\n"
         "\n"
         "🏃‍♂️ お買い物マラソン スタート！\n"
@@ -340,6 +366,7 @@ def tweet_marathon_kickoff() -> str:
 def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> str:
     events = season_event if season_event else "・".join(special_days)
     return (
+        f"{daily_lead_in()}"
         f"🔥 ビッグチャンス！\n"
         f"マラソン × {events} 重なり✨\n"
         "\n"
@@ -378,6 +405,7 @@ def tweet_marathon_entry_only() -> str:
         except Exception:
             pass
     return (
+        f"{daily_lead_in()}"
         "🏃 お買い物マラソン、エントリー受付中！\n"
         "\n"
         f"{start_label}"
@@ -395,6 +423,7 @@ def tweet_marathon_entry_only() -> str:
 
 def tweet_marathon_normal() -> str:
     return (
+        f"{daily_lead_in()}"
         "🏃 お買い物マラソン開催中！\n"
         "\n"
         "買いたいものがなくても買いまわりOK✨\n"
@@ -409,6 +438,7 @@ def tweet_marathon_normal() -> str:
 
 def tweet_wonderful_day() -> str:
     return (
+        f"{daily_lead_in()}"
         "🎉 今日はワンダフルデー！（毎月1日）\n"
         "\n"
         "楽天カード利用でポイントUP✨\n"
@@ -422,6 +452,7 @@ def tweet_wonderful_day() -> str:
 
 def tweet_ichiba_day() -> str:
     return (
+        f"{daily_lead_in()}"
         "🏪 今日は楽天市場の日！（毎月18日）\n"
         "エントリーするだけでOK！\n"
         "\n"
@@ -581,6 +612,7 @@ def tweet_christmas() -> str:
 
 def tweet_zero_five_day() -> str:
     return (
+        f"{daily_lead_in()}"
         "📅 今日は0と5のつく日！\n"
         "楽天カードで【ふるさと納税】+1倍💳\n"
         "\n"
@@ -597,6 +629,7 @@ def tweet_zero_five_day() -> str:
 def tweet_month_end_eve() -> str:
     """月末前日：期間限定ポイント失効注意（警告＋使い道提案）"""
     return (
+        f"{daily_lead_in()}"
         "⏰月末まで残り1日\n"
         "期間限定ポイント、大丈夫？\n"
         "\n"
@@ -616,6 +649,7 @@ def tweet_month_end_eve() -> str:
 def tweet_month_end_last() -> str:
     """月末当日：期間限定ポイント失効目前（緊急告知）"""
     return (
+        f"{daily_lead_in()}"
         "🚨本日23:59期限！\n"
         "期間限定ポイント、失効目前💧\n"
         "\n"
@@ -634,6 +668,7 @@ def tweet_triple_combo(special_days: list, season_event: str = None) -> str:
     """マラソン × W勝利 × 特別日/季節イベント → トリプル役満（年に数回の激レア）"""
     events = season_event if season_event else "・".join(special_days)
     return (
+        f"{daily_lead_in()}"
         "🔥🔥🔥 役満デー！\n"
         f"マラソン × W勝利(⚾×⚽) × {events}\n"
         "奇跡の3重なり✨\n"
@@ -654,6 +689,7 @@ def tweet_triple_combo_adidas(special_days: list, season_event: str = None) -> s
     """
     events = season_event if season_event else "・".join(special_days)
     return (
+        f"{daily_lead_in()}"
         "🔥🔥 トリプル役満！\n"
         f"マラソン × {events} × adidas\n"
         "\n"
@@ -672,6 +708,7 @@ def tweet_triple_combo_nike(special_days: list, season_event: str = None) -> str
     """
     events = season_event if season_event else "・".join(special_days)
     return (
+        f"{daily_lead_in()}"
         "🔥🔥 トリプル役満！\n"
         f"マラソン × {events} × NIKE\n"
         "\n"
@@ -691,6 +728,7 @@ def tweet_marathon_x_victory(w_victory: bool, team: str = "") -> str:
         head = f"🔥 ビッグチャンス！\nマラソン × {team}勝利でポイント増量！"
     tag_team = 'eagles' if ('イーグルス' in team or w_victory) else 'vissel'
     return (
+        f"{daily_lead_in()}"
         f"{head}\n"
         "\n"
         "勝ったら倍エントリー忘れずに、\n"
@@ -707,6 +745,7 @@ def tweet_w_victory_x_special(special_days: list, season_event: str = None) -> s
     """W勝利 × 特別日/季節イベント → レアな組み合わせ"""
     events = season_event if season_event else "・".join(special_days)
     return (
+        f"{daily_lead_in()}"
         f"🎉 レアなチャンス！\n"
         f"W勝利(⚾×⚽) × {events} 重なり✨\n"
         "\n"
@@ -724,6 +763,7 @@ def tweet_single_victory_x_special(team: str, special_days: list, season_event: 
     events = season_event if season_event else "・".join(special_days)
     cat = 'eagles' if 'イーグルス' in team else 'vissel'
     return (
+        f"{daily_lead_in()}"
         f"✨ お得デー！\n"
         f"{team}勝利 × {events} 合わせ技！\n"
         "\n"
@@ -739,6 +779,7 @@ def tweet_single_victory_x_special(team: str, special_days: list, season_event: 
 def tweet_w_victory() -> str:
     """イーグルス＆ヴィッセル神戸W勝利 → ポイント3倍"""
     return (
+        f"{daily_lead_in()}"
         "🎉🎉 W勝利でポイント3倍！！\n"
         "楽天イーグルス⚾×ヴィッセル神戸⚽ 勝利✨\n"
         "\n"
@@ -754,6 +795,7 @@ def tweet_w_victory() -> str:
 def tweet_eagles() -> str:
     """イーグルスのみ勝利 → ポイント2倍"""
     return (
+        f"{daily_lead_in()}"
         "⚾ 楽天イーグルス勝利！\n"
         "「勝ったら倍」でポイント2倍🎉\n"
         "\n"
@@ -768,6 +810,7 @@ def tweet_eagles() -> str:
 def tweet_vissel() -> str:
     """ヴィッセル神戸のみ勝利 → ポイント2倍"""
     return (
+        f"{daily_lead_in()}"
         "⚽ ヴィッセル神戸勝利！\n"
         "「勝ったら倍」でポイント2倍🎉\n"
         "\n"
@@ -781,6 +824,7 @@ def tweet_vissel() -> str:
 
 def tweet_adidas() -> str:
     return (
+        f"{daily_lead_in()}"
         "👟 adidas セール開催中！\n"
         "\n"
         "50%off / 40%off / 30%off / 20%off の\n"
@@ -794,6 +838,7 @@ def tweet_adidas() -> str:
 
 def tweet_nike() -> str:
     return (
+        f"{daily_lead_in()}"
         "👟 NIKE 最大60%OFF開催中！\n"
         "\n"
         "マラソンと組み合わせでお得🔥\n"
@@ -807,6 +852,7 @@ def tweet_nike() -> str:
 
 def tweet_normal() -> str:
     return (
+        f"{daily_lead_in()}"
         "💡 楽天でお買い物する前に、まずエントリー！\n"
         "\n"
         "エントリーするだけでポイントが変わる✨\n"
@@ -835,6 +881,10 @@ def main():
         print(f"  → 本日のスロット {slot}時 は既に投稿済 → スキップ")
         return
     print(f"  → 対象スロット: {slot}時")
+
+    # テンプレに「日替わり文脈行」を渡すためスロット情報をモジュールスコープに公開
+    global _CURRENT_SLOT
+    _CURRENT_SLOT = slot
 
     status           = load_status()
     marathon         = status.get("marathon",         False)
