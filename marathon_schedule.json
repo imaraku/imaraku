@@ -1,8 +1,7 @@
 {
-  "entry_start": "2026-05-07T10:00:00+09:00",
-  "pointup_start": "2026-05-09T20:00:00+09:00",
-  "pointup_end": "2026-05-16T01:59:00+09:00",
-  "source": "manual",
-  "updated_at": "2026-05-06T22:00:00+09:00",
-  "_comment": "ISO8601(JST, +09:00)形式。nullなら未設定。check_campaigns.pyが自動取得を試み、成功したらsourceを'auto'に更新します。手動で上書きしたい場合は source を 'manual' にしておけば auto で上書きされません。pointup_end を過ぎると manual 保護が自動解除され、次回マラソンの auto 抽出が再開します。"
+  "entry_start": "2026-05-21T10:00:00+09:00",
+  "pointup_start": "2026-05-23T20:00:00+09:00",
+  "pointup_end": "2026-05-27T01:59:00+09:00",
+  "source": "auto",
+  "updated_at": "2026-05-21T14:04:56.550541+09:00"
 }
