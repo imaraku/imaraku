@@ -353,10 +353,34 @@ def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> s
 
 
 def tweet_marathon_entry_only() -> str:
-    """エントリー期間中だがポイントアップ期間まだ開始していない場合"""
+    """エントリー期間中だがポイントアップ期間まだ開始していない場合。
+
+    ※ X の重複投稿検出（30日サイクル）対策で、マラソン開始日を本文に含めて
+       毎マラソンでユニークな文章になるようにしている。
+       過去事故: 2026-05-21 に前回マラソン (5/9) と同一テンプレで 403 Forbidden.
+    """
+    # 開始日を本文に埋め込む。schedule取れないときは曜日ベースの推測を入れる
+    sched = load_marathon_schedule()
+    p_start_str = sched.get("pointup_start") if isinstance(sched, dict) else None
+    start_label = ""
+    if p_start_str:
+        try:
+            start_dt = datetime.datetime.fromisoformat(p_start_str).astimezone(JST)
+            now_jst = datetime.datetime.now(JST)
+            delta_days = (start_dt.date() - now_jst.date()).days
+            day_jp = "日月火水木金土"[start_dt.weekday()]
+            if delta_days == 0:
+                start_label = f"⏰ 今夜 {start_dt.hour}時 から！\n"
+            elif delta_days == 1:
+                start_label = f"⏰ 明日 {start_dt.month}/{start_dt.day}({day_jp}) {start_dt.hour}時 開始！\n"
+            elif 0 < delta_days <= 7:
+                start_label = f"⏰ {start_dt.month}/{start_dt.day}({day_jp}) {start_dt.hour}時 開始！\n"
+        except Exception:
+            pass
     return (
         "🏃 お買い物マラソン、エントリー受付中！\n"
         "\n"
+        f"{start_label}"
         "⚠️ 今はまだ「エントリー期間」\n"
         "ポイントアップはまだだが、\n"
         "エントリー忘れると対象外💧\n"
