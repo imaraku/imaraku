@@ -851,16 +851,53 @@ def tweet_nike() -> str:
 
 
 def tweet_normal() -> str:
+    """通常日ツイート。3 バリアントを day_of_year で回し、訴求軸を変える。
+    A: 時短アングル（考えずにエントリー）
+    B: 金銭アングル（ポイント還元を最大化）
+    C: 発見アングル（今日限定の見逃しキャンペーン）
+    """
+    now = datetime.datetime.now(JST)
+    variant = now.timetuple().tm_yday % 3
+    if variant == 0:
+        body = (
+            "🛒 楽天で買う前のルーティン化、できてる？\n"
+            "\n"
+            "① 今楽を開く\n"
+            "② エントリー一括\n"
+            "③ そのまま買い物\n"
+            "\n"
+            "考えないでOK、3秒で完了👇\n"
+            f"{SITE_URL}"
+        )
+        tag_cats = ['core', 'poikatsu', 'saving']
+    elif variant == 1:
+        body = (
+            "💰 同じ商品でも、エントリー有無で\n"
+            "ポイント還元は数%変わる。\n"
+            "\n"
+            "塵も積もれば年間数千〜数万ポイント🪙\n"
+            "「エントリーした人だけがお得」設計✨\n"
+            "\n"
+            "今日のキャンペーン一覧👇\n"
+            f"{SITE_URL}"
+        )
+        tag_cats = ['core', 'poikatsu', 'saving']
+    else:
+        body = (
+            "👀 今日も見逃してるキャンペーン無い？\n"
+            "\n"
+            "・SPU 強化\n"
+            "・限定クーポン\n"
+            "・条件達成ボーナス\n"
+            "\n"
+            "全部まとめて1ページに集約👇\n"
+            f"{SITE_URL}"
+        )
+        tag_cats = ['core', 'poikatsu', 'coupon']
     return (
         f"{daily_lead_in()}"
-        "💡 楽天でお買い物する前に、まずエントリー！\n"
-        "\n"
-        "エントリーするだけでポイントが変わる✨\n"
-        "今日のキャンペーン👇\n"
-        f"{SITE_URL}\n"
-        "\n"
-        "クーポンも忘れずに！\n"
-        f" {hashtags(['core', 'poikatsu', 'coupon'], max_tags=3)}"
+        f"{body}\n"
+        f" {hashtags(tag_cats, max_tags=3)}"
     )
 
 

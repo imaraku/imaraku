@@ -1098,8 +1098,10 @@
       nb.style.color = "#1B5E20";
     } else if (CAMPAIGN_STATUS.marathon && !CAMPAIGN_STATUS.marathon_pointup) {
       // エントリー期間のみ（ポイントアップ未開始）
+      var startLine = formatMarathonStart();
       nb.innerHTML =
         `📋 <strong>マラソン エントリー受付中！</strong>（ポイントアップはまだ始まっていません）<br>` +
+        (startLine ? `⏰ ポイントアップ ${startLine}<br>` : ``) +
         `⚠️ 今のうちに<strong>エントリーだけ</strong>しておこう！エントリーしないとポイントアップ対象外になります。`;
       nb.style.background = "#FFF3CD";
       nb.style.borderColor = "#E6A800";
@@ -1877,6 +1879,9 @@
 
   // marathon_schedule.json の開始/終了時刻と現在時刻(JST)を比較して
   // marathon / marathon_pointup を分単位で上書きする
+  // バナー表示で使うためグローバルに保持（updateNoticeBannerから参照）
+  var MARATHON_POINTUP_START = null;
+  var MARATHON_POINTUP_END   = null;
   function applyMarathonSchedule(schedule) {
     if (!schedule || !schedule.pointup_start || !schedule.pointup_end) return;
     var now = new Date(); // クライアント端末のローカル時刻（表示される時計と一致）
@@ -1887,6 +1892,30 @@
     if (isNaN(eStart.getTime())) eStart = pStart;
     CAMPAIGN_STATUS.marathon         = (now >= eStart && now <= pEnd);
     CAMPAIGN_STATUS.marathon_pointup = (now >= pStart && now <= pEnd);
+    MARATHON_POINTUP_START = pStart;
+    MARATHON_POINTUP_END   = pEnd;
+  }
+
+  function formatMarathonStart() {
+    if (!MARATHON_POINTUP_START) return "";
+    var d = MARATHON_POINTUP_START;
+    var dayJp = "日月火水木金土".charAt(d.getDay());
+    var hh = String(d.getHours()).padStart(2, "0");
+    var mm = String(d.getMinutes()).padStart(2, "0");
+    // 残り時間（時単位で大ざっぱ）
+    var now = new Date();
+    var diffMs = d - now;
+    var hoursLeft = Math.floor(diffMs / 3600000);
+    var countdown = "";
+    if (hoursLeft < 0) {
+      countdown = "";
+    } else if (hoursLeft < 24) {
+      countdown = ` <strong>(あと約${hoursLeft}時間)</strong>`;
+    } else {
+      var daysLeft = Math.floor(hoursLeft / 24);
+      countdown = ` <strong>(あと${daysLeft}日)</strong>`;
+    }
+    return `${d.getMonth()+1}/${d.getDate()}(${dayJp}) ${hh}:${mm} 開始！${countdown}`;
   }
 
   // campaign_status.json を取得して最新キャンペーン状態に更新
