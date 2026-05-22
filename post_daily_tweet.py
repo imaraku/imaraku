@@ -58,7 +58,13 @@ CAMPAIGN_STATUS_FILE   = "campaign_status.json"
 MARATHON_SCHEDULE_FILE = "marathon_schedule.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
-SITE_URL    = "https://imaraku.github.io/imaraku/imaraku.html"   # 自サイト（ラップ不要）
+SITE_URL_BASE = "https://imaraku.github.io/imaraku/imaraku.html"   # 自サイト（ラップ不要）
+# 日替わり cache-buster クエリ付き URL。
+# X は同じURL文字列を高頻度で投稿すると content-similarity / spam検出で 403 を返すことがある
+# (2026-05-22 確認: ranking-check は別ドメインURLで成功、daily-tweet だけ imaraku URL で連続403)。
+# モジュール load 時に今日の日付を埋め込むことで、cron 各 fire で literal URL を毎日変える。
+# リンク先は同じページに着地するのでユーザー体験は無変化。
+SITE_URL = f"{SITE_URL_BASE}?d={datetime.datetime.now(JST).strftime('%Y%m%d')}"
 # 楽天系URLは aff() でラップして使う（直接定義は raw URL）
 SPORTS_URL    = aff("https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160268_0")
 RAKKEN_URL    = aff("https://event.rakuten.co.jp/rakken/")
