@@ -12,7 +12,7 @@
   "mobilebonus": false,
   "repeat_purchase": false,
   "guerrilla": true,
-  "superdeal_4h": false,
+  "superdeal_4h": true,
   "shop39": false,
   "mobiledeal": true,
   "pokemon_lottery": false,
