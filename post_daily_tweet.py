@@ -382,11 +382,13 @@ def tweet_marathon_big_chance(special_days: list, season_event: str = None) -> s
 def tweet_marathon_entry_only() -> str:
     """エントリー期間中だがポイントアップ期間まだ開始していない場合。
 
-    ※ X の重複投稿検出（30日サイクル）対策で、マラソン開始日を本文に含めて
-       毎マラソンでユニークな文章になるようにしている。
-       過去事故: 2026-05-21 に前回マラソン (5/9) と同一テンプレで 403 Forbidden.
+    ※ X の重複投稿検出（30日サイクル）対策が事故源。エントリー期間中は
+       同じテンプレが 2スロット×7日=14回連投されるため、毎マラソン同じ文面だと
+       速攻 403 になる。本文を4バリアント × daily_lead_in（日替わり）で
+       強くシャッフルして対策する。
+       過去事故: 2026-05-21,22 連続で 403 Forbidden を喰らった。
     """
-    # 開始日を本文に埋め込む。schedule取れないときは曜日ベースの推測を入れる
+    # 開始日ラベル（schedule取れる場合のみ）
     sched = load_marathon_schedule()
     p_start_str = sched.get("pointup_start") if isinstance(sched, dict) else None
     start_label = ""
@@ -401,37 +403,113 @@ def tweet_marathon_entry_only() -> str:
             elif delta_days == 1:
                 start_label = f"⏰ 明日 {start_dt.month}/{start_dt.day}({day_jp}) {start_dt.hour}時 開始！\n"
             elif 0 < delta_days <= 7:
-                start_label = f"⏰ {start_dt.month}/{start_dt.day}({day_jp}) {start_dt.hour}時 開始！\n"
+                start_label = f"⏰ あと{delta_days}日 ({start_dt.month}/{start_dt.day}({day_jp}) {start_dt.hour}時 開始)\n"
         except Exception:
             pass
+
+    # 本文を 4 バリアント × 日替わりで切り替え（14日 entry期間でも全部別文章になる）
+    now = datetime.datetime.now(JST)
+    variant = now.timetuple().tm_yday % 4
+    if variant == 0:
+        body = (
+            "🏃 お買い物マラソン、エントリー受付中！\n"
+            "\n"
+            f"{start_label}"
+            "⚠️ 今はまだ「エントリー期間」\n"
+            "ポイントアップはまだだが、\n"
+            "エントリー忘れると対象外💧\n"
+            "\n"
+            "✅今のうちにエントリー済ませよう！\n"
+            "\n"
+            "まとめて👇\n"
+            f"{SITE_URL}"
+        )
+    elif variant == 1:
+        body = (
+            "📋 マラソン エントリー、できてる？\n"
+            "\n"
+            f"{start_label}"
+            "💡 早めにポチっておくのが正解。\n"
+            "ポイントアップ開始前にエントリーしないと、\n"
+            "せっかくの買い物が対象外になっちゃう。\n"
+            "\n"
+            "👇 ボタン一発でまとめてエントリー\n"
+            f"{SITE_URL}"
+        )
+    elif variant == 2:
+        body = (
+            "✋ マラソン前のチェックリスト\n"
+            "\n"
+            f"{start_label}"
+            "□ お買い物マラソン エントリー\n"
+            "□ 楽天カード SPU エントリー\n"
+            "□ 0と5の日キャンペーン エントリー\n"
+            "\n"
+            "全部、開始前に押しておこう👇\n"
+            f"{SITE_URL}"
+        )
+    else:
+        body = (
+            "🛒 マラソン スタート前にやることは1つだけ\n"
+            "\n"
+            f"{start_label}"
+            "👉 エントリー\n"
+            "\n"
+            "エントリーしてないと、買っても\n"
+            "ポイントアップの対象にならないからね💧\n"
+            "\n"
+            "👇 今のうちにまとめて\n"
+            f"{SITE_URL}"
+        )
     return (
         f"{daily_lead_in()}"
-        "🏃 お買い物マラソン、エントリー受付中！\n"
-        "\n"
-        f"{start_label}"
-        "⚠️ 今はまだ「エントリー期間」\n"
-        "ポイントアップはまだだが、\n"
-        "エントリー忘れると対象外💧\n"
-        "\n"
-        "✅今のうちにエントリー済ませよう！\n"
-        "\n"
-        "まとめて👇\n"
-        f"{SITE_URL}\n"
+        f"{body}\n"
         f" {hashtags(['core', 'marathon', 'entry'], max_tags=3)}"
     )
 
 
 def tweet_marathon_normal() -> str:
+    """マラソンポイントアップ期間中の通常ツイート。2スロット×7日=14回連投なので
+    本文を3バリアント×日替わりで強くシャッフル（X 重複検出 403 対策）。"""
+    now = datetime.datetime.now(JST)
+    variant = now.timetuple().tm_yday % 3
+    if variant == 0:
+        body = (
+            "🏃 お買い物マラソン開催中！\n"
+            "\n"
+            "買いたいものがなくても買いまわりOK✨\n"
+            "📦 楽券(eギフト)→コンビニ・コメダ等\n"
+            "🍎 Appleギフトカードも対象\n"
+            "\n"
+            "👇 今楽でまとめてエントリー\n"
+            f"{SITE_URL}"
+        )
+    elif variant == 1:
+        body = (
+            "🛒 マラソン中の買い回りテク\n"
+            "\n"
+            "・1ショップ1,000円以上ずつ\n"
+            "・できれば10ショップで＋9倍\n"
+            "・楽券/Appleギフトで嵩増しOK\n"
+            "\n"
+            "エントリー忘れだけ気をつけて👇\n"
+            f"{SITE_URL}"
+        )
+    else:
+        body = (
+            "💰 マラソン期間中だけのお得テク\n"
+            "\n"
+            "ふだん買う日用品も、\n"
+            "今買えばポイントが数倍に。\n"
+            "\n"
+            "「いつもの買い物を今日に寄せる」\n"
+            "これだけで年間ポイント変わる🪙\n"
+            "\n"
+            f"{SITE_URL}"
+        )
     return (
         f"{daily_lead_in()}"
-        "🏃 お買い物マラソン開催中！\n"
-        "\n"
-        "買いたいものがなくても買いまわりOK✨\n"
-        "📦 楽券(eギフト)→コンビニ・コメダ等\n"
-        "🍎 Appleギフトカードも対象\n"
-        "\n"
-        "👇 今楽でまとめてエントリー\n"
-        f"{SITE_URL}\n"
+        f"{body}\n"
         f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
     )
 
