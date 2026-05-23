@@ -1,6 +1,6 @@
 {
   "marathon": true,
-  "marathon_pointup": false,
+  "marathon_pointup": true,
   "eagles": false,
   "vissel": false,
   "biccamera": true,
