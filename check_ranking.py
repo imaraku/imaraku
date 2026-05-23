@@ -622,6 +622,15 @@ def main():
 
     print(f"=== ランキングチェック {now.strftime('%Y-%m-%d %H:%M JST')} ===")
 
+    # 【2026-05-23】 daily-tweet 減量の補填として5月だけ ranking-check を 1.5倍 fire。
+    # cron は常時 JST 9,12,15,18,20,22 の 6 fire/日 だが、6月以降は 9時/15時 fire を
+    # スクリプト側で skip して原来の 4 fire/日 (12,18,20,22) に戻す。
+    # ※ 手動 dispatch (workflow_dispatch) や schedule = "Scheduled" は両方とも skip対象
+    EXTRA_FIRE_HOURS = {9, 15}  # 5月だけ有効な追加fire
+    if now.month != 5 and now.hour in EXTRA_FIRE_HOURS:
+        print(f"  通常月の追加fire時間外 ({now.hour}時) → スキップ")
+        return
+
     cache = load_cache()
     prev_names = set(cache.get("items", []))
     regular_index = cache.get("regular_index", 0)

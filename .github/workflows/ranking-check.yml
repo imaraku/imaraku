@@ -5,8 +5,12 @@ on:
     # 【2026-04-30 削減】X API クレジット節約のため8時刻→4時刻に絞り込み。
     # 【2026-05-06】:30 cron を削除（concurrency キュー取り合いで cancelled
     # メール多発のため）。各時刻 :00 のみで運用。
-    # JST 12, 18, 20, 22時（昼休み + プライムタイム）= UTC 3, 9, 11, 13
-    - cron: '0 3,9,11,13 * * *'
+    # 【2026-05-23】 daily-tweet を 18時1スロットに減らした補填として
+    # ranking-check は5月だけ 1.5倍 (4 → 6 fire/日) に増やす。
+    # 6月以降の余分fire は check_ranking.py 側の月ゲートで skip される設計。
+    # 全期間 fire: UTC 0,3,6,9,11,13 = JST 9, 12, 15, 18, 20, 22時 (6 fire/日)
+    # 6月以降 active: JST 12, 18, 20, 22時 (4 fire/日、9時/15時を skip)
+    - cron: '0 0,3,6,9,11,13 * * *'
   workflow_dispatch:         # 手動テスト用
 
 permissions:
