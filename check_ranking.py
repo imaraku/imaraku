@@ -461,91 +461,20 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
     return items
 
 
-def fetch_ranking_deep_legacy() -> list[dict]:
-    """【5月限定の TOP100 深掘り】レガシー API (app.rakuten.co.jp) で
-    daily ランキング × ジャンル × page 1-3 を取得して TOP90/ジャンルを集める。
-
-    新 API (openapi.rakuten.co.jp/ichibaranking) は realtime 専用かつ
-    pagination 非対応のためカテゴリTOP30が上限。レガシー API は daily + page を
-    サポートしているため、より広い網で「TOP30からはみ出した急上昇予備軍」を拾える。
-
-    レガシー API が "specify valid applicationId" 等で弾かれる可能性もあるため
-    失敗時は空 list を返す（呼び出し側で fallback すれば良い）。
-    """
-    if not RAKUTEN_APP_ID:
-        return []
-    url = "https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20170628"
-    axes = [
-        ("総合-deep",        0),
-        ("おもちゃ-deep",    562637),
-        ("CD/DVD-deep",      101240),
-        ("本雑誌-deep",      101266),
-        ("テレビ家電-deep",  200162),
-        ("食品-deep",        100533),
-    ]
-    seen_urls = set()
-    items: list[dict] = []
-    for label, gid in axes:
-        per_axis = 0
-        for page in (1, 2, 3):  # 各ジャンル TOP90 = 30 × 3
-            params = {
-                "format": "json",
-                "applicationId": RAKUTEN_APP_ID,
-                "genreId": gid,
-                "period": "daily",
-                "hits": 30,
-                "page": page,
-            }
-            try:
-                r = requests.get(url, params=params, timeout=20)
-                if r.status_code != 200:
-                    if page == 1:
-                        print(f"  ⚠️ 深掘りAPI({label}) 取得エラー: {r.status_code} body={r.text[:200]}", file=sys.stderr)
-                    break  # このジャンルの以降ページは打ち切り
-                data = r.json()
-            except Exception as e:
-                if page == 1:
-                    print(f"  ⚠️ 深掘りAPI({label}) 取得失敗: {e}", file=sys.stderr)
-                break
-            page_count = 0
-            for entry in data.get("Items", []):
-                it = entry.get("Item", {})
-                name = (it.get("itemName") or "").strip()
-                item_url = (it.get("itemUrl") or "").strip()
-                if not name or not item_url:
-                    continue
-                normalized = item_url.split('?')[0]
-                if normalized in seen_urls:
-                    continue
-                seen_urls.add(normalized)
-                items.append({"name": name[:80], "url": add_affiliate(item_url)})
-                per_axis += 1
-                page_count += 1
-            if page_count == 0:
-                break  # 空ページ → 以降も空とみなす
-        print(f"  深掘りAPI取得({label}): +{per_axis} 件")
-    print(f"  深掘りAPI合計: {len(items)} 件（ユニーク, period=daily, pages=1-3）")
-    return items
-
-
 def fetch_ranking() -> list[dict]:
     """ランキング取得。API が使えればそれを優先、ダメならスクレイピングへフォールバック。
-    さらに5月だけは レガシー API で TOP100 深掘りも合算して網を広げる。"""
+
+    【TOP100 拡張試行の経緯 2026-05-23】
+    相棒の依頼「100位まで範囲を広げたい」を受けて、レガシーAPI
+    (app.rakuten.co.jp/services/api/IchibaItem/Ranking/20170628) で daily + page1-3
+    の深掘りを試したが、全 6 ジャンルが `specify valid applicationId` で 400 エラー。
+    楽天が新規 applicationId を旧 API で受け付けない仕様変更を行ったため使えない。
+    新 API (openapi.rakuten.co.jp/ichibaranking) は realtime 専用かつ pagination 非対応。
+
+    結論: 現状の 6ジャンル realtime ランキング = 各 28-30 件 = 合計 ~170 件 が上限。
+    十分広い網が張れているのでこれで運用継続。
+    """
     api_items = fetch_ranking_via_api()
-    # 【2026-05-23】 5月限定: レガシーAPIで daily TOP100/ジャンル を追加取得
-    # (相棒の依頼「100位くらいまで範囲を広げたい」への対応)
-    now = datetime.datetime.now(JST)
-    if now.month == 5:
-        deep = fetch_ranking_deep_legacy()
-        if deep:
-            existing = {i['name'] for i in api_items}
-            added = 0
-            for d in deep:
-                if d['name'] not in existing:
-                    api_items.append(d)
-                    existing.add(d['name'])
-                    added += 1
-            print(f"  深掘りマージ: +{added} 件（重複除外後）")
     if api_items:
         return api_items
 

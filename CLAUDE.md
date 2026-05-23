@@ -209,7 +209,23 @@ w_victory / eagles / vissel / adidas / nike / normal
 **完全固定文は禁止**。daily_lead_in() を必ず先頭に挿入するか、可変要素を
 本文に組み込む。新テンプレ追加時は dedup リスクを必ず確認。
 
-### ⚠️ 13. 「前回NGだった」結論は周期的に再検証する
+### ⚠️ 13. 楽天レガシーAPI (app.rakuten.co.jp) は新規 applicationId を受け付けない
+2026-05-23 に「カテゴリ別 TOP100 まで深掘り」を狙ってレガシー Ranking API
+(`app.rakuten.co.jp/services/api/IchibaItem/Ranking/20170628`) を試したが、
+全リクエストが `400 specify valid applicationId` で拒否された。
+
+これは Search API (5/12 セッションで同じく拒否) と同パターンで、
+楽天が新規発行の applicationId を旧 API endpoint で受け付けない仕様変更を行った模様。
+新 API (`openapi.rakuten.co.jp`) しか使えないが、新 API は:
+- realtime 専用 (period=daily/weekly/monthly は 400)
+- pagination 非対応 (page>=2 は 400)
+- 1ジャンル TOP30 が事実上の上限
+
+✅ **対応**: TOP100 拡張は諦め、6 ジャンル realtime ランキング（合計 ~170 件）で運用継続。
+新しい applicationId 取得しても旧 API では救われないため、構造的に解決不能。
+将来 Rakuten が新 API に pagination を追加すれば自動的に拡張余地が生まれる。
+
+### ⚠️ 14. 「前回NGだった」結論は周期的に再検証する
 2026-05-12 → 12 に「sex+genreId は無理」「カテゴリ別ランキングは無理」と
 結論づけた結果、1週間「総合 TOP30 のみ」運用で売り切れ通知が頻発していた。
 2026-05-20 に相棒の違和感センサーで再チャレンジ → 「genreId 単体なら OK」を発見、
