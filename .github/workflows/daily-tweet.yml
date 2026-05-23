@@ -6,7 +6,9 @@ on:
     # それに合わせて cron も該当時間帯のみに narrow（前は毎時 24fire/日 → 9fire/日）。
     # 12時スロット (JST 12-15時) = UTC 3-6時 / 18時スロット (JST 16-19時) = UTC 7-10時
     # 取りこぼし対策で各スロットに複数 fire を残し、posted_slots.json で重複排除する設計。
-    - cron: '0 3,4,5,6,7,8,9,10 * * *'
+    # 【2026-05-23】5/23 朝の全 cron drop（scheduler 凍結？）対策で minute を 0→5 に変更
+    # して scheduler 再登録を強制。これで cron 配信時刻が JST 12:05, 13:05, ... に移行。
+    - cron: '5 3,4,5,6,7,8,9,10 * * *'
   # 手動テスト用
   workflow_dispatch:
 
