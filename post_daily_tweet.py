@@ -311,7 +311,8 @@ def get_season_event(now: datetime.datetime) -> str | None:
     return None
 
 
-def post_tweet(text: str) -> bool:
+def _post_once(text: str) -> tuple[bool, int]:
+    """1回 X に投げてみる。(成功フラグ, ステータスコード) を返す。"""
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     resp = requests.post(
         "https://api.twitter.com/2/tweets",
@@ -321,9 +322,38 @@ def post_tweet(text: str) -> bool:
     )
     if resp.status_code == 201:
         print(f"✅ 投稿成功: {resp.json()['data']['id']}")
-        return True
+        return True, 201
     print(f"❌ 投稿失敗: {resp.status_code} {resp.text}", file=sys.stderr)
-    return False
+    return False, resp.status_code
+
+
+def post_tweet(text: str) -> bool:
+    """X に投稿。403 (重複/URL flag 等) が出たら URL を削除して 1度だけ再試行する。
+
+    背景: 2026-05-22〜23 に imaraku.github.io URL を含む daily-tweet が
+    cache-buster クエリを足してもなお 403 を喰らった。X 側がこのドメインを
+    bot 連投と判定して URL含む投稿を弾いている疑い。
+    URL を抜けば投稿は通る前提で、fallback として URL なし版でリトライする。
+    """
+    ok, status = _post_once(text)
+    if ok:
+        return True
+    if status != 403:
+        return False
+
+    # 403 → URL 行を全部削除して再試行
+    stripped_lines = []
+    for line in text.split("\n"):
+        if "http://" in line or "https://" in line:
+            print(f"  [403 fallback] URL行を除去: {line[:60]!r}", file=sys.stderr)
+            continue
+        stripped_lines.append(line)
+    fallback_text = "\n".join(stripped_lines).strip()
+    if fallback_text == text.strip():
+        return False  # 元から URL なし → 再試行する意味なし
+    print(f"  [403 fallback] URL抜きで再投稿を試みる…", file=sys.stderr)
+    ok2, _ = _post_once(fallback_text)
+    return ok2
 
 
 # ── ツイート文 生成 ────────────────────────────────────────────────────────
