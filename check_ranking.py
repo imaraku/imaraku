@@ -554,7 +554,9 @@ def tweet_rare_item(items: list) -> str:
     tag_parts.append(base_tags)
     tag_line = " ".join(tag_parts)
 
-    # ⑥ 本文：楽天ブックスなら SPU+0.5% 訴求に差し替え
+    # ⑥ 本文：商品 URL 1本のみに集約（相棒の意向 2026-05-23）。
+    # 以前は ▶商品 と ▶エントリー の 2URL 構成だったが、本筋は商品紹介なので
+    # 商品 URL に絞って読者を迷わせない（imaraku URL は副次経路でフォロー獲得を狙う）。
     if books:
         body = (
             f"🚨 楽天ランキングに急上昇！\n"
@@ -564,7 +566,6 @@ def tweet_rare_item(items: list) -> str:
             "💡3,000円以上でSPU+0.5%🎁\n"
             "\n"
             f"▶ 商品\n{item_url}\n"
-            f"▶ エントリー\n{SITE_URL}\n"
             f" {tag_line}"
         )
     else:
@@ -576,7 +577,6 @@ def tweet_rare_item(items: list) -> str:
             "気になる方はお早めに✨\n"
             "\n"
             f"▶ 商品\n{item_url}\n"
-            f"▶ エントリー\n{SITE_URL}\n"
             f" {tag_line}"
         )
     return body
