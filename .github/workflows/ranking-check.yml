@@ -10,7 +10,14 @@ on:
     # 6月以降の余分fire は check_ranking.py 側の月ゲートで skip される設計。
     # 全期間 fire: UTC 0,3,6,9,11,13 = JST 9, 12, 15, 18, 20, 22時 (6 fire/日)
     # 6月以降 active: JST 12, 18, 20, 22時 (4 fire/日、9時/15時を skip)
-    - cron: '0 0,3,6,9,11,13 * * *'
+    #
+    # 【2026-05-23 backup 復活】 GitHub Actions が混雑時間に cron を drop する実害
+    # （平均 ~3fire/日しか走らない問題）に対応して :30 backup を復活。
+    # 5/6 に削除した理由は cancellation メール多発だったが、現在は
+    # concurrency=cancel-in-progress:false で queue するため大丈夫。
+    # 各時刻に :00 と :30 の 2 fire = 計 12 attempts/日。
+    # 取りこぼしが多い時刻でも script 側 cache dedup で重複ツイートは防げる。
+    - cron: '0,30 0,3,6,9,11,13 * * *'
   workflow_dispatch:         # 手動テスト用
 
 permissions:
