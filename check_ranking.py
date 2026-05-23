@@ -334,7 +334,7 @@ def save_cache(cache: dict):
         json.dump(cache, f, ensure_ascii=False, indent=2)
 
 
-def post_tweet(text: str) -> bool:
+def _post_once(text: str) -> tuple[bool, int]:
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     resp = requests.post(
         "https://api.twitter.com/2/tweets",
@@ -344,9 +344,40 @@ def post_tweet(text: str) -> bool:
     )
     if resp.status_code == 201:
         print(f"✅ 投稿成功: {resp.json()['data']['id']}")
-        return True
+        return True, 201
     print(f"❌ 投稿失敗: {resp.status_code} {resp.text}", file=sys.stderr)
-    return False
+    return False, resp.status_code
+
+
+# imaraku.github.io URL の reputation 回復ガード（2026-05-22〜23 連続 403 経緯）。
+# 6/1 までは事前削除、以降は試行 → 403 なら fallback。daily-tweet と同期。
+URL_INCLUDE_FROM = datetime.date(2026, 6, 1)
+
+
+def _strip_imaraku_url_lines(text: str) -> str:
+    kept = [line for line in text.split("\n") if "imaraku.github.io" not in line]
+    return "\n".join(kept).rstrip() + "\n" if kept else ""
+
+
+def post_tweet(text: str) -> bool:
+    today_jst = datetime.datetime.now(JST).date()
+    if today_jst < URL_INCLUDE_FROM:
+        no_url = _strip_imaraku_url_lines(text)
+        if no_url != text:
+            print(f"  [URL gate] {today_jst} < {URL_INCLUDE_FROM} のため imaraku URL を事前除去", file=sys.stderr)
+        ok, _ = _post_once(no_url)
+        return ok
+    ok, status = _post_once(text)
+    if ok:
+        return True
+    if status != 403:
+        return False
+    fallback_text = _strip_imaraku_url_lines(text)
+    if fallback_text == text:
+        return False
+    print(f"  [403 fallback] imaraku URL を除去して再投稿…", file=sys.stderr)
+    ok2, _ = _post_once(fallback_text)
+    return ok2
 
 
 # ── ランキング取得 ─────────────────────────────────────────────────────────────

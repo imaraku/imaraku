@@ -327,31 +327,48 @@ def _post_once(text: str) -> tuple[bool, int]:
     return False, resp.status_code
 
 
+# imaraku.github.io URL を本文に含めるかの日付ゲート。
+# 2026-05-22〜23 に X が daily-tweet の URL を flag → 連続 403 を喰らった経緯から、
+# reputation 回復のために 6/1 まで URL なし投稿に固定する。6/1 以降は試行→403なら fallback で耐える。
+URL_INCLUDE_FROM = datetime.date(2026, 6, 1)
+
+
+def _strip_imaraku_url_lines(text: str) -> str:
+    """imaraku.github.io を含む行を全部削除する。URL なし版本文を返す。"""
+    kept = [line for line in text.split("\n") if "imaraku.github.io" not in line]
+    return "\n".join(kept).rstrip() + "\n" if kept else ""
+
+
 def post_tweet(text: str) -> bool:
-    """X に投稿。403 (重複/URL flag 等) が出たら URL を削除して 1度だけ再試行する。
+    """X に投稿。
+
+    - URL_INCLUDE_FROM より前: imaraku URL を事前削除して投稿（403 を喰らわない設計）
+    - URL_INCLUDE_FROM 以降: URL 付きで試行 → 403 なら URL 抜きで 1度だけリトライ
 
     背景: 2026-05-22〜23 に imaraku.github.io URL を含む daily-tweet が
     cache-buster クエリを足してもなお 403 を喰らった。X 側がこのドメインを
-    bot 連投と判定して URL含む投稿を弾いている疑い。
-    URL を抜けば投稿は通る前提で、fallback として URL なし版でリトライする。
+    bot 連投と判定して flag している疑い。6/1 まで投稿を抑えて reputation 自然回復を待つ。
     """
+    today_jst = datetime.datetime.now(JST).date()
+
+    if today_jst < URL_INCLUDE_FROM:
+        # 6/1 以前: 先に URL を抜いてから投稿（無駄な 403 を踏まない）
+        no_url = _strip_imaraku_url_lines(text)
+        if no_url != text:
+            print(f"  [URL gate] {today_jst} < {URL_INCLUDE_FROM} のため imaraku URL を事前除去", file=sys.stderr)
+        ok, _ = _post_once(no_url)
+        return ok
+
+    # 6/1 以降: URL 付きで挑戦 → 403 ならフォールバック
     ok, status = _post_once(text)
     if ok:
         return True
     if status != 403:
         return False
-
-    # 403 → URL 行を全部削除して再試行
-    stripped_lines = []
-    for line in text.split("\n"):
-        if "http://" in line or "https://" in line:
-            print(f"  [403 fallback] URL行を除去: {line[:60]!r}", file=sys.stderr)
-            continue
-        stripped_lines.append(line)
-    fallback_text = "\n".join(stripped_lines).strip()
-    if fallback_text == text.strip():
+    fallback_text = _strip_imaraku_url_lines(text)
+    if fallback_text == text:
         return False  # 元から URL なし → 再試行する意味なし
-    print(f"  [403 fallback] URL抜きで再投稿を試みる…", file=sys.stderr)
+    print(f"  [403 fallback] imaraku URL を除去して再投稿…", file=sys.stderr)
     ok2, _ = _post_once(fallback_text)
     return ok2
 
