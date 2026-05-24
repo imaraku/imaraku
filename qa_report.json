@@ -1,17 +1,19 @@
 {
-  "audited_at": "2026-05-23T09:12:21.053185+09:00",
+  "audited_at": "2026-05-24T09:03:04.815650+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
-    "warn": 1,
+    "warn": 2,
     "total_checks": 6
   },
   "results": [
     {
       "name": "new_campaigns ノイズチェック",
-      "status": "PASS",
-      "count": 3,
-      "issues": []
+      "status": "WARN",
+      "count": 4,
+      "issues": [
+        "句読点始まり: '【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/contactlens"
+      ]
     },
     {
       "name": "expired_entries 鮮度",
@@ -34,6 +36,7 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-05-23: 欠スロット ['0', '18', '20']",
         "2026-05-22: 投稿0件",
         "2026-05-21: 投稿0件",
         "2026-05-20: 投稿0件"
