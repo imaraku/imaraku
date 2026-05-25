@@ -77,82 +77,172 @@ RARE_KEYWORDS = [
 ]
 
 # 常連アイテムのツイートテンプレート（月・水・金でローテーション）
-# (本文, ハッシュタグカテゴリ) のタプルで持ち、投稿時にタグを動的生成する
+# 【2026-05-23 改修】 (body, tags) tuple から dict に変更し、
+# その場でリアルタイムランキング上位の具体商品を埋め込む方式へ。
+# 読者がランキングページを開く手間を省き、CTRを上げる狙い（相棒の提案）。
+#
+# 各エントリ:
+#   body:            ツイート本文（"✨ランキング上位商品✨" 行の前で終わる）
+#   tags:            ハッシュタグカテゴリ（hashtags() に渡す）
+#   genre_id:        該当ジャンルの top-level genreId（None なら総合 = 0）
+#   filter_keywords: 商品名にいずれか1語を含むものだけ採用（ジャンルゲーミング対策と同じ思想）
+#   rank_label:      "リアルタイムランキング {rank_label} X位⏰" の差し込み語
 REGULAR_TWEETS = [
     # コンタクトレンズ
-    (
-        "👁 コンタクトレンズ、楽天で買ってる？\n"
-        "\n"
-        "実は市販・眼科より楽天市場の方が\n"
-        "安いことがほとんど💡\n"
-        "ポイントも貯まる＆使えてお得🏆\n"
-        "\n"
-        f"ランキング👇\n{RANKING_URL}\n"
-        f"エントリー👇\n{SITE_URL}",
-        ["core", "contact", "poikatsu"],
-    ),
+    {
+        "name": "コンタクトレンズ",
+        "body": (
+            "👁 コンタクトレンズ、楽天で買ってる？\n"
+            "\n"
+            "実は市販・眼科より楽天市場の方が\n"
+            "安いことがほとんど💡\n"
+            "ポイントも貯まる＆使えてお得🏆"
+        ),
+        "tags": ["core", "contact", "poikatsu"],
+        "genre_id": 100934,  # 医薬品・コンタクト・介護
+        "filter_keywords": ["コンタクト", "ワンデー", "1day", "1DAY", "アキュビュー", "レンズ", "シード", "メニコン", "クーパー"],
+        "rank_label": "医薬品・コンタクト",
+    },
     # お水・炭酸水
-    (
-        "💧 重い飲料こそ楽天で！\n"
-        "\n"
-        "お水・炭酸水を箱買いしても\n"
-        "玄関まで届くから体への負担ゼロ✨\n"
-        "スーパーより安く、ポイントも👍\n"
-        "\n"
-        f"ランキング👇\n{RANKING_URL}\n"
-        f"エントリー👇\n{SITE_URL}",
-        ["core", "water", "poikatsu"],
-    ),
+    {
+        "name": "お水・炭酸水",
+        "body": (
+            "💧 重い飲料こそ楽天で！\n"
+            "\n"
+            "お水・炭酸水を箱買いしても\n"
+            "玄関まで届くから体への負担ゼロ✨\n"
+            "スーパーより安く、ポイントも👍"
+        ),
+        "tags": ["core", "water", "poikatsu"],
+        "genre_id": 100533,  # 食品
+        "filter_keywords": ["炭酸水", "ミネラルウォーター", "天然水", "シリカ水", "強炭酸", "OZA SODA", "ウィルキンソン", "サンガリア", "南アルプス"],
+        "rank_label": "食品",
+    },
     # ティッシュ・トイレットペーパー
-    (
-        "🧻 かさばる日用品も楽天にお任せ！\n"
-        "\n"
-        "ティッシュ・トイレットペーパーは\n"
-        "重くてかさばって大変…😅\n"
-        "楽天なら玄関まで届きます✨\n"
-        "まとめ買いでさらにお得💡\n"
-        "\n"
-        f"ランキング👇\n{RANKING_URL}\n"
-        f"エントリー👇\n{SITE_URL}",
-        ["core", "daily", "poikatsu"],
-    ),
+    {
+        "name": "ティッシュ・トイレットペーパー",
+        "body": (
+            "🧻 かさばる日用品も楽天にお任せ！\n"
+            "\n"
+            "ティッシュ・トイレットペーパーは\n"
+            "重くてかさばって大変…😅\n"
+            "楽天なら玄関まで届きます✨\n"
+            "まとめ買いでさらにお得💡"
+        ),
+        "tags": ["core", "daily", "poikatsu"],
+        "genre_id": 100939,  # 日用品雑貨・文房具・手芸
+        "filter_keywords": ["ティッシュ", "トイレットペーパー", "キッチンペーパー", "鼻セレブ", "エリエール", "スコッティ", "ネピア"],
+        "rank_label": "日用品",
+    },
     # お米
-    (
-        "🍚 重いお米も楽天でお得に！\n"
-        "\n"
-        "5kg・10kgのお米を運ぶのは重労働…\n"
-        "楽天なら玄関まで届きます🏠\n"
-        "ポイントも貯まる＆定期便割引も💡\n"
-        "\n"
-        f"ランキング👇\n{RANKING_URL}\n"
-        f"エントリー👇\n{SITE_URL}",
-        ["core", "rice", "poikatsu"],
-    ),
+    {
+        "name": "お米",
+        "body": (
+            "🍚 重いお米も楽天でお得に！\n"
+            "\n"
+            "5kg・10kgのお米を運ぶのは重労働…\n"
+            "楽天なら玄関まで届きます🏠\n"
+            "ポイントも貯まる＆定期便割引も💡"
+        ),
+        "tags": ["core", "rice", "poikatsu"],
+        "genre_id": 100533,  # 食品
+        "filter_keywords": ["米 ", " 米", "白米", "玄米", "新米", "コシヒカリ", "あきたこまち", "ひとめぼれ", "つや姫", "ゆめぴりか", "ササニシキ"],
+        "rank_label": "食品",
+    },
     # 洗剤・柔軟剤
-    (
-        "🫧 洗剤・柔軟剤も楽天でまとめ買い！\n"
-        "\n"
-        "重くてかさばる洗剤こそ宅配が便利✨\n"
-        "ポイントが貯まって\n"
-        "スーパーよりお得なことも💡\n"
-        "\n"
-        f"ランキング👇\n{RANKING_URL}\n"
-        f"エントリー👇\n{SITE_URL}",
-        ["core", "detergent", "daily"],
-    ),
-    # ランキング全般
-    (
-        "🏆 楽天ランキング、チェックしてる？\n"
-        "\n"
-        "毎日リアルタイムで更新されるから\n"
-        "買い物のヒントにもなります🛒\n"
-        "エントリー併用でポイント最大化💡\n"
-        "\n"
-        f"ランキング👇\n{RANKING_URL}\n"
-        f"エントリー👇\n{SITE_URL}",
-        ["core", "ranking", "poikatsu"],
-    ),
+    {
+        "name": "洗剤・柔軟剤",
+        "body": (
+            "🫧 洗剤・柔軟剤も楽天でまとめ買い！\n"
+            "\n"
+            "重くてかさばる洗剤こそ宅配が便利✨\n"
+            "ポイントが貯まって\n"
+            "スーパーよりお得なことも💡"
+        ),
+        "tags": ["core", "detergent", "daily"],
+        "genre_id": 100939,  # 日用品
+        "filter_keywords": ["洗剤", "柔軟剤", "アタック", "アリエール", "ボールド", "ナノックス", "ハミング", "ファーファ", "レノア"],
+        "rank_label": "日用品",
+    },
+    # ランキング全般（総合 TOP の旬を投げる）
+    {
+        "name": "総合ランキング",
+        "body": (
+            "🏆 楽天ランキング、チェックしてる？\n"
+            "\n"
+            "毎日リアルタイムで更新されるから\n"
+            "買い物のヒントにもなります🛒\n"
+            "エントリー併用でポイント最大化💡"
+        ),
+        "tags": ["core", "ranking", "poikatsu"],
+        "genre_id": 0,           # 総合
+        "filter_keywords": None,  # フィルタなし = TOP1 をそのまま採用
+        "rank_label": "総合",
+    },
 ]
+
+
+def fetch_top_ranked_item(genre_id: int, filter_keywords=None, hits: int = 30):
+    """指定ジャンルのリアルタイムランキングから、filter_keywords のいずれかに
+    マッチする最上位アイテム＋順位を返す。
+    Returns: {"name", "url", "rank"} または None
+    """
+    if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
+        return None
+    url = "https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601"
+    params = {
+        "format": "json",
+        "applicationId": RAKUTEN_APP_ID,
+        "accessKey": RAKUTEN_ACCESS_KEY,
+        "period": "realtime",
+        "hits": min(hits, 30),
+        "genreId": genre_id,
+    }
+    try:
+        r = requests.get(url, params=params, headers={"Origin": RAKUTEN_ORIGIN}, timeout=20)
+        if r.status_code != 200:
+            print(f"  ⚠️ ランキング取得失敗(genre={genre_id}): {r.status_code} body={r.text[:200]}", file=sys.stderr)
+            return None
+        data = r.json()
+    except Exception as e:
+        print(f"  ⚠️ ランキング取得例外(genre={genre_id}): {e}", file=sys.stderr)
+        return None
+    for idx, entry in enumerate(data.get("Items", []), 1):
+        it = entry.get("Item", {})
+        name = (it.get("itemName") or "").strip()
+        item_url = (it.get("itemUrl") or "").strip()
+        if not name or not item_url:
+            continue
+        if filter_keywords and not any(kw in name for kw in filter_keywords):
+            continue
+        return {"name": name, "url": add_affiliate(item_url), "rank": idx}
+    return None
+
+
+def build_regular_tweet(entry: dict) -> str:
+    """REGULAR_TWEETS の1エントリから、TOP商品付きツイートを組み立てる。
+    ランキング取得失敗・該当無しの場合は本文＋ハッシュタグだけのシンプル版にフォールバック。"""
+    body = entry["body"]
+    tags = entry["tags"]
+    genre_id = entry.get("genre_id", 0)
+    filters = entry.get("filter_keywords")
+    rank_label = entry.get("rank_label", "")
+
+    top = fetch_top_ranked_item(genre_id, filters)
+    if top:
+        return (
+            f"{body}\n"
+            f"\n"
+            f"✨ランキング上位商品✨\n"
+            f"{top['url']}\n"
+            f"\n"
+            f"現在、リアルタイムランキング{rank_label} {top['rank']}位⏰\n"
+            f" {hashtags(tags, max_tags=3)}"
+        )
+    # フォールバック: 該当商品取得できなかった場合は シンプル本文 + ハッシュタグのみ
+    # （ランキングページURLを載せると imaraku 経路と類似してXがflag気味なので URL なしで様子見）
+    print(f"  ℹ️ {entry['name']}: TOP商品取得不可 → URL なしフォールバック", file=sys.stderr)
+    return f"{body}\n\n {hashtags(tags, max_tags=3)}"
 
 
 # 人気IP/ブランド → ハッシュタグ 自動検出辞書
@@ -726,9 +816,9 @@ def main():
     )
 
     if should_post_regular:
-        body, tag_categories = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
-        tweet = body + "\n\n" + hashtags(tag_categories)
-        print(f"\n投稿内容（定期・常連アイテム）:\n{tweet}\n")
+        entry = REGULAR_TWEETS[regular_index % len(REGULAR_TWEETS)]
+        tweet = build_regular_tweet(entry)
+        print(f"\n投稿内容（定期・{entry['name']}）:\n{tweet}\n")
         post_tweet(tweet)
         regular_index += 1
         cache["last_regular_date"] = today_str
