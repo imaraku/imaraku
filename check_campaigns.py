@@ -1034,24 +1034,25 @@ def discover_dynamic_urls() -> dict:
     else:
         print("  ⚠️ mobiledeal の日付付きURLを発見できず。フォールバック使用。")
 
-    # guerrilla (pointdouble) URL の動的追従:
-    # マラソントップから `marathon/<token>/` を抽出して、その配下に pointdouble/ が
-    # 実在するかチェック。404 なら今回のマラソンは guerrilla 開催なし → 空文字をセット
-    # することで check_campaign() が必ず default=False に倒れる設計。
+    # マラソン token の動的追従（guerrilla + 各 sub-page URL を一括解決）:
+    # マラソントップから `marathon/<token>/` を抽出して、最頻出を current_token とする。
+    # この token を imaraku.html 側で各カードURL内の旧 token と置換する仕組み。
     marathon_top = fetch("https://event.rakuten.co.jp/campaign/point-up/marathon/")
     if marathon_top:
         tokens = re.findall(r"/marathon/([0-9a-z]{8,})/", marathon_top)
         if tokens:
-            # 最頻出 token = 今回のマラソン分
             from collections import Counter
             current_token = Counter(tokens).most_common(1)[0][0]
-            candidate = f"https://event.rakuten.co.jp/campaign/point-up/marathon/{current_token}/pointdouble/"
-            # 404 チェック（HEAD でも OK だが軽い GET で十分）
+            discovered["marathon_token"] = current_token
+            print(f"  🔗 marathon_token (今回マラソン): {current_token}")
+
+            # guerrilla (pointdouble) URL の存在チェック
+            pointdouble = f"https://event.rakuten.co.jp/campaign/point-up/marathon/{current_token}/pointdouble/"
             try:
-                probe = requests.get(candidate, headers=HEADERS, timeout=10, allow_redirects=False)
+                probe = requests.get(pointdouble, headers=HEADERS, timeout=10, allow_redirects=False)
                 if probe.status_code == 200:
-                    discovered["guerrilla"] = candidate
-                    print(f"  🔗 guerrilla 最新URL: {candidate}")
+                    discovered["guerrilla"] = pointdouble
+                    print(f"  🔗 guerrilla 最新URL: {pointdouble}")
                 else:
                     discovered["guerrilla"] = ""   # 開催なしマーカー
                     print(f"  ℹ️ guerrilla: 今回マラソンでは未開催 (probe {probe.status_code})")

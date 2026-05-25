@@ -1663,7 +1663,9 @@
     { name: "🎓 楽天学割×マラソン +1%", point: "+1%", url: "https://a.r10.to/hgzPvH", essential: true, campaignKey: "marathon", noAffiliate: true },
     { name: "📚 楽天ブックス条件達成 +2%", point: "+2%", url: "https://a.r10.to/h8wmzM", essential: true, campaignKey: "marathon", noAffiliate: true },
     { name: "🥤 水・ソフトドリンク +11%", point: "+11%", url: "https://a.r10.to/hR1FJz", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "🎟️ 何度でも使える 2,000円クーポン", point: "2,000円OFF", url: "https://a.r10.to/h5LvOt", essential: true, campaignKey: "marathon", noAffiliate: true },
+    // 旧短縮URL (a.r10.to/h5LvOt) は 2026-04-24 マラソンの multicoupon ページを指していた。
+    // 今後は marathon_token 動的置換で最新マラソンの multicoupon に自動追従する。
+    { name: "🎟️ 何度でも使える 2,000円クーポン", point: "2,000円OFF", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260523rcdml/multicoupon/", essential: true, campaignKey: "marathon" },
     // 🍚 お米クーポン：URLが date-coded（毎マラソンで変わる）ため
     // 楽天が新URLを公開するまで非表示。新URL確認できたら追加する。
     // ── 5月マラソン追加（マイルドさんブログ参考） ──
@@ -1975,8 +1977,9 @@
     .then(function(r) { return r && r.ok ? r.json() : null; })
     .then(function(dynUrls) {
       if (!dynUrls || typeof dynUrls !== 'object') return;
-      // 各 campaignKey に該当するカード/リンクを最新URLに差し替え
+      // ① 各 campaignKey に該当するカード/リンクを最新URLに差し替え（mobiledeal, guerrilla 等）
       Object.keys(dynUrls).forEach(function(key) {
+        if (key === 'marathon_token') return; // 後段で別途処理
         var newUrl = dynUrls[key];
         if (!newUrl) return;
         var newHref = newUrl.includes('?scid=') ? newUrl : aff(newUrl);
@@ -1992,6 +1995,28 @@
           });
         });
       });
+
+      // ② marathon_token による URL 正規化:
+      // /marathon/{token}/ パターンを含む全カードURLについて、token が古ければ最新に置換。
+      // 例: /marathon/20260509fhqao/itemcoupon/ → /marathon/20260523rcdml/itemcoupon/
+      // これで rankcoupon / itemcoupon / multicoupon 等のマラソンサブページが全て最新に追従。
+      var marathonToken = dynUrls.marathon_token;
+      if (marathonToken && /^[0-9a-z]{8,}$/.test(marathonToken)) {
+        var tokenPattern = /\/marathon\/([0-9a-z]{8,})\//;
+        document.querySelectorAll('[data-entry-url-raw]').forEach(function(card) {
+          var rawUrl = card.getAttribute('data-entry-url-raw') || '';
+          var m = rawUrl.match(tokenPattern);
+          if (!m || m[1] === marathonToken) return;
+          var newRaw = rawUrl.replace(tokenPattern, '/marathon/' + marathonToken + '/');
+          var newHref = aff(newRaw);
+          card.setAttribute('data-entry-url-raw', newRaw);
+          card.setAttribute('data-entry-url', newHref);
+          card.querySelectorAll('a[href]').forEach(function(a) { a.setAttribute('href', newHref); });
+          card.querySelectorAll('input.bulk-check[data-url]').forEach(function(cb) {
+            cb.setAttribute('data-url', newHref);
+          });
+        });
+      }
     })
     .catch(function() { /* ネット接続なし等のフォールバック：デフォルト値のまま */ });
 
