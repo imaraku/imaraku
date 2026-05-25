@@ -429,6 +429,28 @@ def save_cache(cache: dict):
         json.dump(cache, f, ensure_ascii=False, indent=2)
 
 
+# IP クールダウン履歴: 同じ IP (鬼滅の刃 / ワンピース / Switch 等) の連投を抑える。
+# 形式: { "#鬼滅の刃": "2026-05-23", "#ワンピース": "2026-05-22", ... }
+POSTED_IPS_FILE = "posted_ip_history.json"
+
+
+def load_posted_ips() -> dict:
+    if os.path.exists(POSTED_IPS_FILE):
+        try:
+            with open(POSTED_IPS_FILE, encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+        except Exception:
+            pass
+    return {}
+
+
+def save_posted_ips(data: dict):
+    with open(POSTED_IPS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
 def _post_once(text: str) -> tuple[bool, int]:
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
     resp = requests.post(
@@ -776,12 +798,49 @@ def main():
 
             if rare_new:
                 print(f"  🚨 レアアイテム新規ランクイン候補: {[i['name'] for i in rare_new]}")
+
+                # ── IP クールダウンフィルタ（2026-05-25 追加） ──
+                # 「鬼滅の刃」「ワンピース」「Switch ソフト」等の人気IPは新刊・限定版が
+                # 連続でランキング入りするため、同じIPで毎週何度も投稿になりがち。
+                # → 直近 N日 (= IP_COOLDOWN_DAYS) に投稿した IP の商品は候補から外し、
+                #   他IPに枠を回すことで「またコレか」感を抑える。
+                # 全候補が cooldown 内なら fallback で元の候補集合を使う（投稿ゼロは避ける）。
+                IP_COOLDOWN_DAYS = 4
+                posted_ips = load_posted_ips()
+                today_d = now.date()
+                fresh_rare = []
+                skipped_for_cooldown = []
+                for it in rare_new:
+                    ip = detect_ip_hashtag(it['name'])
+                    if ip and ip in posted_ips:
+                        try:
+                            last_dt = datetime.date.fromisoformat(posted_ips[ip])
+                            if (today_d - last_dt).days < IP_COOLDOWN_DAYS:
+                                skipped_for_cooldown.append(f"{ip}({(today_d-last_dt).days}日前)")
+                                continue
+                        except Exception:
+                            pass
+                    fresh_rare.append(it)
+                if skipped_for_cooldown:
+                    print(f"  ⏳ IPクールダウンでスキップ: {', '.join(skipped_for_cooldown)}")
+
+                # cooldown フィルタ後の候補があればそちら優先、無ければ元候補にフォールバック
+                pick_pool = fresh_rare if fresh_rare else rare_new
+                if not fresh_rare and rare_new:
+                    print(f"  ℹ️ 全候補が cooldown 内 → fallback で元候補から選定")
+
                 # 売り切れ商品を紹介しても読者が失望するだけなので、在庫確認して最初の在庫ありを選ぶ
-                in_stock = pick_in_stock_item(rare_new)
+                in_stock = pick_in_stock_item(pick_pool)
                 if in_stock:
                     tweet = tweet_rare_item([in_stock])
                     print(f"\n投稿内容（レアアイテム・在庫あり）:\n{tweet}\n")
-                    post_tweet(tweet)
+                    if post_tweet(tweet):
+                        # 投稿成功した IP を記録して以降 IP_COOLDOWN_DAYS 日スキップ
+                        picked_ip = detect_ip_hashtag(in_stock['name'])
+                        if picked_ip:
+                            posted_ips[picked_ip] = today_d.isoformat()
+                            save_posted_ips(posted_ips)
+                            print(f"  📝 IP履歴更新: {picked_ip} → {today_d}")
                 else:
                     print("  全て売り切れのため、ツイートを見送り")
             else:
