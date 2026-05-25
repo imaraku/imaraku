@@ -148,12 +148,16 @@ CAMPAIGNS = [
     },
     {
         # マラソン内ゲリラキャンペーン：(ゲリラ)全店+1倍
-        # 専用ページ (pointdouble) が立ち上がるとそこに「エントリー」「ポイント」表記が出る。
-        # ※ URL末尾の "20260509fhqao" は今回マラソン分のID。次回マラソンで変わる可能性あり。
+        # URL は discover_dynamic_urls() で今回マラソンの token を抽出して動的差し替え。
+        # 動的検出で 404 なら強制 false（main() の forced_inactive で確定）。
+        # active_kw は「ゲリラ専用ページが立ち上がってる時しか出ない」語に厳格化:
+        #   2026-05-23: "ポイント2倍" "+1倍" を削除（前回マラソン解説文の生HTMLに残って
+        #   いるためfalse positiveの原因。JSレンダー後の「期間が終了しております」も
+        #   生HTMLには出ないため end_kw も effectively機能しなかった経緯あり）。
         "key": "guerrilla",
-        "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/pointdouble/",
+        "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/",  # discover が動的差し替え、失敗時はマラソントップ
         "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
-        "active_kw": ["エントリーする", "エントリー受付中", "ゲリラ", "全店＋1倍", "全店+1倍", "ポイント2倍", "+1倍"],
+        "active_kw": ["ゲリラ", "全店＋1倍", "全店+1倍"],
         "default": False,
     },
     {
@@ -1030,6 +1034,34 @@ def discover_dynamic_urls() -> dict:
     else:
         print("  ⚠️ mobiledeal の日付付きURLを発見できず。フォールバック使用。")
 
+    # guerrilla (pointdouble) URL の動的追従:
+    # マラソントップから `marathon/<token>/` を抽出して、その配下に pointdouble/ が
+    # 実在するかチェック。404 なら今回のマラソンは guerrilla 開催なし → 空文字をセット
+    # することで check_campaign() が必ず default=False に倒れる設計。
+    marathon_top = fetch("https://event.rakuten.co.jp/campaign/point-up/marathon/")
+    if marathon_top:
+        tokens = re.findall(r"/marathon/([0-9a-z]{8,})/", marathon_top)
+        if tokens:
+            # 最頻出 token = 今回のマラソン分
+            from collections import Counter
+            current_token = Counter(tokens).most_common(1)[0][0]
+            candidate = f"https://event.rakuten.co.jp/campaign/point-up/marathon/{current_token}/pointdouble/"
+            # 404 チェック（HEAD でも OK だが軽い GET で十分）
+            try:
+                probe = requests.get(candidate, headers=HEADERS, timeout=10, allow_redirects=False)
+                if probe.status_code == 200:
+                    discovered["guerrilla"] = candidate
+                    print(f"  🔗 guerrilla 最新URL: {candidate}")
+                else:
+                    discovered["guerrilla"] = ""   # 開催なしマーカー
+                    print(f"  ℹ️ guerrilla: 今回マラソンでは未開催 (probe {probe.status_code})")
+            except Exception as e:
+                print(f"  ⚠️ guerrilla URL probe 失敗: {e}")
+        else:
+            print("  ⚠️ marathon token を抽出できず")
+    else:
+        print("  ⚠️ marathon トップ取得失敗")
+
     return discovered
 
 
@@ -1040,12 +1072,18 @@ def main():
     print("── 0. 動的URLの自動追従 ──")
     dynamic_urls = discover_dynamic_urls()
     changed_dynamic = False
+    forced_inactive = set()  # discover で空URLが返った（=未開催確認）keyの集合
     if dynamic_urls:
         # 検出した最新URLを CAMPAIGNS 定義に反映してから状況チェックする
         for camp in CAMPAIGNS:
             if camp["key"] in dynamic_urls:
                 old = camp["url"]
                 new = dynamic_urls[camp["key"]]
+                if new == "":
+                    # 「今回マラソンでは未開催」確定マーカー → check_campaign を skip して False 確定
+                    forced_inactive.add(camp["key"])
+                    print(f"  [{camp['key']}] 動的検出: 今回未開催 → 強制 false")
+                    continue
                 if old != new:
                     print(f"  [{camp['key']}] URL更新: {old} → {new}")
                 camp["url"] = new
@@ -1058,7 +1096,10 @@ def main():
     print("── 1. 開催状況チェック ──")
     results = {}
     for camp in CAMPAIGNS:
-        results[camp["key"]] = check_campaign(camp)
+        if camp["key"] in forced_inactive:
+            results[camp["key"]] = False  # discover で 404 確認済み → 状況チェック不要
+        else:
+            results[camp["key"]] = check_campaign(camp)
 
     # 1-b. マラソン スケジュール取得 → 時刻ベースで marathon / marathon_pointup を上書き
     print("\n── 1-b. マラソン スケジュール判定 ──")
