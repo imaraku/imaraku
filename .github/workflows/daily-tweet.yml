@@ -6,7 +6,10 @@ on:
     # 投稿スロットを 18時1本に圧縮（前は 12時 + 18時）。
     # 18時スロット (JST 16-19時) = UTC 7-10時 のみ fire。dispatch 取りこぼし対策で4本残す。
     # X reputation が完全回復したら 12時スロットも復活させる予定。
-    - cron: '5 7,8,9,10 * * *'
+    # 【2026-05-26 backup復活】 5/26 朝の cron drop で全0fireの事故が発生。
+    # ranking-check と同じく :30 backup を追加して取りこぼし救済。
+    # 1日8 attempts/日 (4時刻×2分) に増加するが、posted_slots.json で重複排除済。
+    - cron: '0,30 7,8,9,10 * * *'
   # 手動テスト用
   workflow_dispatch:
 
