@@ -1,90 +1,208 @@
 {
-  "_comment": "曜日別カテゴリTOP3。新ランキングAPI(openapi)では大ジャンルのみランキング取得可能。ショップが他ジャンルから流入させてくる（カテゴリゲーミング）対策として name_must_not_contain_any でブラックリスト主体の防御を入れている。name_must_contain_any (whitelist) は厳しすぎて legitimate な商品まで弾く副作用があったため空配列に。実運用で明確に許容したいキーワードが見えてきたら順次追加していく方針。",
-  "categories": {
-    "0": {
-      "name": "医薬品・コンタクト",
-      "emoji": "💊",
-      "genreId": 100934,
-      "keyword_filter": "",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージ", "マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド", "家具", "学習机", "デスク", "本棚", "収納棚", "ソファ", "ベッドフレーム"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "定期消耗品はネットでサクッと注文✨",
-      "hashtags": ["core", "contact", "poikatsu"]
-    },
-    "1": {
-      "name": "日用品雑貨",
-      "emoji": "🧻",
-      "genreId": 100939,
-      "keyword_filter": "",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージ", "マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド", "家具", "学習机", "デスク", "本棚", "収納棚", "ソファ", "ベッドフレーム"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "重い物・かさばる物こそネット注文で家まで届けてもらおう🚚",
-      "hashtags": ["core", "daily", "poikatsu"]
-    },
-    "2": {
-      "name": "食品TOP3",
-      "emoji": "🍱",
-      "genreId": 100533,
-      "keyword_filter": "",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージ", "マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド", "家具", "学習机", "デスク", "本棚", "収納棚", "ソファ", "ベッドフレーム", "プロテイン", "サプリ", "EAA", "BCAA", "HMB"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "ランキング上位は外れにくい安心の選択肢✨",
-      "hashtags": ["core", "food", "poikatsu"]
-    },
-    "3": {
-      "name": "スイーツ・お菓子",
-      "emoji": "🍰",
-      "genreId": 100804,
-      "keyword_filter": "",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージ", "マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド", "家具", "学習机", "デスク", "本棚", "収納棚", "ソファ", "ベッドフレーム", "プロテイン", "サプリ", "EAA", "BCAA", "HMB", "化粧水", "美容液", "シャンプー", "コンディショナー"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "おやつタイムのお供に🍵",
-      "hashtags": ["core", "sweets", "poikatsu"]
-    },
-    "4": {
-      "name": "ペット用品",
-      "emoji": "🐾",
-      "genreId": 101213,
-      "keyword_filter": "",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージ", "マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド", "学習机", "デスク", "本棚", "収納棚", "ソファ", "ベッドフレーム"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "ペット飼育者必見✨",
-      "hashtags": ["core", "pet", "poikatsu"]
-    },
-    "5": {
-      "name": "母の日ギフト",
-      "emoji": "🌸",
-      "genreId": 100533,
-      "keyword_filter": "母の日",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージ", "マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "母の日は5月第2日曜！早めの準備が確実✨",
-      "hashtags": ["core", "mothers", "poikatsu"],
-      "active_months": [4, 5]
-    },
-    "6": {
-      "name": "ダイエット・健康",
-      "emoji": "💪",
-      "genreId": 100938,
-      "keyword_filter": "",
-      "name_must_contain_any": [],
-      "name_must_not_contain_any": ["マッサージベッド", "マッサージチェア", "オットマン", "整体ベッド", "施術ベッド", "家具", "学習机", "デスク", "本棚", "収納棚", "ソファ", "ベッドフレーム"],
-      "hits": 40,
-      "min_review_count": 0,
-      "tail_message": "週末に体調管理を整えよう🏃",
-      "hashtags": ["core", "health", "poikatsu"]
-    }
+  "_comment": "曜日 × 週ローテーション。各曜日に複数サブカテゴリを定義し、(週of年 % サブ数) で当番が決まる。TOP1のみ紹介してCTR最大化する設計（2026-05-26 改修）。filter_keywords は商品名に含む必須キーワード（OR条件）、name_must_not_contain_any は除外キーワード（カテゴリゲーミング対策）。",
+  "weekdays": {
+    "0": [
+      {
+        "name": "ワンデーコンタクト",
+        "emoji": "👁",
+        "genre_id": 100934,
+        "filter_keywords": ["ワンデー", "1day", "1DAY", "アキュビュー オアシス", "デイリーズ", "1日使い捨て"],
+        "name_must_not_contain_any": ["カラコン", "カラーコンタクト", "カラー コンタクト"],
+        "tail_message": "定期消耗品はネットでサクッと注文✨",
+        "hashtags": ["core", "contact", "poikatsu"]
+      },
+      {
+        "name": "カラーコンタクト",
+        "emoji": "👁‍🗨",
+        "genre_id": 100934,
+        "filter_keywords": ["カラコン", "カラーコンタクト", "カラー コンタクト", "ReVIA", "ナチュラリ"],
+        "name_must_not_contain_any": [],
+        "tail_message": "盛れる × ポイント還元 ✨",
+        "hashtags": ["core", "contact", "poikatsu"]
+      }
+    ],
+    "1": [
+      {
+        "name": "洗剤",
+        "emoji": "🧴",
+        "genre_id": 100939,
+        "filter_keywords": ["洗剤", "アタック", "アリエール", "ナノックス", "ボールド", "ジェルボール"],
+        "name_must_not_contain_any": ["柔軟剤", "シャンプー", "食器用"],
+        "tail_message": "重くてかさばる洗剤こそ宅配が便利✨",
+        "hashtags": ["core", "detergent", "daily"]
+      },
+      {
+        "name": "柔軟剤",
+        "emoji": "🌸",
+        "genre_id": 100939,
+        "filter_keywords": ["柔軟剤", "ハミング", "ファーファ", "レノア", "ソフラン"],
+        "name_must_not_contain_any": [],
+        "tail_message": "ふんわり仕上げでお気に入りを長持ち💐",
+        "hashtags": ["core", "detergent", "daily"]
+      },
+      {
+        "name": "シャンプー",
+        "emoji": "💆",
+        "genre_id": 100939,
+        "filter_keywords": ["シャンプー", "ヘアシャンプー"],
+        "name_must_not_contain_any": ["ペット", "犬用", "猫用"],
+        "tail_message": "毎日使うものこそ自分に合うのを探そう💡",
+        "hashtags": ["core", "daily", "poikatsu"]
+      }
+    ],
+    "2": [
+      {
+        "name": "お米",
+        "emoji": "🍚",
+        "genre_id": 100533,
+        "filter_keywords": ["米", "コシヒカリ", "あきたこまち", "ひとめぼれ", "つや姫", "ゆめぴりか", "ササニシキ", "新米"],
+        "name_must_not_contain_any": ["米粉", "米油"],
+        "tail_message": "5kg/10kgを玄関まで届けてもらおう🏠",
+        "hashtags": ["core", "rice", "poikatsu"]
+      },
+      {
+        "name": "パン",
+        "emoji": "🍞",
+        "genre_id": 100533,
+        "filter_keywords": ["食パン", "パン", "ベーグル", "クロワッサン", "ロールパン"],
+        "name_must_not_contain_any": ["パンツ", "パンスト", "おむつ"],
+        "tail_message": "冷凍パンはストックしておくと便利✨",
+        "hashtags": ["core", "food", "poikatsu"]
+      },
+      {
+        "name": "麺類（うどん・そば・パスタ）",
+        "emoji": "🍜",
+        "genre_id": 100533,
+        "filter_keywords": ["うどん", "そば", "パスタ", "ラーメン", "そうめん"],
+        "name_must_not_contain_any": ["スープのみ", "つゆのみ"],
+        "tail_message": "常備しておくと急な日にも安心🍴",
+        "hashtags": ["core", "food", "poikatsu"]
+      }
+    ],
+    "3": [
+      {
+        "name": "チョコレート",
+        "emoji": "🍫",
+        "genre_id": 100804,
+        "filter_keywords": ["チョコ", "ショコラ"],
+        "name_must_not_contain_any": ["プロテイン", "シリアル", "ナッツのみ"],
+        "tail_message": "おやつタイムのお供に🍵",
+        "hashtags": ["core", "sweets", "poikatsu"]
+      },
+      {
+        "name": "和菓子",
+        "emoji": "🍡",
+        "genre_id": 100804,
+        "filter_keywords": ["和菓子", "饅頭", "まんじゅう", "羊羹", "ようかん", "大福", "もなか", "団子", "せんべい"],
+        "name_must_not_contain_any": [],
+        "tail_message": "緑茶と合わせて一息つこう🍵",
+        "hashtags": ["core", "sweets", "poikatsu"]
+      },
+      {
+        "name": "アイス・冷凍スイーツ",
+        "emoji": "🍨",
+        "genre_id": 100804,
+        "filter_keywords": ["アイス", "アイスクリーム", "シャーベット", "ジェラート"],
+        "name_must_not_contain_any": ["アイスバッグ", "保冷"],
+        "tail_message": "夏に向けてストックしよう✨",
+        "hashtags": ["core", "sweets", "poikatsu"]
+      }
+    ],
+    "4": [
+      {
+        "name": "ドッグフード",
+        "emoji": "🐕",
+        "genre_id": 101213,
+        "filter_keywords": ["ドッグフード", "犬用フード", "犬 おやつ", "ワンちゃん"],
+        "name_must_not_contain_any": ["猫用", "キャット"],
+        "tail_message": "毎日の主食はまとめ買いでお得に🛒",
+        "hashtags": ["core", "pet", "poikatsu"]
+      },
+      {
+        "name": "キャットフード",
+        "emoji": "🐈",
+        "genre_id": 101213,
+        "filter_keywords": ["キャットフード", "猫用フード", "猫 おやつ", "ねこ", "ちゅ〜る", "ちゅーる"],
+        "name_must_not_contain_any": ["犬用", "ドッグ"],
+        "tail_message": "毎日の主食はまとめ買いでお得に🛒",
+        "hashtags": ["core", "pet", "poikatsu"]
+      }
+    ],
+    "5": [
+      {
+        "name": "ジュース",
+        "emoji": "🧃",
+        "genre_id": 100533,
+        "filter_keywords": ["ジュース", "100%", "野菜ジュース", "果汁"],
+        "name_must_not_contain_any": ["炭酸"],
+        "tail_message": "箱買いで重い思いをせずにストック✨",
+        "hashtags": ["core", "water", "poikatsu"]
+      },
+      {
+        "name": "ミネラルウォーター",
+        "emoji": "💧",
+        "genre_id": 100533,
+        "filter_keywords": ["ミネラルウォーター", "天然水", "シリカ水", "アルカリイオン水", "南アルプス"],
+        "name_must_not_contain_any": ["炭酸"],
+        "tail_message": "重いお水こそ宅配で楽しよう🏠",
+        "hashtags": ["core", "water", "poikatsu"]
+      },
+      {
+        "name": "炭酸水",
+        "emoji": "🫧",
+        "genre_id": 100533,
+        "filter_keywords": ["炭酸水", "強炭酸", "スパークリング", "ウィルキンソン", "OZA SODA", "サンガリア"],
+        "name_must_not_contain_any": [],
+        "tail_message": "毎日の水分補給にも料理にも🍳",
+        "hashtags": ["core", "water", "poikatsu"]
+      },
+      {
+        "name": "お茶",
+        "emoji": "🍵",
+        "genre_id": 100533,
+        "filter_keywords": ["お茶", "緑茶", "ほうじ茶", "麦茶", "玄米茶", "ウーロン茶"],
+        "name_must_not_contain_any": ["茶碗", "茶筒", "茶葉のみ"],
+        "tail_message": "ペットボトル箱買いはネットが圧倒的に楽🛒",
+        "hashtags": ["core", "water", "poikatsu"]
+      },
+      {
+        "name": "コーヒー（豆・ドリップ）",
+        "emoji": "☕",
+        "genre_id": 100533,
+        "filter_keywords": ["コーヒー豆", "ドリップコーヒー", "ドリップバッグ", "焙煎", "アラビカ"],
+        "name_must_not_contain_any": ["コーヒー味", "プロテイン", "プリン", "ゼリー", "アイス"],
+        "tail_message": "毎朝の一杯を楽天で揃えよう☕",
+        "hashtags": ["core", "poikatsu", "saving"]
+      }
+    ],
+    "6": [
+      {
+        "name": "プロテイン",
+        "emoji": "💪",
+        "genre_id": 100938,
+        "filter_keywords": ["プロテイン", "WPC", "WPI", "ホエイ", "ソイ"],
+        "name_must_not_contain_any": [],
+        "tail_message": "週末に体調管理を整えよう🏃",
+        "hashtags": ["core", "health", "poikatsu"]
+      },
+      {
+        "name": "サプリメント",
+        "emoji": "💊",
+        "genre_id": 100938,
+        "filter_keywords": ["サプリ", "ビタミン", "DHA", "EPA", "コラーゲン", "酵素", "亜鉛", "鉄分", "葉酸"],
+        "name_must_not_contain_any": [],
+        "tail_message": "気になる栄養素を手軽にプラス💡",
+        "hashtags": ["core", "health", "poikatsu"]
+      },
+      {
+        "name": "体重計・体組成計",
+        "emoji": "⚖️",
+        "genre_id": 100938,
+        "filter_keywords": ["体重計", "体組成計", "ヘルスメーター", "タニタ", "オムロン"],
+        "name_must_not_contain_any": [],
+        "tail_message": "毎日測ると意識が変わる✨",
+        "hashtags": ["core", "health", "poikatsu"]
+      }
+    ]
   }
 }

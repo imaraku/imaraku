@@ -221,56 +221,46 @@ def weighted_length(text: str) -> int:
     return n
 
 
-def _compose_single_url(header: str, items: list, footer: str, name_limit: int) -> str:
-    """1ツイート組み立て（URL は TOP1 商品のみ、TOP2/3 はテキストのみ）。
-    X の spam検出回避のため、ツイート内URLは1本に抑える。
-    消費者心理に応えるため、商品名+評価は3商品ぶん全部見せる。
+def _compose_top1_tweet(header: str, item: dict, tail: str, footer: str, name_limit: int) -> str:
+    """TOP1 のみツイート組み立て（2026-05-26 改修: TOP3 → TOP1 集中投下）。
+    商品名 + ⭐評価 + 商品ページURL + 推しメッセージ + ハッシュタグ。
     """
-    rank_emojis = ["①", "②", "③"]
-    body_lines = []
-    for i, item in enumerate(items):
-        item_name = shorten_name(item['name'], name_limit)
-        rating = short_rating(item)
-        if rating:
-            body_lines.append(f"{rank_emojis[i]} {item_name} {rating}")
-        else:
-            body_lines.append(f"{rank_emojis[i]} {item_name}")
-        # URL は TOP1（最初の商品）にだけ付ける
-        if i == 0:
-            body_lines.append("👇 ①の商品ページ")
-            body_lines.append(aff(item["url"]))
+    item_name = shorten_name(item['name'], name_limit)
+    rating = short_rating(item)
+    body_lines = [f"🏆 {item_name}"]
+    if rating:
+        body_lines.append(rating)
+    body_lines.append("")
+    body_lines.append("👇 商品ページ")
+    body_lines.append(aff(item["url"]))
+    if tail:
         body_lines.append("")
-    return header + "\n".join(body_lines).rstrip() + "\n\n" + footer
+        body_lines.append(tail)
+    return header + "\n".join(body_lines).rstrip() + footer
 
 
 def build_tweet(category: dict, items: list) -> str:
-    """カテゴリ＋上位アイテムからツイート文を作る。
-    URL は TOP1 商品の1本のみに集約（403 spam検出回避）。
-    商品名+⭐評価は3商品分すべて表示して、消費者の好奇心を満たす。
-
-    フォールバック順:
-      ① TOP3 + ⭐ + TOP1のみURL + tags
-      ② TOP3 + ⭐ (短名) + TOP1のみURL + tags
-      ③ TOP3 + ⭐ (極短名) + TOP1のみURL + tags (最終)
+    """カテゴリ＋TOP1アイテムからツイート文を作る（2026-05-26 改修）。
+    変更点:
+      - TOP3 表示 → TOP1 のみ（実測で押されるのは #1 だけだったため CTR 最大化目的）
+      - サブカテゴリ細分化（例: 飲み物 → ジュース / ミネラルウォーター / 炭酸水 ...）
+        週ごとに別サブが当番になる
     """
     name = category.get("name", "TOP")
     emoji = category.get("emoji", "🏆")
+    tail = category.get("tail_message", "")
     tags = hashtags(category.get("hashtags", ["core", "poikatsu"]), max_tags=3)
 
-    header = f"{emoji} {name} TOP3\n\n"
-    footer = f"\n {tags}"
+    header = f"{emoji} {name} ランキング1位\n\n"
+    footer = f"\n\n {tags}"
+    top = items[0]
 
-    # name_limit を段階的に短くしてフィット試行
-    candidates = [
-        _compose_single_url(header, items[:3], footer, name_limit=22),
-        _compose_single_url(header, items[:3], footer, name_limit=18),
-        _compose_single_url(header, items[:3], footer, name_limit=14),
-        _compose_single_url(header, items[:3], footer, name_limit=10),
-    ]
-    for c in candidates:
+    # name_limit を段階的に短くして280字制限にフィット
+    for limit in (40, 32, 26, 20, 14):
+        c = _compose_top1_tweet(header, top, tail, footer, name_limit=limit)
         if weighted_length(c) <= 280:
             return c
-    return candidates[-1]
+    return _compose_top1_tweet(header, top, tail, footer, name_limit=10)
 
 
 # ── X 投稿 ──
@@ -302,12 +292,24 @@ def main():
         print("  → 本日は既に投稿済みのためスキップ")
         return
 
-    # カテゴリ取得
+    # カテゴリ取得 (2026-05-26 新スキーマ: weekdays[曜日] = サブカテゴリリスト)
     config = load_config()
-    cat = config.get("categories", {}).get(str(weekday))
-    if not cat:
-        print(f"  → weekday={weekday} のカテゴリ未定義")
-        return
+    weekdays = config.get("weekdays", {})
+    subs = weekdays.get(str(weekday), [])
+    if not subs:
+        # 旧スキーマ (categories[曜日] = 単一カテゴリ) との後方互換
+        legacy_cat = config.get("categories", {}).get(str(weekday))
+        if legacy_cat:
+            subs = [legacy_cat]
+        else:
+            print(f"  → weekday={weekday} のカテゴリ未定義")
+            return
+
+    # 週ローテーション: 同じ曜日でも (週of年) で当番サブカテゴリを切り替え
+    week_of_year = now.isocalendar()[1]
+    sub_index = week_of_year % len(subs)
+    cat = subs[sub_index]
+    print(f"  weekday={weekday} 週={week_of_year} → サブ[{sub_index}/{len(subs)}] = {cat.get('name')}")
 
     # active_months チェック（季節限定カテゴリ）
     active_months = cat.get("active_months")
@@ -315,21 +317,23 @@ def main():
         print(f"  → 今月({now.month})は対象外（active_months={active_months}）")
         return
 
-    genre_id = cat.get("genreId")
+    # 新スキーマは genre_id / 旧スキーマは genreId の両方を許容
+    genre_id = cat.get("genre_id") or cat.get("genreId")
     if not genre_id:
-        print(f"  ⚠️ {cat.get('name')} に genreId 未設定 → スキップ")
+        print(f"  ⚠️ {cat.get('name')} に genre_id 未設定 → スキップ")
         return
     keyword_filter = cat.get("keyword_filter", "")
-    name_whitelist = cat.get("name_must_contain_any", []) or []
+    # 新スキーマでは filter_keywords (whitelist 役), name_must_not_contain_any (blacklist)
+    name_whitelist = cat.get("filter_keywords") or cat.get("name_must_contain_any") or []
     name_blacklist = cat.get("name_must_not_contain_any", []) or []
-    print(f"  カテゴリ: {cat.get('name')} (genreId={genre_id}, filter={keyword_filter!r}, "
+    print(f"  カテゴリ: {cat.get('name')} (genre_id={genre_id}, "
           f"whitelist={len(name_whitelist)}語, blacklist={len(name_blacklist)}語)")
 
     # 楽天ランキングAPIで上位アイテム取得（リアルタイムランキング）
     items = fetch_top_items(
         genre_id=genre_id,
         keyword=keyword_filter,
-        hits=cat.get("hits", 20),
+        hits=cat.get("hits", 30),  # TOP1 だけ使うがフィルタ後の余裕で 30 取得
         min_reviews=cat.get("min_review_count", 0),
     )
 
@@ -359,12 +363,13 @@ def main():
         for ex in rejected_examples:
             print(f"    {ex}")
 
-    if len(items) < 3:
+    # TOP1 のみ使うため 1件以上あれば OK
+    if len(items) < 1:
         print(f"  ⚠️ 該当アイテム不足: {len(items)} 件 → スキップ")
         return
 
     # ツイート組み立て＆投稿
-    tweet = build_tweet(cat, items[:3])
+    tweet = build_tweet(cat, items[:1])
     print(f"\n投稿内容:\n{tweet}\n（重み付き {weighted_length(tweet)} 文字）\n")
 
     if post_tweet(tweet):
