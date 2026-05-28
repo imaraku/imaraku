@@ -101,9 +101,10 @@ REGULAR_TWEETS = [
             "ポイントも貯まる＆使えてお得🏆"
         ),
         "tags": ["core", "contact", "poikatsu"],
-        "genre_id": 100934,  # 医薬品・コンタクト・介護
+        "genre_id": 100934,
         "filter_keywords": ["コンタクト", "ワンデー", "1day", "1DAY", "アキュビュー", "レンズ", "シード", "メニコン", "クーパー"],
         "rank_label": "医薬品・コンタクト",
+        "search_keyword": "コンタクトレンズ",  # TOP1取得失敗時の楽天検索フォールバック
     },
     # お水・炭酸水
     {
@@ -116,9 +117,10 @@ REGULAR_TWEETS = [
             "スーパーより安く、ポイントも👍"
         ),
         "tags": ["core", "water", "poikatsu"],
-        "genre_id": 100533,  # 食品
+        "genre_id": 100533,
         "filter_keywords": ["炭酸水", "ミネラルウォーター", "天然水", "シリカ水", "強炭酸", "OZA SODA", "ウィルキンソン", "サンガリア", "南アルプス"],
         "rank_label": "食品",
+        "search_keyword": "ミネラルウォーター 炭酸水",
     },
     # ティッシュ・トイレットペーパー
     {
@@ -132,9 +134,10 @@ REGULAR_TWEETS = [
             "まとめ買いでさらにお得💡"
         ),
         "tags": ["core", "daily", "poikatsu"],
-        "genre_id": 100939,  # 日用品雑貨・文房具・手芸
+        "genre_id": 100939,
         "filter_keywords": ["ティッシュ", "トイレットペーパー", "キッチンペーパー", "鼻セレブ", "エリエール", "スコッティ", "ネピア"],
         "rank_label": "日用品",
+        "search_keyword": "ティッシュ トイレットペーパー",
     },
     # お米
     {
@@ -147,9 +150,10 @@ REGULAR_TWEETS = [
             "ポイントも貯まる＆定期便割引も💡"
         ),
         "tags": ["core", "rice", "poikatsu"],
-        "genre_id": 100533,  # 食品
+        "genre_id": 100533,
         "filter_keywords": ["米 ", " 米", "白米", "玄米", "新米", "コシヒカリ", "あきたこまち", "ひとめぼれ", "つや姫", "ゆめぴりか", "ササニシキ"],
         "rank_label": "食品",
+        "search_keyword": "お米 5kg",
     },
     # 洗剤・柔軟剤
     {
@@ -162,9 +166,10 @@ REGULAR_TWEETS = [
             "スーパーよりお得なことも💡"
         ),
         "tags": ["core", "detergent", "daily"],
-        "genre_id": 100939,  # 日用品
+        "genre_id": 100939,
         "filter_keywords": ["洗剤", "柔軟剤", "アタック", "アリエール", "ボールド", "ナノックス", "ハミング", "ファーファ", "レノア"],
         "rank_label": "日用品",
+        "search_keyword": "洗剤 柔軟剤",
     },
     # ランキング全般（総合 TOP の旬を投げる）
     {
@@ -177,9 +182,11 @@ REGULAR_TWEETS = [
             "エントリー併用でポイント最大化💡"
         ),
         "tags": ["core", "ranking", "poikatsu"],
-        "genre_id": 0,           # 総合
-        "filter_keywords": None,  # フィルタなし = TOP1 をそのまま採用
+        "genre_id": 0,
+        "filter_keywords": None,
         "rank_label": "総合",
+        "search_keyword": None,  # 総合は検索より楽天ランキングTOPページが自然
+        "fallback_url": "https://ranking.rakuten.co.jp/",
     },
 ]
 
@@ -223,7 +230,13 @@ def fetch_top_ranked_item(genre_id: int, filter_keywords=None, hits: int = 30):
 
 def build_regular_tweet(entry: dict) -> str:
     """REGULAR_TWEETS の1エントリから、TOP商品付きツイートを組み立てる。
-    ランキング取得失敗・該当無しの場合は本文＋ハッシュタグだけのシンプル版にフォールバック。"""
+
+    URL 優先順位（2026-05-29 改修, 相棒の要望「常にリンク欲しい」反映）:
+      1. TOP1 商品 URL（fetch_top_ranked_item で取得成功）
+      2. 楽天検索URL アフィ付き（search_keyword から生成）
+      3. fallback_url（明示指定があれば。例: 総合 → ranking.rakuten.co.jp）
+      ※ ハードリンクが必ず1本付くため、読者は常に楽天市場の該当ページへ着地できる
+    """
     body = entry["body"]
     tags = entry["tags"]
     genre_id = entry.get("genre_id", 0)
@@ -241,10 +254,25 @@ def build_regular_tweet(entry: dict) -> str:
             f"現在、リアルタイムランキング{rank_label} {top['rank']}位⏰\n"
             f" {hashtags(tags, max_tags=3)}"
         )
-    # フォールバック: 該当商品取得できなかった場合は シンプル本文 + ハッシュタグのみ
-    # （ランキングページURLを載せると imaraku 経路と類似してXがflag気味なので URL なしで様子見）
-    print(f"  ℹ️ {entry['name']}: TOP商品取得不可 → URL なしフォールバック", file=sys.stderr)
-    return f"{body}\n\n {hashtags(tags, max_tags=3)}"
+    # フォールバック: TOP1 商品が見つからない場合は楽天検索URL（アフィ付き）を使う
+    print(f"  ℹ️ {entry['name']}: TOP1 取得不可 → 楽天検索URLにフォールバック", file=sys.stderr)
+    search_keyword = entry.get("search_keyword")
+    explicit_fallback = entry.get("fallback_url")
+    fallback_url = ""
+    if search_keyword:
+        from urllib.parse import quote
+        fallback_url = add_affiliate(f"https://search.rakuten.co.jp/search/mall/{quote(search_keyword)}/")
+    elif explicit_fallback:
+        fallback_url = add_affiliate(explicit_fallback)
+    if not fallback_url:
+        return f"{body}\n\n {hashtags(tags, max_tags=3)}"
+    return (
+        f"{body}\n"
+        f"\n"
+        f"楽天市場で人気の商品をチェック👇\n"
+        f"{fallback_url}\n"
+        f" {hashtags(tags, max_tags=3)}"
+    )
 
 
 # 人気IP/ブランド → ハッシュタグ 自動検出辞書
