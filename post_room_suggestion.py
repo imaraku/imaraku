@@ -114,60 +114,53 @@ def save_cache(cache: dict) -> None:
 
 
 # ── ランキング取得（スクレイピング） ───────────────────────────────────────────
+#
+# 2026-05-25 以降、楽天がページ構造を変更:
+#   旧: <a href="https://item.rakuten.co.jp/f..."> 直接リンク
+#   新: <div data-key="itemurl">https://item.rakuten.co.jp/f...</div> data-key パターン
+#
+# 新フォーマットは全フィールドが綺麗に data-key で並ぶので、
+# むしろ取得が確実かつシンプルになった（rank, name, url, image, price, shop が全部取れる）。
 
 FURUSATO_RANKING_URL = "https://event.rakuten.co.jp/furusato/ranking/"
-# 楽天ふるさと納税の商品URLパターン: item.rakuten.co.jp/f[5-6桁数字]-[自治体名]/...
-# 「f + 数字」プレフィックスは自治体ショップの証。ブランドショップと区別できる確実な目印。
-FURUSATO_URL_RE = re.compile(r"https?://item\.rakuten\.co\.jp/f\d+-[^/]+/")
-PRICE_RE = re.compile(r"([0-9][0-9,]{2,})\s*円")
+# 寄付額文字列 → 整数。"7,500円～" や "18,000円" 等を吸収
+PRICE_VALUE_RE = re.compile(r"([0-9][0-9,]{2,})")
 
 
-def _extract_name_from_link(a) -> str:
-    """<a> タグから商品名を抽出。imgのaltを優先、なければテキスト。"""
-    img = a.find("img")
-    if img and img.get("alt"):
-        alt = img["alt"].strip()
-        if len(alt) >= 5:
-            return alt
-    text = a.get_text(" ", strip=True)
-    return text[:120] if text else ""
+def _extract_datakey_values(html: str, key: str) -> list[str]:
+    """<div data-key="key">...</div> の中身テキストを順序通り抽出。"""
+    pat = re.compile(
+        r'<div\s+data-key="' + re.escape(key) + r'"\s*>(.*?)</div>',
+        re.DOTALL,
+    )
+    return [m.group(1).strip() for m in pat.finditer(html)]
 
 
-def _extract_image_url(a) -> str:
-    """<a> 内の <img> から画像URLを抽出。lazy-load属性も考慮。"""
-    img = a.find("img")
-    if not img:
-        return ""
-    for attr in ("src", "data-src", "data-original", "data-lazy-src"):
-        url = img.get(attr)
-        if url and url.strip():
-            url = url.strip()
-            if url.startswith("//"):
-                url = "https:" + url
-            elif url.startswith("/"):
-                url = "https://event.rakuten.co.jp" + url
-            # プレースホルダーや1px透過GIF等は除外
-            if url.endswith(".gif") and "blank" in url.lower():
-                continue
-            if url.startswith("data:"):
-                continue
-            return url
-    return ""
+def _extract_datakey_image_srcs(html: str, key: str = "imageurl") -> list[str]:
+    """<div data-key="imageurl"><img src="..." /></div> の src を抽出。"""
+    pat = re.compile(
+        r'<div\s+data-key="' + re.escape(key) + r'"\s*>(.*?)</div>',
+        re.DOTALL,
+    )
+    results = []
+    for m in pat.finditer(html):
+        block = m.group(1)
+        img_m = re.search(r'<img[^>]+src="([^"]+)"', block)
+        results.append(img_m.group(1).strip() if img_m else "")
+    return results
 
 
-def _extract_price_near(a) -> int:
-    """<a> の周辺テキストから寄付額を推定。親要素を2段階辿って円の数字を拾う。"""
-    for node in (a, a.parent, getattr(a.parent, "parent", None)):
-        if node is None:
-            continue
-        text = node.get_text(" ", strip=True)
-        m = PRICE_RE.search(text)
-        if m:
-            try:
-                return int(m.group(1).replace(",", ""))
-            except ValueError:
-                continue
-    return 0
+def _parse_price(text: str) -> int:
+    """『18,000円』『7,500円～』等から整数を抽出。失敗時は0。"""
+    if not text:
+        return 0
+    m = PRICE_VALUE_RE.search(text)
+    if not m:
+        return 0
+    try:
+        return int(m.group(1).replace(",", ""))
+    except ValueError:
+        return 0
 
 
 def fetch_via_scrape() -> list[dict]:
@@ -189,36 +182,42 @@ def fetch_via_scrape() -> list[dict]:
         print(f"⚠️ ランキングページ取得失敗: {e}", file=sys.stderr)
         return []
 
-    soup = BeautifulSoup(r.text, "html.parser")
+    html = r.text
+    ranks       = _extract_datakey_values(html, "rank")
+    names       = _extract_datakey_values(html, "itemname")
+    urls        = _extract_datakey_values(html, "itemurl")
+    images      = _extract_datakey_image_srcs(html, "imageurl")
+    prices      = _extract_datakey_values(html, "kakaku")
+    shops       = _extract_datakey_values(html, "shopname")
+
+    # 全フィールドの件数が揃わない場合は早期return（楽天側の再変更検出）
+    n = min(len(ranks), len(names), len(urls), len(images), len(prices), len(shops))
+    if n == 0:
+        print(f"⚠️ data-key 形式マッチ0件。ページ構造が再変更された可能性。"
+              f"ranks={len(ranks)} names={len(names)} urls={len(urls)} "
+              f"images={len(images)} prices={len(prices)} shops={len(shops)}",
+              file=sys.stderr)
+        return []
+
     seen_base = set()
     items: list[dict] = []
-
-    for a in soup.find_all("a", href=True):
-        href = a["href"].strip()
-        if not FURUSATO_URL_RE.match(href):
+    for i in range(n):
+        url = urls[i]
+        if not url or "item.rakuten.co.jp" not in url:
             continue
-        base = href.split("?")[0].rstrip("/")
+        base = url.split("?")[0].rstrip("/")
         if base in seen_base:
             continue
-        name = _extract_name_from_link(a)
+        name = names[i]
         if not name or len(name) < 5:
             continue
-        price = _extract_price_near(a)
-        # 自治体名をURLのf000000-xxxxx部分から抽出してshopフィールドに入れる
-        shop = ""
-        m = re.match(r"https?://item\.rakuten\.co\.jp/(f\d+-[^/]+)/", href)
-        if m:
-            shop = m.group(1)
-
-        image_url = _extract_image_url(a)
-
         seen_base.add(base)
         items.append({
-            "name": name.strip(),
+            "name": name,
             "url": base + "/",
-            "price": price,
-            "shop": shop,
-            "image_url": image_url,
+            "price": _parse_price(prices[i]),
+            "shop": shops[i] or "",
+            "image_url": images[i] or "",
             "caption": "",
         })
         if len(items) >= 60:
