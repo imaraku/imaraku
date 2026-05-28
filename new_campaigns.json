@@ -22,5 +22,11 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/contactlens",
     "point": "要確認",
     "detected_at": "2026-05-23"
+  },
+  {
+    "name": "対象キッズ商品を",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/fashionkids",
+    "point": "要確認",
+    "detected_at": "2026-05-28"
   }
 ]
