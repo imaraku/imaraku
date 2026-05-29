@@ -87,15 +87,24 @@ CAMPAIGNS = [
         "key": "biccamera",
         "url": "https://biccamera.rakuten.co.jp/c/campaign/megabic/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
-        "active_kw": ["エントリーする", "エントリー受付中", "MegaBIC", "ポイントアップ"],
-        "default": True,
+        # ⚠ このページは JS レンダリングの SPA で、requests が取得する生HTMLには
+        #   日付・エントリー文言・ブランド語が一切含まれない（全て count=0 を確認）。
+        #   よって従来は「判定不能 → default=True」で“万年開催中”になり、終了後も
+        #   サイトに出続けていた（owner 指摘のバグ本体）。default=False に変更し、
+        #   生HTMLから開催を肯定的に確認できない限り非表示にする（安全側）。
+        #   period_check は将来サーバーレンダリング化した場合の保険（現状は None で素通り）。
+        "active_kw": ["エントリーする", "エントリー受付中"],
+        "default": False,
+        "period_check": True,
     },
     {
         "key": "superdeal",
         "url": "https://event.rakuten.co.jp/superdeal/campaign/superdealdays/",
         "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
-        "active_kw": ["エントリーする", "エントリー受付中", "スーパーDEAL", "ポイントバック"],
+        # 開催期間が短い窓で連続するため、ブランド語の万年マッチを避けて日付判定を優先。
+        "active_kw": ["エントリーする", "エントリー受付中"],
         "default": True,
+        "period_check": True,
     },
     {
         "key": "returnpurchaser",
@@ -610,6 +619,50 @@ def marathon_flags_from_schedule(schedule: dict) -> tuple[bool | None, bool | No
     return (marathon, pointup)
 
 
+# 日付判定のチューニング値（誤検出ゼロ優先）
+_PERIOD_GRACE   = datetime.timedelta(days=3)   # 直近に終わった窓は「週次リサイクル中」とみなし表示維持
+_PERIOD_HORIZON = datetime.timedelta(days=45)  # この範囲内に始まる次回は「開催予定」として表示維持
+
+
+def period_status(text: str, now: datetime.datetime | None = None) -> str | None:
+    """ページ本文から「開始〜終了」期間を抽出し、現在が開催中かを日付で判定する。
+    戻り値:
+      "active"  … 現在が期間内／近い将来(≤45日)に開始／直近(≤3日)に終了したばかり
+      "expired" … 期間は取れたが、全て十分前に終了し近い次回も無い（＝確実に終了）
+      None      … 期間表記が見つからず判定不能（呼び出し側はキーワード判定へ）
+
+    「終了しました」を出さず日付だけ過ぎて放置されるページ（海外通販×DEAL 等の
+    サイレント終了）を捕捉する一方、毎週連続開催の窓間ギャップ（日用品+4%等）や
+    開始直前のキャンペーン（学割6/1開始等）を誤って隠さないよう猶予を設ける。"""
+    import html as _html
+    now = now or datetime.datetime.now(JST)
+    fallback_year = now.year
+    clean = _html.unescape(text)
+    clean = re.sub(r'<[^>]+>', ' ', clean)
+    clean = re.sub(r'\s+', ' ', clean)
+
+    ranges = []
+    for start_txt, end_txt in _RANGE_RE.findall(clean):
+        s = _parse_jst(start_txt, fallback_year)
+        e = _parse_jst(end_txt, fallback_year)
+        if not s or not e:
+            continue
+        if e < s:  # 年跨ぎ補正（終了が開始より前なら翌年扱い）
+            e = e.replace(year=e.year + 1)
+        ranges.append((s, e))
+
+    if not ranges:
+        return None
+    if any(s <= now <= e for s, e in ranges):
+        return "active"                                  # 今が期間内
+    if any(now < s <= now + _PERIOD_HORIZON for s, e in ranges):
+        return "active"                                  # 近い将来に開始（開催予定）
+    past_ends = [e for s, e in ranges if e <= now]
+    if past_ends and max(past_ends) >= now - _PERIOD_GRACE:
+        return "active"                                  # ごく直近に終了＝リサイクル中
+    return "expired"                                     # 確実に終了
+
+
 def check_campaign(camp: dict) -> bool:
     text = fetch(camp["url"])
     if text is None:
@@ -619,6 +672,17 @@ def check_campaign(camp: dict) -> bool:
         if kw in text:
             print(f"  [{camp['key']}] ✗ 終了: 「{kw}」")
             return False
+    # 日付ベース判定（opt-in）。終了表記を出さずブランド名が残るページ対策。
+    # 期間が明確に取れた場合はキーワード判定より優先する。
+    if camp.get("period_check"):
+        status = period_status(text)
+        if status == "active":
+            print(f"  [{camp['key']}] ✓ 開催中（期間内）")
+            return True
+        if status == "expired":
+            print(f"  [{camp['key']}] ✗ 期間外（日付判定）")
+            return False
+        # status is None（期間表記なし）→ キーワード判定へフォールバック
     for kw in camp["active_kw"]:
         if kw in text:
             print(f"  [{camp['key']}] ✓ 開催中: 「{kw}」")
@@ -867,6 +931,13 @@ def _check_one_url(url: str) -> tuple:
     ]
     if any(p in text for p in GRATITUDE):
         return (url, "expired:お礼ページ検出")
+
+    # D. 日付ベースの終了判定（明示の終了句を出さず会期だけ過ぎるページ対策）。
+    #    海外通販×DEAL のように「終了しました」を出さないページを捕捉する。
+    #    period_status は猶予(3日)＋開催予定(45日)を考慮し、確実に終了した場合のみ
+    #    "expired" を返すため、連続開催の窓間ギャップや開始直前を誤判定しない。
+    if period_status(text) == "expired":
+        return (url, "expired:期間終了(日付判定)")
 
     return (url, "active")
 

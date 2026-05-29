@@ -130,6 +130,12 @@ def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str
     """スロット別の挨拶を先頭に付けて、テキストを毎回ユニークにする。
     日付＋曜日を含めることで、X の重複投稿検出を確実に回避する。
     例: 🌃 5/9(土) 今夜の買い物前にエントリー
+
+    ⚠️ 二段ヘッダ防止: 大半のテンプレは本文先頭で daily_lead_in() の
+    「📅 M/D(曜) …チェック」ヘッダを既に持つ。本関数のヘッダと重なると
+    日付行が二段になり不自然なので、先頭の daily_lead_in 段落を剥がして
+    から付け直し、「日付＋曜日＋スロット文脈」を一段に集約する。
+    （kickoff だけは with_slot_intro を通さず daily_lead_in をそのまま使う）
     """
     pair = SLOT_TIME_PHRASES.get(slot)
     if not pair:
@@ -139,9 +145,14 @@ def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str
         now = datetime.datetime.now(JST)
     weekday_jp = WEEKDAY_JP[now.weekday()]
     intro = f"{emoji} {now.month}/{now.day}({weekday_jp}) {phrase}"
-    # 既に同じ intro が含まれていれば二重付与しない
+    # 既に同じ intro が付いていれば二重付与しない
     if tweet.startswith(intro):
         return tweet
+    # daily_lead_in() の「📅 …」ヘッダ段落が先頭にあれば剥がす（二段ヘッダ防止）
+    if tweet.startswith("📅 "):
+        parts = tweet.split("\n\n", 1)
+        if len(parts) == 2:
+            tweet = parts[1]
     return f"{intro}\n\n{tweet}"
 
 
@@ -389,7 +400,9 @@ def daily_lead_in() -> str:
       📅 5/21(木) 🌆 帰り道チェック
     """
     now = datetime.datetime.now(JST)
-    day_jp = "日月火水木金土"[now.weekday()]
+    # weekday() は月曜=0 始まり。"日月火…"[weekday()] だと曜日が1日ズレる
+    # （金曜→"木" 等）バグだったので Mon 始まりの WEEKDAY_JP を使う。
+    day_jp = WEEKDAY_JP[now.weekday()]
     if _CURRENT_SLOT == "12":
         slot_label = " 🌞 お昼チェック"
     elif _CURRENT_SLOT == "18":
