@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
 post_category_ranking.py
-曜日別にカテゴリTOP3を楽天Ichiba検索APIから取得し、X(Twitter)に投稿する。
+曜日×週ローテーションで決まるサブカテゴリの「リアルタイムランキング1位」を
+楽天 Ichiba Ranking API から取得し、X(Twitter)に投稿する。
 
 【機能】
-  ・曜日別カテゴリ（category_ranking.json）に基づいて検索キーワード決定
-  ・楽天 IchibaItem/Search/20170706 API でレビュー数降順 TOP3 取得
-  ・商品説明 (itemCaption) から推しポイント自動抽出
-  ・アフィリエイトURL ラッピング
-  ・1日1回まで（同日重複投稿防止）
+  ・曜日別サブカテゴリ（category_ranking.json weekdays スキーマ）を週ローテーションで選択
+  ・楽天 IchibaItem/Ranking/20220601 API（realtime, hits上限20）でジャンル別TOP取得
+  ・商品名 whitelist/blacklist でカテゴリゲーミング（別ジャンル商品の混入）を除去
+  ・当番サブが TOP20 に1件も出ない週は同曜日の他サブへフォールバック（必ず1投稿）
+  ・TOP1 のみ集中投下（CTR最大化）＋ アフィリエイトURL ラッピング
+  ・1日1回まで（category_posted.json で同日重複投稿防止）
 
-【全自動】
-  - 商品ピック: API のレビュー数降順 (人気順)
-  - 推しポイント: itemCaption の最初の文 + レビュー平均/件数情報
+⚠️ 地雷#10: realtime ランキングは hits>20 で 400。fetch_top_items が hits を 20 に clamp する。
 """
 
 import os
@@ -85,6 +85,9 @@ def fetch_top_items(genre_id: int, keyword: str = "", hits: int = 20, min_review
     if not RAKUTEN_APP_ID or not RAKUTEN_ACCESS_KEY:
         print("⚠️ RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY が未設定", file=sys.stderr)
         return []
+    # ⚠️ 地雷#10: realtime ランキングは hits 上限 20。21 以上を渡すと API が 400 を返し
+    # 全件取得失敗 → 毎回スキップする。caller が何を渡しても 20 を超えさせない安全弁。
+    hits = min(int(hits or 20), 20)
     headers = {"Origin": RAKUTEN_ORIGIN}
 
     def _call(gid: int):
@@ -279,12 +282,64 @@ def post_tweet(text: str) -> bool:
     return False
 
 
+# ── カテゴリゲーミング対策フィルタ ─────────────────────────────────
+def filter_items(cat: dict, items: list) -> list:
+    """商品名で2段フィルタしてカテゴリミスマッチを弾く。
+    楽天は出店者が任意ジャンルでランキング登録できる（例: マッサージ器を
+    「スイーツ」ジャンルに登録するショップが実在）。
+      1. blacklist のいずれか1語でも商品名に含まれていれば除外（誤爆ストッパー）
+      2. whitelist が指定されている場合、いずれか1語が商品名に含まれている必要あり
+    """
+    name_whitelist = cat.get("filter_keywords") or cat.get("name_must_contain_any") or []
+    name_blacklist = cat.get("name_must_not_contain_any", []) or []
+    if not (name_blacklist or name_whitelist):
+        return items
+    before = len(items)
+    filtered = []
+    rejected_examples = []
+    for it in items:
+        nm = it.get("name", "")
+        if any(bw in nm for bw in name_blacklist):
+            if len(rejected_examples) < 3:
+                rejected_examples.append(f"NG(blacklist): {nm[:50]}")
+            continue
+        if name_whitelist and not any(ww in nm for ww in name_whitelist):
+            if len(rejected_examples) < 3:
+                rejected_examples.append(f"NG(not in whitelist): {nm[:50]}")
+            continue
+        filtered.append(it)
+    print(f"  ゲーミング対策フィルタ: {before} → {len(filtered)} 件")
+    for ex in rejected_examples:
+        print(f"    {ex}")
+    return filtered
+
+
+def collect_items_for_sub(cat: dict) -> list:
+    """1サブカテゴリ分の「フェッチ＋ゲーミング対策フィルタ済み」アイテムを返す。"""
+    # 新スキーマは genre_id / 旧スキーマは genreId の両方を許容
+    genre_id = cat.get("genre_id") or cat.get("genreId")
+    if not genre_id:
+        print(f"  ⚠️ {cat.get('name')} に genre_id 未設定 → スキップ")
+        return []
+    name_whitelist = cat.get("filter_keywords") or cat.get("name_must_contain_any") or []
+    name_blacklist = cat.get("name_must_not_contain_any", []) or []
+    print(f"  カテゴリ: {cat.get('name')} (genre_id={genre_id}, "
+          f"whitelist={len(name_whitelist)}語, blacklist={len(name_blacklist)}語)")
+    items = fetch_top_items(
+        genre_id=genre_id,
+        keyword=cat.get("keyword_filter", ""),
+        hits=cat.get("hits", 20),  # realtime は hits 上限 20（地雷#10）。fetch 側でも clamp 済
+        min_reviews=cat.get("min_review_count", 0),
+    )
+    return filter_items(cat, items)
+
+
 # ── メイン ──
 def main():
     now = datetime.datetime.now(JST)
     today_str = now.strftime("%Y-%m-%d")
     weekday = now.weekday()  # 0=月..6=日
-    print(f"=== カテゴリTOP3 {today_str} (weekday={weekday}) ===")
+    print(f"=== カテゴリTOP1 {today_str} (weekday={weekday}) ===")
 
     # 重複投稿チェック
     posted = load_posted()
@@ -305,76 +360,43 @@ def main():
             print(f"  → weekday={weekday} のカテゴリ未定義")
             return
 
-    # 週ローテーション: 同じ曜日でも (週of年) で当番サブカテゴリを切り替え
+    # 週ローテーション: 同じ曜日でも (週of年) で当番サブカテゴリを切り替え。
+    # ただし当番サブが realtime TOP20 に1件も出てこない週がある（例: スイーツ
+    # ジャンルTOP20 に「和菓子」が並ばない）。その場合は黙ってスキップせず、
+    # 同じ曜日の他サブへ順にフォールバックして「必ず1投稿」を担保する（地雷#10再発防止）。
     week_of_year = now.isocalendar()[1]
     sub_index = week_of_year % len(subs)
-    cat = subs[sub_index]
-    print(f"  weekday={weekday} 週={week_of_year} → サブ[{sub_index}/{len(subs)}] = {cat.get('name')}")
+    order = list(range(sub_index, len(subs))) + list(range(0, sub_index))
 
-    # active_months チェック（季節限定カテゴリ）
-    active_months = cat.get("active_months")
-    if active_months and now.month not in active_months:
-        print(f"  → 今月({now.month})は対象外（active_months={active_months}）")
+    chosen_cat = None
+    chosen_items = None
+    for n, i in enumerate(order):
+        cat = subs[i]
+        # active_months チェック（季節限定カテゴリ）
+        active_months = cat.get("active_months")
+        if active_months and now.month not in active_months:
+            print(f"  [{i}] {cat.get('name')}: 今月({now.month})対象外 "
+                  f"active_months={active_months} → 次サブへ")
+            continue
+        label = "当番" if n == 0 else f"フォールバック#{n}"
+        print(f"  [{label}] 週={week_of_year} サブ[{i}/{len(subs)}] = {cat.get('name')}")
+        items = collect_items_for_sub(cat)
+        if len(items) >= 1:
+            chosen_cat, chosen_items = cat, items
+            break
+        print(f"    ⚠️ 該当0件 → 次のサブへフォールバック")
+
+    if not chosen_cat:
+        print("  ⚠️ 全サブで該当アイテム0件 → 本日は投稿スキップ")
         return
 
-    # 新スキーマは genre_id / 旧スキーマは genreId の両方を許容
-    genre_id = cat.get("genre_id") or cat.get("genreId")
-    if not genre_id:
-        print(f"  ⚠️ {cat.get('name')} に genre_id 未設定 → スキップ")
-        return
-    keyword_filter = cat.get("keyword_filter", "")
-    # 新スキーマでは filter_keywords (whitelist 役), name_must_not_contain_any (blacklist)
-    name_whitelist = cat.get("filter_keywords") or cat.get("name_must_contain_any") or []
-    name_blacklist = cat.get("name_must_not_contain_any", []) or []
-    print(f"  カテゴリ: {cat.get('name')} (genre_id={genre_id}, "
-          f"whitelist={len(name_whitelist)}語, blacklist={len(name_blacklist)}語)")
-
-    # 楽天ランキングAPIで上位アイテム取得（リアルタイムランキング）
-    items = fetch_top_items(
-        genre_id=genre_id,
-        keyword=keyword_filter,
-        hits=cat.get("hits", 30),  # TOP1 だけ使うがフィルタ後の余裕で 30 取得
-        min_reviews=cat.get("min_review_count", 0),
-    )
-
-    # ── カテゴリゲーミング対策フィルタ ─────────────────────────────────
-    # 楽天は出店者が任意ジャンルでランキング登録できる。たとえばマッサージ商品を
-    # 「スイーツ・お菓子」ジャンルでランキングインさせるショップが実在する。
-    # 商品名で2段フィルタしてカテゴリミスマッチを弾く:
-    #   1. blacklist のいずれか1語でも商品名に含まれていれば除外（誤爆ストッパー）
-    #   2. whitelist が指定されている場合、いずれか1語が商品名に含まれている必要あり
-    if name_blacklist or name_whitelist:
-        before = len(items)
-        filtered = []
-        rejected_examples = []
-        for it in items:
-            nm = it.get("name", "")
-            if any(bw in nm for bw in name_blacklist):
-                if len(rejected_examples) < 3:
-                    rejected_examples.append(f"NG(blacklist): {nm[:50]}")
-                continue
-            if name_whitelist and not any(ww in nm for ww in name_whitelist):
-                if len(rejected_examples) < 3:
-                    rejected_examples.append(f"NG(not in whitelist): {nm[:50]}")
-                continue
-            filtered.append(it)
-        items = filtered
-        print(f"  カテゴリゲーミング対策フィルタ: {before} → {len(items)} 件")
-        for ex in rejected_examples:
-            print(f"    {ex}")
-
-    # TOP1 のみ使うため 1件以上あれば OK
-    if len(items) < 1:
-        print(f"  ⚠️ 該当アイテム不足: {len(items)} 件 → スキップ")
-        return
-
-    # ツイート組み立て＆投稿
-    tweet = build_tweet(cat, items[:1])
+    # ツイート組み立て＆投稿（TOP1 のみ集中投下）
+    tweet = build_tweet(chosen_cat, chosen_items[:1])
     print(f"\n投稿内容:\n{tweet}\n（重み付き {weighted_length(tweet)} 文字）\n")
 
     if post_tweet(tweet):
         posted["last_posted_date"] = today_str
-        posted["last_category"] = cat.get("name")
+        posted["last_category"] = chosen_cat.get("name")
         save_posted(posted)
         print(f"✅ 完了")
     else:

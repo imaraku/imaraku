@@ -156,6 +156,19 @@ axes = [
 6軸並列で ~140 件取得。総合 TOP30 だけだと売り切れ商品ばかり拾うが、
 **カテゴリ別 TOP30 はトラフィック分散でまだ在庫がある段階で検出**できる。
 
+**🔁 再発事例（2026-05-28）— hits=30 を再び書いてしまった**:
+カテゴリTOP1 リファクタ (`6bbdcca`) で `post_category_ranking.py` の
+`fetch_top_items(hits=...)` 既定を **20→30 に変更**してしまい（「TOP1 だけ使うが
+フィルタ後の余裕で 30 取得」という善意の判断）、realtime API が全リクエスト 400 →
+`items=[]` → 毎回「該当アイテム不足」スキップ。**カテゴリTOP1 が 5/28・5/29 と
+連続で投稿ゼロ**になった（`category_posted.json` が 5/27 "食品TOP3" で凍結したのが痕跡）。
+`check_ranking.py` の `fetch_top_ranked_item` も `min(hits,30)` で同じ穴があり、
+常連ツイートが毎回 search URL フォールバックに落ちていた。
+✅ **恒久対策**: hits は **fetch 関数の入口で `min(hits, 20)` に clamp** する安全弁を
+両ファイルに追加。caller が誤って 30 を渡しても二度と 400 を踏まない。
+✅ **教訓**: 「TOP3→TOP1 で余裕を持って多めに取る」発想は realtime の hits≤20 制約と
+衝突する。hits を触る変更は地雷#10 を必ず想起すること。
+
 ### ⚠️ 11. YAML/JSON を Edit ツールで操作したら必ず構文検証してから push
 2026-05-20 に daily-tweet スロット節約のため Edit でcron 行差し替えをしたが、
 古い `# 手動テスト用 / workflow_dispatch:` 2行を残したまま新しい同じ2行も

@@ -191,7 +191,7 @@ REGULAR_TWEETS = [
 ]
 
 
-def fetch_top_ranked_item(genre_id: int, filter_keywords=None, hits: int = 30):
+def fetch_top_ranked_item(genre_id: int, filter_keywords=None, hits: int = 20):
     """指定ジャンルのリアルタイムランキングから、filter_keywords のいずれかに
     マッチする最上位アイテム＋順位を返す。
     Returns: {"name", "url", "rank"} または None
@@ -204,7 +204,9 @@ def fetch_top_ranked_item(genre_id: int, filter_keywords=None, hits: int = 30):
         "applicationId": RAKUTEN_APP_ID,
         "accessKey": RAKUTEN_ACCESS_KEY,
         "period": "realtime",
-        "hits": min(hits, 30),
+        # ⚠️ 地雷#10: realtime は hits 上限 20。21+ を渡すと 400 → 常に None →
+        # build_regular_tweet が毎回 search URL フォールバックに落ちていた。20 に clamp。
+        "hits": min(hits, 20),
         "genreId": genre_id,
     }
     try:
