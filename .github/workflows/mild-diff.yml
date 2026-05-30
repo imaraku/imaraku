@@ -1,0 +1,67 @@
+name: マイルドさん差分チェック（取りこぼし拾い）
+
+# ⚠️ 現在は「手動実行のみ」＝自動では動かない（マイルドさんへの連絡が済んでから
+#    下の schedule のコメントを外して稼働させる）。
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '日付ゲートを無視して即実行（テスト用）'
+        type: boolean
+        default: true
+
+  # ▼▼▼ 稼働時はここを有効化する（毎日 23:00 JST = 14:00 UTC に起動し、
+  #      スクリプト側で「月末」または「マラソン開始前日」だけに絞る）▼▼▼
+  # schedule:
+  #   - cron: '0 14 * * *'    # 23:00 JST
+  #   - cron: '10 14 * * *'   # 23:10 JST バックアップ（cron 取りこぼし対策・地雷#5）
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: mild-diff
+  cancel-in-progress: false
+
+jobs:
+  mild-diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests
+
+      - name: マイルドさん差分チェック
+        id: diff
+        env:
+          MILD_DIFF_FORCE: ${{ inputs.force }}
+        run: python check_mild_diff.py
+
+      - name: 変更があればコミット & プッシュ
+        if: steps.diff.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add new_campaigns.json
+          git commit -m "chore: マイルドさん差分で取りこぼしを追加 [skip ci]"
+          # 他ワークフローとの同時刻競合対策：rebase+retry 付き push
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then
+              echo "push 成功（試行 $i）"
+              exit 0
+            fi
+            echo "push リトライ $i..."
+            sleep $((i * 5))
+          done
+          echo "push 3回失敗" && exit 1
