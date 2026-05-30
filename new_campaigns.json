@@ -46,5 +46,65 @@
     "url": "https://event.rakuten.co.jp/mc/pg/coupon",
     "point": "要確認",
     "detected_at": "2026-05-30"
+  },
+  {
+    "name": "雨の日も快適に過ごせるアイテムが勢ぞろい",
+    "url": "https://event.rakuten.co.jp/fashion/collection/shoes/women",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "ディズニープリンセスのベビーグッズも大集合",
+    "url": "https://event.rakuten.co.jp/disney/special/raingoods",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "グルメ・お酒・ドリンク・スイーツ",
+    "url": "https://event.rakuten.co.jp/father/food",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "喜ばれる誕生日プレゼント",
+    "url": "https://event.rakuten.co.jp/gift/scene/birthday",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "楽天市場のグルメ有名ショップをご紹介！",
+    "url": "https://event.rakuten.co.jp/beauty/color_shindan",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "高コスパのトレンドトップスをご紹介",
+    "url": "https://event.rakuten.co.jp/fashion/yukata",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "この夏を彩るゆかたに出会おう",
+    "url": "https://event.rakuten.co.jp/fashion/newarrival",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "楽天マイカー割",
+    "url": "https://event.rakuten.co.jp/pet/petwari",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "手提げや水筒など人気アイテムが盛りだくさん",
+    "url": "https://event.rakuten.co.jp/disney/genre/appliance/smartphone",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "トレンドトップス",
+    "url": "https://event.rakuten.co.jp/fashion/collection/tops-women",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
   }
 ]
