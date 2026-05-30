@@ -773,21 +773,20 @@ def tweet_zero_five_day() -> str:
 
 
 def tweet_month_end_eve() -> str:
-    """月末前日：期間限定ポイント失効注意（警告＋使い道提案）"""
+    """月末前日：期間限定ポイント失効注意（警告＋残高確認URL＋使い道提案）。
+    失効注意は純粋な親切ツイートなので CTA は点残高チェックURLに一本化し、
+    今楽URLは載せない（X 文字数 280 と 6/1 までの URL 抑制方針の両方に整合）。"""
     return (
         f"{daily_lead_in()}"
-        "⏰月末まで残り1日\n"
-        "期間限定ポイント、大丈夫？\n"
+        "⏰月末まで残り1日！\n"
+        "期間限定ポイント、失効してない？💸\n"
         "\n"
-        "初心者が一番やらかすミスは月末失効💸\n"
+        "🔍まず確認はココ👇\n"
+        "https://point.rakuten.co.jp/\n"
         "\n"
         "✅使い切り術\n"
-        "・Appleギフト・楽券を購入\n"
-        "・日用品購入や楽天ペイで消化\n"
-        "・楽天PointClubアプリで期限確認\n"
-        "\n"
-        "👇 リンクまとめは今楽で\n"
-        f"{SITE_URL}\n"
+        "・Appleギフト/楽券に交換\n"
+        "・楽天ペイや日用品で消化\n"
         f" {hashtags(['core', 'pointexpire', 'poikatsu'], max_tags=3)}"
     )
 
@@ -796,16 +795,15 @@ def tweet_month_end_last() -> str:
     """月末当日：期間限定ポイント失効目前（緊急告知）"""
     return (
         f"{daily_lead_in()}"
-        "🚨本日23:59期限！\n"
+        "🚨本日23:59まで！\n"
         "期間限定ポイント、失効目前💧\n"
         "\n"
-        "使い切るワザ👇\n"
-        "・Appleギフト・楽券を購入\n"
-        "・楽天ふるさと納税でお得に変換\n"
-        "・楽天PointClubで保有ポイント確認！\n"
+        "🔍まず保有残高を確認👇\n"
+        "https://point.rakuten.co.jp/\n"
         "\n"
-        "👇 リンクまとめは今楽で\n"
-        f"{SITE_URL}\n"
+        "✅使い切るワザ\n"
+        "・Appleギフト/楽券に交換\n"
+        "・ふるさと納税でお得に変換\n"
         f" {hashtags(['core', 'pointexpire', 'furusato'], max_tags=3)}"
     )
 
