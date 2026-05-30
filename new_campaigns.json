@@ -166,5 +166,65 @@
     "url": "https://event.rakuten.co.jp/beauty/menscosme",
     "point": "要確認",
     "detected_at": "2026-05-30"
+  },
+  {
+    "name": "厳選ショップの父の日ギフト",
+    "url": "https://event.rakuten.co.jp/father/shop",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "クールなマーベルファッションが大集合",
+    "url": "https://event.rakuten.co.jp/marvel/popupstore",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "出産祝いや結婚祝いのギフト探しに！",
+    "url": "https://event.rakuten.co.jp/disney/special/school",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "ライフスタイルにあったベビーカーを探そう",
+    "url": "https://event.rakuten.co.jp/brand/officialshop",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "メンズコスメが勢揃い！",
+    "url": "https://event.rakuten.co.jp/beauty/brand/official",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "入園入学準備にぴったりなサンリオグッズが満載！",
+    "url": "https://event.rakuten.co.jp/starwars/fashion",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "お礼や感謝伝えるプチギフト",
+    "url": "https://event.rakuten.co.jp/gift/scene/wedding",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "時間タイムセール",
+    "url": "https://event.rakuten.co.jp/bargain/timesale",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "成長にあわせた服や通学・通園アイテムも",
+    "url": "https://event.rakuten.co.jp/fashion/collection/bag-wallet/women",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "お酒気分が味わえる新しいドリンクがトレンドに！",
+    "url": "https://event.rakuten.co.jp/beauty/haircarecatalog",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
   }
 ]
