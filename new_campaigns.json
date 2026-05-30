@@ -226,5 +226,23 @@
     "url": "https://event.rakuten.co.jp/beauty/haircarecatalog",
     "point": "要確認",
     "detected_at": "2026-05-30"
+  },
+  {
+    "name": "花とスイーツのセット",
+    "url": "https://event.rakuten.co.jp/mother/flower/sweets_set",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "大人も着やすいシンプルファッション",
+    "url": "https://event.rakuten.co.jp/disney/special/gift",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "プリザーブドフラワー特集",
+    "url": "https://event.rakuten.co.jp/beauty/korea",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
   }
 ]
