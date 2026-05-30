@@ -351,25 +351,45 @@ def _strip_imaraku_url_lines(text: str) -> str:
     return "\n".join(kept).rstrip() + "\n" if kept else ""
 
 
+def _strip_all_url_lines(text: str) -> str:
+    """http(s):// を含む行を全部削除する（403 フォールバック用・完全 URL なし版）。"""
+    kept = [line for line in text.split("\n")
+            if "http://" not in line and "https://" not in line]
+    return "\n".join(kept).rstrip() + "\n" if kept else ""
+
+
 def post_tweet(text: str) -> bool:
     """X に投稿。
 
-    - URL_INCLUDE_FROM より前: imaraku URL を事前削除して投稿（403 を喰らわない設計）
-    - URL_INCLUDE_FROM 以降: URL 付きで試行 → 403 なら URL 抜きで 1度だけリトライ
+    - URL_INCLUDE_FROM より前: imaraku URL は事前削除（既知flag）。残る他URL(point等)は
+      付けて試行 → 403 なら URL を全除去して再投稿（＝ツイートは必ず通す保険）
+    - URL_INCLUDE_FROM 以降: URL 付きで試行 → 403 なら imaraku URL を抜いて 1度リトライ
 
     背景: 2026-05-22〜23 に imaraku.github.io URL を含む daily-tweet が
     cache-buster クエリを足してもなお 403 を喰らった。X 側がこのドメインを
     bot 連投と判定して flag している疑い。6/1 まで投稿を抑えて reputation 自然回復を待つ。
+    ※ 月末ポイントツイート等が point.rakuten.co.jp(hb.afl) を持つので、6/1前でも
+      「URL付きで試す→ダメなら URL なしで通す」フォールバックで取りこぼしを防ぐ。
     """
     today_jst = datetime.datetime.now(JST).date()
 
     if today_jst < URL_INCLUDE_FROM:
-        # 6/1 以前: 先に URL を抜いてから投稿（無駄な 403 を踏まない）
-        no_url = _strip_imaraku_url_lines(text)
-        if no_url != text:
+        # 6/1 以前: imaraku URL（既知flag）は事前除去。それ以外のURLは付けて試す。
+        text2 = _strip_imaraku_url_lines(text)
+        if text2 != text:
             print(f"  [URL gate] {today_jst} < {URL_INCLUDE_FROM} のため imaraku URL を事前除去", file=sys.stderr)
-        ok, _ = _post_once(no_url)
-        return ok
+        ok, status = _post_once(text2)
+        if ok:
+            return True
+        if status != 403:
+            return False
+        # 403: 残るURL(point等)も諦めて URL なしで再投稿 → ツイート自体は必ず通す
+        bare = _strip_all_url_lines(text2)
+        if bare == text2:
+            return False  # 既に URL なし → これ以上手は無い
+        print("  [403 fallback] 残りのURLも除去して URLなしで再投稿…", file=sys.stderr)
+        ok2, _ = _post_once(bare)
+        return ok2
 
     # 6/1 以降: URL 付きで挑戦 → 403 ならフォールバック
     ok, status = _post_once(text)
