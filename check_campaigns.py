@@ -233,15 +233,17 @@ KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
     "brandavenue.rakuten.co.jp",
     "beauty.rakuten.co.jp",
     "event.rakuten.co.jp/genre/daily",
-    "event.rakuten.co.jp/brand/",
+    # 2026-05-30「広め」抽出のため brand/fashion/beauty を除外リストから開放
+    #   （Brand Day・ファッション・美容のキャンペーンを🆕枠で拾えるように）。
+    # "event.rakuten.co.jp/brand/",   ← 開放
     "event.rakuten.co.jp/drink/",
-    "event.rakuten.co.jp/fashion/",
+    # "event.rakuten.co.jp/fashion/", ← 開放
     "event.rakuten.co.jp/medicine/",
     "event.rakuten.co.jp/season/",
     "24.rakuten.co.jp",
     "point.rakuten.co.jp",
     "event.rakuten.co.jp/overseas/",
-    "event.rakuten.co.jp/beauty/",
+    # "event.rakuten.co.jp/beauty/",  ← 2026-05-30「広め」抽出のため開放
     "event.rakuten.co.jp/young/",
     "event.rakuten.co.jp/auto/",
     "event.rakuten.co.jp/superdeal/campaign/megadeal",
@@ -256,7 +258,11 @@ KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
 # event.rakuten.co.jp の主要セクション + coupon.rakuten.co.jp を網羅
 NEW_CAMPAIGN_URL_RE = re.compile(
     r'https://(?:'
-    r'event\.rakuten\.co\.jp/(?:campaign|genre|coupon|superdeal/campaign|sale)/[^"\'>\s]+'
+    # 2026-05-30: 楽天トップpageのバナー(市場お買い物系)を広く拾うためセクション拡張。
+    #   gift/father/mother(ギフト・季節), brand/bargain/fashion/beauty(セール・ブランド・美容),
+    #   pet(ペット), disney/sanrio/pokemon/marvel/starwars/moomin(キャラ特集) を追加。
+    #   車/不動産/カード/トラベル等は別ドメイン or is_non_market_url() で除外（ワガママ）。
+    r'event\.rakuten\.co\.jp/(?:campaign|genre|coupon|superdeal/campaign|sale|gift|father|mother|brand|bargain|pet|fashion|beauty|disney|sanrio|pokemon|marvel|starwars|moomin)/[^"\'>\s]+'
     r'|coupon\.rakuten\.co\.jp/[a-zA-Z0-9_\-]+/[^"\'>\s]+'
     r')'
 )
@@ -753,6 +759,25 @@ def is_category_nav_url(url: str) -> bool:
     return m.group(1).lower() in CATEGORY_NAV_TAILS
 
 
+# ─── ワガママ・フィルタ：楽天市場のお買い物に無関係なキャンペーンを除外 ───
+# 相棒の要望(2026-05-30): カード/トラベル/レンタカー/銀行/証券/保険/モバイル/
+# 車/不動産/ゴルフ等は今楽の対象外。大半は別ドメインで NEW_CAMPAIGN_URL_RE に
+# 当たらず自動除外されるが、event.rakuten.co.jp 配下に紛れる車/不動産等を明示的に弾く。
+NON_MARKET_PATTERNS = [
+    "/auto/", "/mycar", "/realestate", "household/realestate",
+    "/travel", "/rentalcar", "/insurance", "/hoken", "/golf",
+    # 念のためのドメインレベル安全網（通常は regex 段階で既に除外済み）
+    "card.rakuten.co.jp", "travel.rakuten.co.jp", "hoken.rakuten.co.jp",
+    "securities", "rakuten-bank", "network.mobile.rakuten",
+]
+
+
+def is_non_market_url(url: str) -> bool:
+    """楽天市場のお買い物に無関係なキャンペーン(車/トラベル/カード/金融等)なら True。"""
+    u = url.lower()
+    return any(p in u for p in NON_MARKET_PATTERNS)
+
+
 def extract_title_near_link(html: str, url: str) -> str:
     """リンク周辺のテキストからキャンペーン名を推定する（ベストエフォート）。"""
     # URLをエスケープしてその周辺100文字を取得
@@ -978,8 +1003,10 @@ def detect_new_campaigns(existing_new: list) -> list:
     ── 多重ガード（誤検出ゼロ優先）──
       ① is_known: 既知URL（marathon, eagles 等）はスキップ
       ② is_category_nav_url: 楽天クーポンのカテゴリ一覧ページはスキップ
+      ②' is_non_market_url: 市場お買い物に無関係（車/トラベル/カード/金融等）はスキップ
       ③ STRICT_ENDS / GRATITUDE_PHRASES: 終了確定ページはスキップ
       ④ ACTIVE_KEYWORDS が無いページはスキップ
+      ④' period_status=="expired": 「終了」表記なしで会期だけ過ぎたページはスキップ
       ⑤ name 重複・不正パターンはスキップ
       ⑥ 1ラン最大10件まで（暴走防止）
     """
@@ -1008,6 +1035,9 @@ def detect_new_campaigns(existing_new: list) -> list:
             # ② カテゴリナビページ
             if is_category_nav_url(url):
                 continue
+            # ②' ワガママ除外: 市場お買い物に無関係（車/トラベル/カード/金融等）
+            if is_non_market_url(url):
+                continue
             # 既存リストにあるならスキップ
             if url in existing_urls:
                 continue
@@ -1028,6 +1058,11 @@ def detect_new_campaigns(existing_new: list) -> list:
                 continue
             if any(p in page for p in GRATITUDE_PHRASES):
                 print(f"  🚫 過去開催のお礼ページ → スキップ: {url}")
+                continue
+            # ④' 日付ベース終了判定: 「終了」表記が無く会期だけ過ぎたページを弾く
+            #    （海外通販×DEAL のようなサイレント終了対策。owner の誤表示クレーム対応）
+            if period_status(page) == "expired":
+                print(f"  🚫 期間外（日付判定）→ スキップ: {url}")
                 continue
 
             # ⑤ 名前抽出＆バリデーション
