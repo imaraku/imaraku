@@ -34,5 +34,17 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
     "point": "要確認",
     "detected_at": "2026-05-29"
+  },
+  {
+    "name": "父の日特集（ポイントアップ）",
+    "url": "https://event.rakuten.co.jp/father/special/point",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
+  },
+  {
+    "name": "P&G まとめ買い 最大1,500円OFFクーポン",
+    "url": "https://event.rakuten.co.jp/mc/pg/coupon",
+    "point": "要確認",
+    "detected_at": "2026-05-30"
   }
 ]
