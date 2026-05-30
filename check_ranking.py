@@ -187,6 +187,7 @@ REGULAR_TWEETS = [
         "rank_label": "総合",
         "search_keyword": None,  # 総合は検索より楽天ランキングTOPページが自然
         "fallback_url": "https://ranking.rakuten.co.jp/",
+        "cta_line": "👇 今の楽天ランキングはこちら",  # 「総合ランキングの売れ筋」は重複するので個別指定
     },
 ]
 
@@ -268,10 +269,13 @@ def build_regular_tweet(entry: dict) -> str:
         fallback_url = add_affiliate(explicit_fallback)
     if not fallback_url:
         return f"{body}\n\n {hashtags(tags, max_tags=3)}"
+    # CTA は「人気の商品をチェック」(丸投げ感) をやめ、品目を名指しして具体化（相棒の要望 2026-05-30）。
+    # 総合ランキング等は cta_line で個別指定。それ以外は「{品目名}の売れ筋はこちら」。
+    cta = entry.get("cta_line") or f"👇 {entry['name']}の売れ筋はこちら"
     return (
         f"{body}\n"
         f"\n"
-        f"楽天市場で人気の商品をチェック👇\n"
+        f"{cta}\n"
         f"{fallback_url}\n"
         f" {hashtags(tags, max_tags=3)}"
     )
