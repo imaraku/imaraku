@@ -25,6 +25,7 @@ post_daily_tweet.py
 
 import os
 import sys
+import time
 import json
 import datetime
 import requests
@@ -324,19 +325,44 @@ def get_season_event(now: datetime.datetime) -> str | None:
 
 
 def _post_once(text: str) -> tuple[bool, int]:
-    """1回 X に投げてみる。(成功フラグ, ステータスコード) を返す。"""
+    """1回 X に投げる（Cloudflare 403/429/5xx は最大3回リトライ）。(成功, ステータス) を返す。
+    api.twitter.com の Cloudflare マネージドチャレンジ(403 "Just a moment")対策として
+    ブラウザ風 User-Agent を付与＋一時エラーをリトライ（2026-05-31）。"""
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-    resp = requests.post(
-        "https://api.twitter.com/2/tweets",
-        auth=auth,
-        json={"text": text},
-        headers={"Content-Type": "application/json"},
-    )
-    if resp.status_code == 201:
-        print(f"✅ 投稿成功: {resp.json()['data']['id']}")
-        return True, 201
-    print(f"❌ 投稿失敗: {resp.status_code} {resp.text}", file=sys.stderr)
-    return False, resp.status_code
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/124.0.0.0 Safari/537.36"),
+    }
+    last_status = 0
+    for attempt in range(1, 4):
+        try:
+            resp = requests.post(
+                "https://api.twitter.com/2/tweets",
+                auth=auth, json={"text": text}, headers=headers, timeout=20,
+            )
+        except requests.RequestException as e:
+            print(f"❌ 投稿例外(試行{attempt}/3): {e}", file=sys.stderr)
+            if attempt < 3:
+                time.sleep(5 * attempt)
+                continue
+            return False, 0
+        if resp.status_code == 201:
+            print(f"✅ 投稿成功: {resp.json()['data']['id']}")
+            return True, 201
+        last_status = resp.status_code
+        is_cf = resp.status_code == 403 and (
+            "Just a moment" in resp.text or "cloudflare" in resp.text.lower()
+            or "cf_chl" in resp.text)
+        transient = is_cf or resp.status_code in (429, 500, 502, 503)
+        reason = "Cloudflareチャレンジ" if is_cf else resp.text[:160]
+        print(f"❌ 投稿失敗(試行{attempt}/3): {resp.status_code} {reason}", file=sys.stderr)
+        if attempt < 3 and transient:
+            time.sleep(5 * attempt)
+            continue
+        return False, resp.status_code
+    return False, last_status
 
 
 # imaraku.github.io URL を本文に含めるかの日付ゲート。
