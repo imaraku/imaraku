@@ -18,7 +18,7 @@
   "pokemon_lottery": false,
   "mother_day": false,
   "father_day": true,
-  "ochugen": false,
+  "ochugen": true,
   "oseibo": false,
   "osechi": false,
   "xmas": false,
