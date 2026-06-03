@@ -271,6 +271,34 @@ w_victory / eagles / vissel / adidas / nike / normal
   系の検知ロジックを将来的に足すと再発防止になる
 - 「コードは正しく動いてる風」「成功で返ってる」≠「ユーザー価値が出ている」
 
+### ⚠️ 15. X API (api.twitter.com) は Cloudflare で間欠的に 403 を返す
+2026-05-31 に「カテゴリTOP3ツイート」が2連続失敗。ログ実視で真因判明：
+api.twitter.com への投稿が **Cloudflare マネージドチャレンジ（403 "Just a moment…"）**
+で弾かれていた。GitHub Actions のデータセンターIP＋素の `python-requests` の
+デフォルト User-Agent が「いかにもbot」と判定されるのが原因。重複でもコードbugでも
+認証エラーでもない（最初は重複403を疑ったが、ログ本文を見て確定した）。
+
+【なぜ気づきにくいか】
+- 間欠的（全リクエストではなく一部だけ challenge）。多くは通るので「たまに失敗」に見える。
+- cron回数が多い経路（daily-tweet / ranking）はリトライで拾えて表面化しない。
+- カテゴリは 1日2回 cron だけ → 両方 challenge に当たって全滅 → 初めて顕在化した。
+
+✅ **対策（全4投稿スクリプトに適用済 2026-05-31）**:
+post_daily_tweet / check_ranking / post_marathon_alert / post_category_ranking の
+`_post_once`（または `post_tweet`）に:
+  1. **ブラウザ風 User-Agent** を付与（bot スコアを下げ challenge 率を減らす）
+  2. **Cloudflare403 / 429 / 5xx は最大3回リトライ**（5s,10s バックオフ＋timeout=20）
+  3. 重複403等の決定的エラーはリトライしない（無駄撃ち防止）
+判定: `403 かつ body に "Just a moment" / "cloudflare" / "cf_chl" を含む` → Cloudflare とみなす。
+
+✅ **教訓**:
+- 「post_tweet が False」の真因は status code だけでなく **body を見ないと分からない**
+  （地雷#11「success を信用するな」の"失敗"版＝失敗の中身も見ろ）。
+- これは**緩和策**。Cloudflare が強化したら UA だけでは突破できなくなる可能性あり。
+  その時は専用ライブラリ(tweepy 等)や別経路を検討。**周期的に投稿成功率を確認**する。
+- ログ本文は認証必須。gh 未導入時は **Chrome MCP でジョブログをスクショ→読む**のが速い
+  （`javascript_tool` は query string を含むと拡張のセーフティでブロックされることがある）。
+
 ### 🔗 補足: 動的URL（月毎に日付が変わるキャンペーン）の自動追従
 楽天の一部キャンペーンは URL 末尾が `/YYYYMMDD/` 形式で月毎に変わる
 （例: `mobiledeal/20260509/`）。次のマラソンで URL が変わると、ハードコード
