@@ -1,0 +1,66 @@
+name: 楽天スーパーSALE 自動アナウンス
+
+on:
+  schedule:
+    # JST 14:00-20:00 を毎時 fire（UTC 5-11時）。緩い時間指定＋dedup で実投稿は各1回。
+    # スクリプト側 detect() が「先行日／一般開始日」だけに絞るので、平常日は何もしない。
+    - cron: '0 5,6,7,8,9,10,11 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '時間ゲートを無視して即実行（テスト用。日付/dedup判定は維持）'
+        type: boolean
+        default: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: supersale-alert
+  cancel-in-progress: false
+
+jobs:
+  supersale-alert:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests requests-oauthlib
+
+      - name: スーパーSALEアナウンス
+        id: ss
+        env:
+          TWITTER_API_KEY:             ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:          ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:        ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          SUPERSALE_FORCE:             ${{ inputs.force }}
+        run: python post_supersale_alert.py
+
+      - name: アナウンス履歴をコミット
+        if: steps.ss.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add supersale_announced.json
+          git commit -m "chore: スーパーSALEアナウンス履歴を更新 [skip ci]"
+          for i in 1 2 3; do
+            if git pull --rebase origin main && git push; then
+              echo "push 成功（試行 $i）"
+              exit 0
+            fi
+            echo "push リトライ $i..."
+            sleep $((i * 5))
+          done
+          echo "push 3回失敗" && exit 1
