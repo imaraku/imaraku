@@ -69,6 +69,16 @@ def aff(url):
     return f"https://hb.afl.rakuten.co.jp/hgc/{RAKUTEN_AFFILIATE_ID}/?pc={e}&m={e}"
 
 
+def parse_point_cap(page_html):
+    """買い回りの獲得上限ポイント数を抽出（例 '10,000'）。取れなければ None。
+    「獲得上限ポイント数： 10,000ポイント」の専用ラベルで一意に拾う（誤検出回避）。
+    買い回りの倍率は 1+9ショップ＝最大10倍で一定のため定数扱い（自動パースは SPU の
+    最大47倍と混同するので避ける）。"""
+    clean = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', _html.unescape(page_html)))
+    m = re.search(r'獲得上限ポイント数[^0-9]{0,12}([\d,]{3,7})\s*ポイント', clean)
+    return m.group(1) if m else None
+
+
 def detect(now, page_html):
     """(一般レンジ(start,end) or None, 先行開始 or None) を返す。"""
     clean = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', _html.unescape(page_html)))
@@ -128,26 +138,30 @@ def _fmt(dt):
     return f"{dt.month}/{dt.day}({WD[dt.weekday()]})"
 
 
-def tweet_senko(senko_start, general_start, url):
+def tweet_senko(senko_start, general_start, cap, url):
+    cap_line = (f"【上限】{cap}ポイント／買い回り最大10倍\n" if cap
+                else "【倍率】買い回り最大10倍\n")
     return (
-        "⚡楽天モバイルユーザーは“今夜”先行スタート！\n\n"
+        "⚡楽天モバイルユーザーは“今夜”先行！\n\n"
         "🛒楽天スーパーSALE\n"
         f"モバイル契約者は本日{_fmt(senko_start)}{senko_start.hour}:00〜先行で参加OK🎉\n"
-        f"（一般開始は明日{_fmt(general_start)}{general_start.hour}:00〜）\n\n"
-        "エントリー＆詳細はこちら👇\n"
+        f"（一般は明日{_fmt(general_start)}{general_start.hour}:00〜）\n"
+        f"{cap_line}\n"
+        "エントリー＆詳細👇\n"
         f"{url}\n"
         "#楽天スーパーセール #楽天モバイル #ポイ活"
     )
 
 
-def tweet_general(general_start, general_end, url):
+def tweet_general(general_start, general_end, cap, url):
+    cap_line = f"【上限】{cap}ポイント\n" if cap else ""
     return (
         f"🔥本日{general_start.hour}:00開幕！楽天スーパーSALE\n\n"
         f"🛒{_fmt(general_start)}{general_start.hour}:00〜"
         f"{_fmt(general_end)}{general_end.hour}:{general_end.minute:02d}\n"
-        "年に数回の最大級セール✨\n"
-        "半額・数量限定アイテムや\n"
-        "ショップ買いまわりでポイントUP\n\n"
+        f"{cap_line}"
+        "【倍率】買い回り最大10倍\n"
+        "半額・数量限定も多数✨\n\n"
         "まずはエントリー👇\n"
         f"{url}\n"
         "#楽天スーパーセール #ポイ活 #楽天市場"
@@ -197,7 +211,8 @@ def main():
         return
 
     general, senko = detect(now, page)
-    print(f"検出: 一般開始={general[0] if general else None} 先行開始={senko}")
+    cap = parse_point_cap(page)
+    print(f"検出: 一般開始={general[0] if general else None} 先行開始={senko} 上限={cap}")
     if not general:
         print("スーパーSALEの開催日程を検出できず → 何もしない")
         _set_output("changed", "false")
@@ -213,7 +228,7 @@ def main():
         if announced.get("senko") == key:
             print("先行アナウンスは投稿済み → スキップ")
         else:
-            text = tweet_senko(senko, general[0], url)
+            text = tweet_senko(senko, general[0], cap, url)
             print(f"\n[モバイル先行]\n{text}\n")
             if _post_once(text)[0]:
                 announced["senko"] = key
@@ -225,7 +240,7 @@ def main():
         if announced.get("general") == key:
             print("一般アナウンスは投稿済み → スキップ")
         else:
-            text = tweet_general(general[0], general[1], url)
+            text = tweet_general(general[0], general[1], cap, url)
             print(f"\n[一般開幕]\n{text}\n")
             if _post_once(text)[0]:
                 announced["general"] = key
