@@ -6,9 +6,11 @@ post_marathon_alert.py
 """
  
 import os
+import re
 import sys
 import time
 import json
+import html as _html
 import datetime
 import requests
 from requests_oauthlib import OAuth1
@@ -144,39 +146,77 @@ def post_tweet(text: str) -> bool:
     return ok2
  
  
-def build_tweet(special_days: list) -> str:
-    """状況に応じたツイート文を生成する。
+WD_JP = ["月", "火", "水", "木", "金", "土", "日"]
+
+
+def _fmt_dt(dt):
+    return f"{dt.month}/{dt.day}({WD_JP[dt.weekday()]}){dt.hour}:{dt.minute:02d}"
+
+
+def marathon_period_str():
+    """marathon_schedule.json の pointup 期間を「M/D(曜)H:MM〜M/D(曜)H:MM」で返す。無ければ None。"""
+    if not os.path.exists(MARATHON_SCHEDULE_FILE):
+        return None
+    try:
+        with open(MARATHON_SCHEDULE_FILE) as f:
+            s = json.load(f)
+        ps = datetime.datetime.fromisoformat(s["pointup_start"])
+        pe = datetime.datetime.fromisoformat(s["pointup_end"])
+        if ps.tzinfo is None:
+            ps = ps.replace(tzinfo=JST)
+        if pe.tzinfo is None:
+            pe = pe.replace(tzinfo=JST)
+        return f"{_fmt_dt(ps)}〜{_fmt_dt(pe)}"
+    except Exception:
+        return None
+
+
+def parse_marathon_cap():
+    """マラソンページから獲得上限ポイント数を抽出（例 '10,000'）。取れなければ None（行を省略）。
+    スーパーSALEと同じ「獲得上限ポイント数：X,XXXポイント」ラベル想定。タグ除去後に検索。
+    ※マラソン開催時にラベルを実機確認して微調整する（非開催時は取得不可で省略＝安全）。"""
+    try:
+        t = requests.get(MARATHON_URL, headers=HEADERS, timeout=15).text
+    except Exception:
+        return None
+    clean = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', _html.unescape(t)))
+    m = re.search(r'獲得上限ポイント数[^0-9]{0,12}([\d,]{3,7})\s*ポイント', clean)
+    return m.group(1) if m else None
+
+
+def build_tweet(special_days, period=None, cap=None) -> str:
+    """マラソン事前告知ツイートを生成。【期間】【上限】【倍率】を付与（相棒の要望 2026-06-05）。
 
     ※ X 重複検出回避: 今夜の日付を本文に埋め込みマラソン毎にユニークに。
-       マラソンは月2回程度なので 30日窓で複数回ヒットする可能性が高い。
     """
     now = datetime.datetime.now(JST)
-    day_jp = "日月火水木金土"[now.weekday()]
+    day_jp = WD_JP[now.weekday()]   # 旧「日月火水木金土」[weekday()] は曜日が1日ズレるバグだった
     date_prefix = f"📅 今夜 {now.month}/{now.day}({day_jp}) 20:00 START!\n\n"
 
+    info = ""
+    if period:
+        info += f"🛒{period}\n"
+    if cap:
+        info += f"【上限】{cap}ポイント\n"
+    info += "【倍率】買い回り最大10倍\n"
+
     if special_days:
-        # マラソン × 特別日 → ビッグチャンス！
         events = "・".join(special_days)
         return (
             f"{date_prefix}"
-            f"🔥 お買い物マラソン × {events}！\n"
-            "ポイントを最大限稼げるビッグチャンス🎯\n"
-            "\n"
+            f"🔥お買い物マラソン × {events}！\n"
+            f"{info}"
+            "ポイント最大のビッグチャンス🎯\n\n"
             "エントリーまとめ👇\n"
             f"{SITE_URL}\n"
             f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
         )
 
-    # 通常のマラソン事前告知（SPU控えめ、eギフト追記）
     return (
         f"{date_prefix}"
-        "🏃 お買い物マラソン、もうすぐ開幕！\n"
-        "\n"
-        "注文前に必ずエントリーを✅\n"
-        "\n"
-        "買いたいものがない方も\n"
-        "楽券・Appleギフトで買い周りOK！\n"
-        "\n"
+        "🏃お買い物マラソン、もうすぐ開幕！\n"
+        f"{info}"
+        "注文前に必ずエントリーを✅\n\n"
         "20時から「今楽」でまとめて👇\n"
         f"{SITE_URL}\n"
         f" {hashtags(['core', 'marathon', 'entry'], max_tags=3)}"
@@ -264,9 +304,11 @@ def main():
         return
 
     special_days = get_special_days(now)
-    print(f"特別な日: {special_days if special_days else 'なし'}")
+    period = marathon_period_str()
+    cap = parse_marathon_cap()
+    print(f"特別な日: {special_days if special_days else 'なし'} / 期間: {period} / 上限: {cap}")
  
-    tweet = build_tweet(special_days)
+    tweet = build_tweet(special_days, period, cap)
     print(f"\n投稿内容:\n{tweet}\n")
     if post_tweet(tweet):
         try:
