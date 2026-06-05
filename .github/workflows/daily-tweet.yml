@@ -9,7 +9,9 @@ on:
     # 【2026-05-26 backup復活】 5/26 朝の cron drop で全0fireの事故が発生。
     # ranking-check と同じく :30 backup を追加して取りこぼし救済。
     # 1日8 attempts/日 (4時刻×2分) に増加するが、posted_slots.json で重複排除済。
-    - cron: '0,30 7,8,9,10 * * *'
+    # 2026-06-05: 12時スロット復活。昼(UTC2-5=JST11:00-14:30)＋夕(UTC7-10=JST16:00-19:30)を毎時2回。
+    # SLOT_WINDOWS で昼(10-16)/夕(16-22)に振り分け、posted_slots.json で各スロット1回に絞る。
+    - cron: '0,30 2,3,4,5,7,8,9,10 * * *'
   # 手動テスト用
   workflow_dispatch:
 
