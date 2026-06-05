@@ -23,5 +23,6 @@
   "osechi": false,
   "xmas": false,
   "valentine": false,
-  "whiteday": false
+  "whiteday": false,
+  "supersale": true
 }
