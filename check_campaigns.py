@@ -594,6 +594,32 @@ def detect_pokemon_lottery(now: datetime.datetime) -> bool:
     return False
 
 
+SUPERSALE_URL = "https://event.rakuten.co.jp/campaign/supersale/"
+
+
+def detect_supersale_active(now: datetime.datetime) -> bool:
+    """楽天スーパーSALE公式ページの開催レンジに now が入っていれば True。
+    「20:00開始 / 翌日以降 01-02時台終了 / 3日以上」のレンジ（=スーパーSALE本体の形）で判定。
+    取得失敗・未検出は False（保守的＝不明は非開催。デフォルトは保守的にの原則）。
+    ※ _RANGE_RE / _parse_jst を再利用。2026-06-05 実ページで True を確認済み。"""
+    page = fetch(SUPERSALE_URL)
+    if not page:
+        print("  ⚠️ スーパーSALEページ取得失敗 → 非開催扱い")
+        return False
+    import html as _html
+    text = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', _html.unescape(page)))
+    for start_txt, end_txt in _RANGE_RE.findall(text):
+        s = _parse_jst(start_txt, now.year)
+        e = _parse_jst(end_txt, now.year)
+        if not s or not e:
+            continue
+        if e < s:  # 年跨ぎ補正
+            e = e.replace(year=e.year + 1)
+        if s.hour == 20 and e.hour in (1, 2) and (e - s).days >= 3 and s <= now <= e:
+            return True
+    return False
+
+
 def marathon_flags_from_schedule(schedule: dict) -> tuple[bool | None, bool | None]:
     """スケジュールから現在時刻基準で (marathon, marathon_pointup) を計算。
     スケジュール無効の場合は (None, None) を返し、呼び出し側はキーワード判定にフォールバックする。"""
@@ -1245,6 +1271,11 @@ def main():
     seasonal = detect_seasonal_events(now_jst)
     for k, v in seasonal.items():
         results[k] = v
+
+    # 1-b5. 楽天スーパーSALE 開催判定（公式ページの開催レンジに今入っているか）
+    print("\n── 1-b5. スーパーSALE 判定 ──")
+    results["supersale"] = detect_supersale_active(now_jst)
+    print(f"  [supersale] {'✓ 開催中' if results['supersale'] else '✗ 非開催'}")
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
     if not results.get("marathon", False):
