@@ -630,6 +630,39 @@ def tweet_marathon_normal() -> str:
     )
 
 
+def tweet_supersale_big_chance(special_days: list, season_event: str = None) -> str:
+    """スーパーSALE × 特別日（0と5/1日/18日）= 最強クラスの買い時。"""
+    events = season_event if season_event else "・".join(special_days)
+    return (
+        f"{daily_lead_in()}"
+        "🔥 今日は最強クラスの買い時！\n"
+        f"楽天スーパーSALE × {events}✨\n"
+        "\n"
+        "🛒 買い回り最大10倍\n"
+        "半額・数量限定も多数💡\n"
+        "\n"
+        "エントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', 'supersale', 'poikatsu'], max_tags=3)}"
+    )
+
+
+def tweet_supersale() -> str:
+    """スーパーSALE開催中（特別日でない通常のSALE日）。"""
+    return (
+        f"{daily_lead_in()}"
+        "🛒 楽天スーパーSALE開催中！\n"
+        "\n"
+        "買い回り最大10倍✨\n"
+        "半額・数量限定も狙い目💡\n"
+        "エントリーは早いほどお得！\n"
+        "\n"
+        "まとめてチェック👇\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', 'supersale', 'poikatsu'], max_tags=3)}"
+    )
+
+
 def tweet_wonderful_day() -> str:
     return (
         f"{daily_lead_in()}"
@@ -1122,12 +1155,13 @@ def main():
     vissel           = status.get("vissel",           False)
     adidas_on        = status.get("adidas",           False)
     nike_on          = status.get("nike",             False)
+    supersale        = status.get("supersale",        False)
     special_days     = get_special_days(now)
     season_event     = get_season_event(now)
     month_end_phase  = get_month_end_phase(now)
 
     print(f"  marathon={marathon}, marathon_pointup={marathon_pointup}, eagles={eagles}, vissel={vissel}")
-    print(f"  adidas={adidas_on}, nike={nike_on}, special={special_days}, season={season_event}, weekday={weekday}, month_end={month_end_phase}")
+    print(f"  adidas={adidas_on}, nike={nike_on}, supersale={supersale}, special={special_days}, season={season_event}, weekday={weekday}, month_end={month_end_phase}")
 
     SEASON_TWEET_MAP = {
         "年始":         tweet_new_year,
@@ -1196,6 +1230,16 @@ def main():
         # エントリー期間のみ → まずエントリーを促す（まだ買わなくてOK）
         tweet = tweet_marathon_entry_only()
         label = "マラソン（エントリー期間のみ・ポイントアップ未開始）"
+
+    # ★ 楽天スーパーSALE（マラソンと並ぶ大型買い回りイベント。開催中はヘッドライン優先）
+    elif supersale and has_special:
+        # スーパーSALE × 特別日(0と5/1日/18日) = 最強クラスの日 → ビッグチャンス
+        tweet = tweet_supersale_big_chance(special_days, season_event)
+        label = f"スーパーSALE×{'・'.join(special_days) if special_days else season_event}（最強の日）"
+
+    elif supersale:
+        tweet = tweet_supersale()
+        label = "スーパーSALE開催中"
 
     # ★ 母の日カウントダウン（D-14, D-7, D-3, D-1 の特定日のみ発火）
     elif (lambda d: d > 0 and d in (14, 7, 3, 1))(
