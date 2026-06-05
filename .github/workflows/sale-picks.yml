@@ -1,0 +1,74 @@
+name: セール文脈まとめツイート
+
+on:
+  schedule:
+    # JST 14:00/14:30/15:00/15:30 (UTC 5:00-6:30) に試行（cron取りこぼし対策）。
+    # 大型セール開催中のみ・1日1回(sale_picks_posted.json で日次重複排除)。
+    # daily(昼12/夕18) の“間”の時間帯に置いて露出を分散する。
+    - cron: '0,30 5,6 * * *'
+  # 手動テスト用（SALE_PICKS_FORCE=true で時間/重複ガードを無視）
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "強制実行（時間窓・重複を無視）"
+        required: false
+        default: "false"
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: write   # sale_picks_posted.json をコミットするため
+
+concurrency:
+  group: sale-picks
+  cancel-in-progress: false
+
+jobs:
+  post-sale-picks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests requests-oauthlib
+
+      - name: セール文脈まとめを投稿
+        env:
+          TWITTER_API_KEY:             ${{ secrets.TWITTER_API_KEY }}
+          TWITTER_API_SECRET:          ${{ secrets.TWITTER_API_SECRET }}
+          TWITTER_ACCESS_TOKEN:        ${{ secrets.TWITTER_ACCESS_TOKEN }}
+          TWITTER_ACCESS_TOKEN_SECRET: ${{ secrets.TWITTER_ACCESS_TOKEN_SECRET }}
+          RAKUTEN_APP_ID:              ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY:          ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          SALE_PICKS_FORCE:            ${{ github.event.inputs.force }}
+        run: python post_sale_picks.py
+
+      - name: 投稿履歴をコミット
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if [ -f sale_picks_posted.json ]; then
+            git add sale_picks_posted.json
+            if git diff --cached --quiet; then
+              echo "履歴に変更なし"
+              exit 0
+            fi
+            git commit -m "chore: セール文脈まとめ 投稿履歴を更新 [skip ci]"
+            for i in 1 2 3; do
+              if git pull --rebase origin main && git push; then
+                echo "push 成功（試行 $i）"
+                exit 0
+              fi
+              sleep $((i * 5))
+            done
+            echo "push 3回失敗" && exit 1
+          fi
