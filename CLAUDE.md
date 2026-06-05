@@ -432,6 +432,7 @@ imaraku/                        ← リポジトリルート
 | `mobilebonus` | 楽天モバイル限定+2倍（常設ではない） | false |
 | `repeat_purchase` | リピート購入 +1倍（マラソン期間中のみ開催） | false |
 | `guerrilla` | ゲリラ 全店+1倍（不定期） | false |
+| `supersale` | 楽天スーパーSALE開催中（公式ページの開催レンジを `detect_supersale_active` が自動判定） | false |
 | `superdeal_4h` | スーパーDEAL 4時間限定（マラソン期間中のみ開催） | false |
 | `mobiledeal` | 楽天モバイル×スーパーDEAL（マラソン期間中のみ開催） | false |
 | `pokemon_lottery` | 楽天ブックスのポケカ抽選（受付期間中のみ true） | false |
@@ -493,6 +494,8 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 1. マラソン（ポイントアップ中）× 特別日 → ビッグチャンスツイート
 2. マラソン（ポイントアップ中）         → eギフト/Appleギフト活用ツイート
 3. マラソン（エントリー期間のみ）        → 事前エントリー促進ツイート（まだ買わなくてOK）
+3b. スーパーSALE × 特別日(0と5/1日/18日) → 最強クラスのビッグチャンスツイート（big_chance）
+3c. スーパーSALE開催中                    → SALE文脈ツイート（大型買い回りとしてマラソン直後の高優先）
 4. 月末前日（マラソン無し）              → 期間限定ポイント失効注意ツイート
 5. 月末最終日（マラソン無し）            → 期間限定ポイント失効目前ツイート
 6. ワンダフルデー（18日）               → ワンダフルデーツイート
@@ -504,14 +507,25 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 12. 日曜 & nike開催中                   → NIKE特集ツイート
 13. 通常日                              → 39ショップ・リピート・ゲリラ告知
 
-### slot 設計（2026-05-23 改修後・暫定）
-- **18時スロット** (JST 16:00-19:59): 通勤・夕方ゴールデンタイム — **現在これだけ稼働**
-- ❌ 0時 / 12時 / 20時スロットは廃止（暫定）
-  - 0時 / 20時は 2026-05-20 にX APIクレジット節約で廃止
-  - 12時は 2026-05-23 に X URL reputation 悪化を止めるため一時休止
-    → 1日1投稿に絞って 403 連鎖を物理ゼロに → reputation 自然回復を待つ
-  - reputation 回復後（imaraku URL 付き投稿が 1st try で通るようになったら）、
-    12時スロットを再開する予定（SLOT_WINDOWS と daily-tweet.yml cron 両方を戻す）
+### slot 設計（2026-06-05 改修後）
+- **通常日**: 昼12時(JST10-16) + 夕18時(JST16-22) の **2投稿**。窓は cron 遅延着地を見込んで広め(地雷#5/#16)
+- **最強の日**(=大型セール×0と5の日): 上記に **夜20時**(JST20-23) を加えた **3投稿**。
+  夕(18)窓を16-20に狭め夜(20)20-23と重複させない。`NORMAL_SLOTS` / `PEAK_SLOTS` を `is_peak_day()` で切替
+- 履歴: 5/23にX reputation悪化で18時一本に圧縮 → 6/1経過＋Cloudflare対策(地雷#15)完了で
+  2026-06-05に12時復活＋ピーク日20時を新設
+- 各スロットは `daily_lead_in` で文面ユニーク化(地雷#12)、`posted_slots.json` で各1回(二重投稿なし)
+
+### 🔥「最強の日」の定義と peak-day ブースト（2026-06-05 相棒の定義）
+相棒の感覚で「最強クラスの買い時」は次の重なり:
+- **お買い物マラソン**: 月1回目のマラソン × 0と5のつく日
+- **スーパーSALE**: セール中の最初の0と5のつく日（マラソンの最強日と「同等以上」）
+
+実装 `is_peak_day(now, status)` = **(marathon_pointup or supersale) かつ day%5==0** で広く判定
+（「月1回目」「最初の」までは厳密判定せず、セール×0と5 を最強日とする）。最強の日は:
+- daily-tweet が **3スロット**(昼/夕/夜) で SALE/マラソンの big_chance を投稿
+- `post_sale_picks.py`(A案) が売れ筋まとめを別角度で1本
+→ 露出を最大化する。※ピーク日は同じ big_chance 文面が時間帯ヘッダ違いで複数出るため、
+  繰り返し感が気になれば夕/夜版の文面を分ける余地あり（将来の改善ポイント）。
 ```
 
 ### 月末2日の期間限定ポイントツイートについて
@@ -527,9 +541,10 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 | ワークフロー | cron（UTC） | JST換算 / 戦略 |
 |---|---|---|
 | check-campaigns | `0 15,17,19,21,23,1,3,5,7,9,11,13 * * *` | 2時間ごと |
-| daily-tweet | `5 7,8,9,10 * * *` | **JST 16-19時のみ 4 fire/日**＋slot dedup (1スロット: 18時のみ。URL reputation 回復まで暫定) |
+| daily-tweet | `0,30 2,3,4,5,7,8,9,10,11,12,13 * * *` | 昼(JST11-14:30)/夕(16-19:30)/夜(20-22:30)＋slot dedup。通常日は昼12/夕18、最強の日は夜20も |
 | marathon-preannounce | `30 10 * * *` / `40 10 * * *` / `50 10 * * *` | 19:30/19:40/19:50 JST 冗長fire |
 | ranking-check | `0,30 0,3,6,9,11,13,15,18 * * *` | 8時刻×2 (16fire/日) |
+| sale-picks | `0,30 5,6 * * *` | JST14-15時、セール中のみ1日1回（売れ筋まとめ・dedup） |
 
 **重要**: daily-tweet は cron 取りこぼし対策で毎時2回試行する設計。
 スクリプト側で `current_slot()` がスロット判定（0/12/18/20時）し、
@@ -566,14 +581,22 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 新しい cron / LaunchAgent / 別サーバー上のbot / n8n / Buffer 等を追加する時は、
 **必ずこの表に追記する**。二重投稿の温床になる。
 
-### 稼働中の自動投稿経路（2026-04-18 現在）
+### 稼働中の自動投稿経路（2026-06-05 現在）
 
 | 経路 | 実体 | スケジュール | 停止方法 |
 |---|---|---|---|
-| GitHub Actions: daily-tweet | `.github/workflows/daily-tweet.yml` → `post_daily_tweet.py` | 0/12/18/20時 JST | ワークフローを disable |
-| GitHub Actions: marathon-preannounce | `.github/workflows/marathon-preannounce.yml` → `post_marathon_alert.py` | 19:50 JST | 同上 |
-| GitHub Actions: ranking-check | `.github/workflows/ranking-check.yml` → `check_ranking.py` | 3時間ごと | 同上 |
-| GitHub Actions: post-pokemon-lottery | `.github/workflows/post-pokemon-lottery.yml` → `post_pokemon_lottery.py` | 手動 | 実行しない |
+| GitHub Actions: daily-tweet | `daily-tweet.yml` → `post_daily_tweet.py` | 昼12/夕18時 JST（最強の日は夜20時も） | ワークフローを disable |
+| GitHub Actions: marathon-preannounce | `marathon-preannounce.yml` → `post_marathon_alert.py` | 19:30-19:50 JST | 同上 |
+| GitHub Actions: ranking-check | `ranking-check.yml` → `check_ranking.py` | 3時間ごと | 同上 |
+| GitHub Actions: category-ranking | `category-ranking.yml` → `post_category_ranking.py` | 9時台 JST | 同上 |
+| GitHub Actions: supersale-alert | `supersale-alert.yml` → `post_supersale_alert.py` | スーパーSALE開始前後 14-20時 JST | 同上 |
+| GitHub Actions: sale-picks | `sale-picks.yml` → `post_sale_picks.py` | セール中 14-15時 JST（1日1回・売れ筋まとめ） | 同上 |
+| GitHub Actions: post-pokemon-lottery | `post-pokemon-lottery.yml` → `post_pokemon_lottery.py` | 手動 | 実行しない |
+
+⚠️ **未整理（2026-06-05 確認・要登録）**: 上記以外に `mega-chance.yml` / `monthly-pay.yml` /
+`point-usage.yml` / `room-daily.yml` / `travel-campaign.yml` の cron が稼働中。別セッションで
+追加された投稿系の疑い。**新規自動化の前に、これらが何をいつ投稿するか確認し、この表へ統合すること**
+（二重投稿・投稿過多の点検のため）。`mild-diff.yml` はサイト更新のみ（X投稿経路ではない）。
 
 ### 過去に存在したが **廃止済** の自動化（掘り起こし禁止）
 
