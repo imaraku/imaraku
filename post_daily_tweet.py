@@ -165,19 +165,34 @@ def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str
 # 「今日のこのスロットは既に投稿済か」を判定して二重投稿を防ぐ。
 
 # 各スロットの「許容投稿時間帯」: スロット名 → (開始hour, 終了hour)
-SLOT_WINDOWS = [
-    # 2026-06-05: reputation 回復期(〜6/1)＋Cloudflare対策(地雷#15)完了により 12時スロットを復活。
-    # 1日2投稿(昼+夕)に戻す。窓は cron 遅延着地も拾えるよう広めに取る（地雷#5/#16）。
-    # ※ピーク日(最強の日)はさらに追加スロットで露出を増やす設計（peak-day boost）。
+# 通常日のスロット: 昼+夕の2投稿。窓は cron 遅延着地(地雷#5/#16)も拾えるよう広めに取る。
+NORMAL_SLOTS = [
     ("12", 10, 16),  # 昼スロット JST 10:00-15:59
-    ("18", 16, 22),  # 夕スロット JST 16:00-21:59
+    ("18", 16, 22),  # 夕スロット JST 16:00-21:59（遅延着地20-21時も救済）
+]
+# 最強の日(=大型セール×0と5の日)のスロット: 昼+夕+夜の3投稿で露出を増やす。
+# 夕(18)を16-20に狭め、夜(20)を20-23に新設して窓を重複させない。
+PEAK_SLOTS = [
+    ("12", 10, 16),  # 昼スロット JST 10:00-15:59
+    ("18", 16, 20),  # 夕スロット JST 16:00-19:59
+    ("20", 20, 23),  # 夜スロット JST 20:00-22:59（ピーク日のみ）
 ]
 
 
-def current_slot(now: datetime.datetime):
-    """現在時刻がどのスロットに該当するかを返す（該当なしなら None）。"""
+def is_peak_day(now: datetime.datetime, status: dict) -> bool:
+    """最強の日 = 大型セール(マラソンpointup or スーパーSALE)開催中 × 0と5のつく日。
+    相棒の定義: 月1回目マラソン×0と5 / スーパーSALEの最初の0と5 が最強クラス。
+    （ここでは「セール×0と5」で広く判定。1日/18日は通常スロットで big_chance になる）"""
+    sale = status.get("marathon_pointup", False) or status.get("supersale", False)
+    return bool(sale) and (now.day % 5 == 0)
+
+
+def current_slot(now: datetime.datetime, peak: bool = False):
+    """現在時刻がどのスロットに該当するかを返す（該当なしなら None）。
+    peak=True（最強の日）なら夜20時スロットを加えた3枠で判定する。"""
     h = now.hour
-    for name, start, end in SLOT_WINDOWS:
+    windows = PEAK_SLOTS if peak else NORMAL_SLOTS
+    for name, start, end in windows:
         if start <= h < end:
             return name
     return None
@@ -1135,20 +1150,22 @@ def main():
 
     # 🛡️ スロット重複排除: 冗長cronで取りこぼし救済しつつ、二重投稿を物理的に防ぐ
     today = now.strftime("%Y-%m-%d")
-    slot = current_slot(now)
+    status           = load_status()
+    # 最強の日(大型セール×0と5)はスロットを増やして露出を上げる（peak-day boost）
+    peak = is_peak_day(now, status)
+    slot = current_slot(now, peak)
     if slot is None:
-        print(f"  → 投稿対象スロット外（{now.strftime('%H:%M')} JST）→ スキップ")
+        print(f"  → 投稿対象スロット外（{now.strftime('%H:%M')} JST, peak={peak}）→ スキップ")
         return
     if is_slot_posted(slot, today):
         print(f"  → 本日のスロット {slot}時 は既に投稿済 → スキップ")
         return
-    print(f"  → 対象スロット: {slot}時")
+    print(f"  → 対象スロット: {slot}時（peak={peak}）")
 
     # テンプレに「日替わり文脈行」を渡すためスロット情報をモジュールスコープに公開
     global _CURRENT_SLOT
     _CURRENT_SLOT = slot
 
-    status           = load_status()
     marathon         = status.get("marathon",         False)
     marathon_pointup = status.get("marathon_pointup", False)
     eagles           = status.get("eagles",           False)
