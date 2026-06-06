@@ -597,15 +597,16 @@ def detect_pokemon_lottery(now: datetime.datetime) -> bool:
 SUPERSALE_URL = "https://event.rakuten.co.jp/campaign/supersale/"
 
 
-def detect_supersale_active(now: datetime.datetime) -> bool:
-    """楽天スーパーSALE公式ページの開催レンジに now が入っていれば True。
+def detect_supersale_range(now: datetime.datetime):
+    """楽天スーパーSALE公式ページの開催レンジに now が入っていれば (start, end) を返す。
+    非開催・取得失敗・未検出は None（保守的＝不明は非開催。デフォルトは保守的にの原則）。
     「20:00開始 / 翌日以降 01-02時台終了 / 3日以上」のレンジ（=スーパーSALE本体の形）で判定。
-    取得失敗・未検出は False（保守的＝不明は非開催。デフォルトは保守的にの原則）。
-    ※ _RANGE_RE / _parse_jst を再利用。2026-06-05 実ページで True を確認済み。"""
+    ※ start/end は mega-chance(最強日アナウンス)等が「最初の0と5の日」算出に使う。
+    ※ _RANGE_RE / _parse_jst を再利用。2026-06-05 実ページで開催レンジを確認済み。"""
     page = fetch(SUPERSALE_URL)
     if not page:
         print("  ⚠️ スーパーSALEページ取得失敗 → 非開催扱い")
-        return False
+        return None
     import html as _html
     text = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', _html.unescape(page)))
     for start_txt, end_txt in _RANGE_RE.findall(text):
@@ -616,8 +617,8 @@ def detect_supersale_active(now: datetime.datetime) -> bool:
         if e < s:  # 年跨ぎ補正
             e = e.replace(year=e.year + 1)
         if s.hour == 20 and e.hour in (1, 2) and (e - s).days >= 3 and s <= now <= e:
-            return True
-    return False
+            return (s, e)
+    return None
 
 
 def marathon_flags_from_schedule(schedule: dict) -> tuple[bool | None, bool | None]:
@@ -1273,9 +1274,15 @@ def main():
         results[k] = v
 
     # 1-b5. 楽天スーパーSALE 開催判定（公式ページの開催レンジに今入っているか）
+    # 開催中は開始/終了も記録 → mega-chance が supersale 最強日(最初の0と5の日)を検知できる。
     print("\n── 1-b5. スーパーSALE 判定 ──")
-    results["supersale"] = detect_supersale_active(now_jst)
-    print(f"  [supersale] {'✓ 開催中' if results['supersale'] else '✗ 非開催'}")
+    ss_range = detect_supersale_range(now_jst)
+    results["supersale"] = bool(ss_range)
+    if ss_range:
+        results["supersale_start"] = ss_range[0].isoformat()
+        results["supersale_end"]   = ss_range[1].isoformat()
+    print(f"  [supersale] {'✓ 開催中' if results['supersale'] else '✗ 非開催'}"
+          + (f"（{ss_range[0].strftime('%m/%d')}〜{ss_range[1].strftime('%m/%d')}）" if ss_range else ""))
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
     if not results.get("marathon", False):

@@ -73,7 +73,14 @@ def get_active_event(now: datetime.datetime):
         if p_start and p_end and p_start <= now <= p_end:
             return ("お買い物マラソン", p_start)
 
-    # ② extra_events.json に登録された大型イベント
+    # ② スーパーSALE（check_campaigns が campaign_status に開催レンジを記録）
+    if status.get("supersale") and status.get("supersale_start"):
+        s_start = _parse_iso(status.get("supersale_start") or "")
+        s_end = _parse_iso(status.get("supersale_end") or "")
+        if s_start and s_end and s_start <= now <= s_end:
+            return ("スーパーセール", s_start)
+
+    # ③ extra_events.json に登録された大型イベント
     extra = load_json("extra_events.json", {"events": []})
     for ev in extra.get("events", []):
         p_start = _parse_iso(ev.get("pointup_start", "") or "")
