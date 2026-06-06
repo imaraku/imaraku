@@ -24,5 +24,7 @@
   "xmas": false,
   "valentine": false,
   "whiteday": false,
-  "supersale": true
+  "supersale": true,
+  "supersale_start": "2026-06-03T20:00:00+09:00",
+  "supersale_end": "2026-06-11T01:59:00+09:00"
 }
