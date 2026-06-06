@@ -50,6 +50,7 @@
       superdeal_4h:     false, // スーパーDEAL 4時間限定（マラソン内サブキャンペーン）
       mobiledeal:       false, // 楽天モバイル×スーパーDEAL +10%
       shop39:           false, // 39ショップ キャンペーン（マラソン期と同期間が多いが個別判定）
+      supersale:        false, // 楽天スーパーSALE（買い回り型の大型セール・check_campaignsが自動判定）
     };
 
     // 終了確定URLマップ（GitHub Actionsが自動更新する expired_entries.json で上書きされる）
@@ -1131,6 +1132,13 @@
       nb.style.background = "#FFF3CD";
       nb.style.borderColor = "#E6A800";
       nb.style.color = "#5C3D00";
+    } else if (CAMPAIGN_STATUS.supersale) {
+      // 🛒 楽天スーパーSALE 開催中（買い回り型の大型セール。マラソンと同じく最大10倍）
+      nb.innerHTML =
+        `🛒 <strong>楽天スーパーSALE開催中！</strong> 買い回りで最大10倍！複数ショップで買いまわってポイントアップ！エントリー＆クーポン獲得をお忘れなく！`;
+      nb.style.background = "#FDECEA";
+      nb.style.borderColor = "#D32F2F";
+      nb.style.color = "#8B0000";
     } else if (CAMPAIGN_STATUS.eagles && CAMPAIGN_STATUS.vissel && (isSpecialDay || day === 1 || day === 18)) {
       // ★ レアチャンス: W勝利 × 特別日（赤+ゴールドのグラデ表示）
       var label = (day === 1) ? "ワンダフルデー"
@@ -1634,6 +1642,16 @@
     // ── ⭐ 優先エントリー（おすすめに上位表示） ──
     { name: "🎴 楽天ブックス ポケカ抽選 受付中（👇下の全17種）", point: "抽選", url: "https://books.rakuten.co.jp/search?sitem=%E3%83%9D%E3%82%B1%E3%83%A2%E3%83%B3%E3%82%AB%E3%83%BC%E3%83%89+%E6%8A%BD%E9%81%B8&g=006", essential: true, campaignKey: "pokemon_lottery" },
     { name: "🏃 お買い物マラソン（買いまわり）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/?l-id=top_normal_bigbnr_pc_JBEFGGIB_161861_1", essential: true, campaignKey: "marathon" },
+    // ── 🛒 楽天スーパーSALE 期間中のみ表示（campaignKey: supersale）──
+    // 買い回りTOPはトークン無しの常設URL（常に正しい）。クーポン類は現行SALEトークン(20260604frehf)。
+    // ⚠️ 次回SALEでトークンが変わるとクーポンURLが404になる→ discover_dynamic_urls で自動追従予定。
+    //    （SALE終了で supersale=false になればカードは非表示になるので 404 は露出しない）
+    { name: "🛒 楽天スーパーSALE 買い回り（最大10倍）", point: "+9%", url: "https://event.rakuten.co.jp/campaign/supersale/", essential: true, campaignKey: "supersale" },
+    { name: "🎟️ スーパーSALE 何度でも使える割引クーポン", point: "割引", url: "https://event.rakuten.co.jp/campaign/supersale/20260604frehf/multicoupon/", essential: true, campaignKey: "supersale" },
+    { name: "🏷️ スーパーSALE 最大半額クーポン", point: "最大半額", url: "https://event.rakuten.co.jp/campaign/supersale/20260604frehf/itemcoupon/", essential: true, campaignKey: "supersale" },
+    { name: "💎 スーパーSALE 会員ランク別クーポン", point: "クーポン", url: "https://event.rakuten.co.jp/campaign/supersale/20260604frehf/rankcoupon/", essential: true, campaignKey: "supersale" },
+    { name: "🛍️ スーパーSALE ショップクーポン", point: "クーポン", url: "https://event.rakuten.co.jp/campaign/supersale/20260604frehf/shopcoupon/", essential: true, campaignKey: "supersale" },
+    { name: "🔥 スーパーSALE 目玉・大幅値下げ商品", point: "目玉", url: "https://event.rakuten.co.jp/campaign/supersale/20260604frehf/bigsale/", essential: true, campaignKey: "supersale" },
     { name: "⚾ 楽天勝利 勝ったら倍", point: "+1%〜", url: "https://event.rakuten.co.jp/campaign/sports/?l-id=top_normal_flashbnr_10_EECDCECB_160292_0_irrcp", essential: true, campaignKey: "eagles" },
     { name: "🏃 39ショップ キャンペーン", point: "+1%", url: "https://event.rakuten.co.jp/guide/freeshippingline/campaign/?l-id=top_normal_flashbnr_10_EECGIGEA_162459_0_irrcp", essential: true, campaignKey: "shop39" },
     { name: "📅 0と5のつく日 +1%（楽天カード）", point: "+1%", url: "https://event.rakuten.co.jp/card/pointday/?scid=af_pc_etc&sc2id=af_101_0_0", essential: true, showOnDays: [5,10,15,20,25,30] },
