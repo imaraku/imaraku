@@ -581,22 +581,32 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 新しい cron / LaunchAgent / 別サーバー上のbot / n8n / Buffer 等を追加する時は、
 **必ずこの表に追記する**。二重投稿の温床になる。
 
-### 稼働中の自動投稿経路（2026-06-05 現在）
+### 稼働中の自動投稿経路（2026-06-06 棚卸し済・全数）
 
-| 経路 | 実体 | スケジュール | 停止方法 |
-|---|---|---|---|
-| GitHub Actions: daily-tweet | `daily-tweet.yml` → `post_daily_tweet.py` | 昼12/夕18時 JST（最強の日は夜20時も） | ワークフローを disable |
-| GitHub Actions: marathon-preannounce | `marathon-preannounce.yml` → `post_marathon_alert.py` | 19:30-19:50 JST | 同上 |
-| GitHub Actions: ranking-check | `ranking-check.yml` → `check_ranking.py` | 3時間ごと | 同上 |
-| GitHub Actions: category-ranking | `category-ranking.yml` → `post_category_ranking.py` | 9時台 JST | 同上 |
-| GitHub Actions: supersale-alert | `supersale-alert.yml` → `post_supersale_alert.py` | スーパーSALE開始前後 14-20時 JST | 同上 |
-| GitHub Actions: sale-picks | `sale-picks.yml` → `post_sale_picks.py` | セール中 14-15時 JST（1日1回・売れ筋まとめ） | 同上 |
-| GitHub Actions: post-pokemon-lottery | `post-pokemon-lottery.yml` → `post_pokemon_lottery.py` | 手動 | 実行しない |
+**X 投稿経路（@ima_raku_entry）= 11本＋手動1。新規追加時は必ずこの表に追記すること。**
 
-⚠️ **未整理（2026-06-05 確認・要登録）**: 上記以外に `mega-chance.yml` / `monthly-pay.yml` /
-`point-usage.yml` / `room-daily.yml` / `travel-campaign.yml` の cron が稼働中。別セッションで
-追加された投稿系の疑い。**新規自動化の前に、これらが何をいつ投稿するか確認し、この表へ統合すること**
-（二重投稿・投稿過多の点検のため）。`mild-diff.yml` はサイト更新のみ（X投稿経路ではない）。
+| 経路 | 実体 | スケジュール(JST) | 内容 | 停止方法 |
+|---|---|---|---|---|
+| daily-tweet | `daily-tweet.yml` → `post_daily_tweet.py` | 昼12/夕18（最強日は夜20も） | エントリー喚起・SALE文脈 | disable |
+| mega-chance | `mega-chance.yml` → `post_mega_chance.py` | 最強日 07:00 | 「月一の最強日」アナウンス（マラソン/スーパーSALE×最初の0と5） | disable |
+| marathon-preannounce | `marathon-preannounce.yml` → `post_marathon_alert.py` | マラソン前日 19:30-50 | 事前告知 | disable |
+| ranking-check | `ranking-check.yml` → `check_ranking.py` | 3時間ごと | 急上昇/常連ランキング | disable |
+| category-ranking | `category-ranking.yml` → `post_category_ranking.py` | 9時台 | カテゴリTOP3 | disable |
+| sale-picks | `sale-picks.yml` → `post_sale_picks.py` | セール中 14-15（1日1回） | 売れ筋まとめ | disable |
+| supersale-alert | `supersale-alert.yml` → `post_supersale_alert.py` | SALE開始前後 14-20 | 先行/開幕告知 | disable |
+| travel-campaign | `travel-campaign.yml` → `post_travel_campaign.py` | 0と5の日 17:00（月2まで） | 楽天トラベル特集 | disable |
+| monthly-pay | `monthly-pay.yml` → `post_monthly_pay.py` | 毎月2日 21:00 | 楽天ペイ月初ルーティン | disable |
+| point-usage | `point-usage.yml` → `post_point_usage.py` | 毎月16日 18:00 | ポイント活用ヒント | disable |
+| post-pokemon-lottery | `post-pokemon-lottery.yml` → `post_pokemon_lottery.py` | 手動 | ポケカ抽選 | 実行しない |
+
+**X 投稿ではない自動化（二重投稿の心配なし）:**
+- `room-daily.yml` → `post_room_suggestion.py`: 📧 **Gmailで自分宛**（楽天ROOM用ふるさと納税提案・毎日01:00）。X投稿ではない。
+- `check-campaigns.yml` / `mild-diff.yml`: サイト更新のみ（campaign_status / new_campaigns）。
+- `qa-audit.yml` → `qa_audit.py`: カナの監視（commit報告のみ）。
+
+⚠️ **最強日の重複に注意**: 最強日（大型セール×最初の0と5）は mega-chance(07時announce)＋
+daily-tweet(12/18/20 の big_chance)＋sale-picks(14時) が重なり計6本前後になる。文面は別物だが
+テーマが重なるので、最強日にさらに投稿を増やす時は「投稿過多」を点検すること（相棒の違和感センサー優先）。
 
 ### 過去に存在したが **廃止済** の自動化（掘り起こし禁止）
 
