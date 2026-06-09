@@ -17,7 +17,8 @@ on:
     # concurrency=cancel-in-progress:false で queue するため大丈夫。
     # 各時刻に :00 と :30 の 2 fire = 計 12 attempts/日。
     # 取りこぼしが多い時刻でも script 側 cache dedup で重複ツイートは防げる。
-    - cron: '0,30 0,3,6,9,11,13 * * *'
+    # 2026-06-10 クレジット節約: 6時刻→3時刻に削減（JST 12/18/21時）。rareは数時間消えないので捕捉ほぼ不変。
+    - cron: '0,30 3,9,12 * * *'
   workflow_dispatch:         # 手動テスト用
 
 permissions:

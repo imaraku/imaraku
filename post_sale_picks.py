@@ -111,6 +111,12 @@ def main():
         print("大型セール非開催（supersale / marathon_pointup いずれもfalse）→ 何もしない")
         return
 
+    # クレジット節約(2026-06-10): 売れ筋まとめは「最強日」(セール×0と5のつく日)に集中。
+    # カテゴリTOP3 / 急上昇ランキングと商品紹介が重複するため、毎セール日→最強日のみに絞る。
+    if not force and now.day % 5 != 0:
+        print(f"  最強日(0と5のつく日)でない（{now.day}日）→ スキップ（クレジット節約）")
+        return
+
     today = now.strftime("%Y-%m-%d")
     posted = load_json(POSTED_FILE, {})
     if posted.get("date") == today and not force:

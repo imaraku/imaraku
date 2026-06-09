@@ -873,19 +873,15 @@ def main():
 
     print(f"=== ランキングチェック {now.strftime('%Y-%m-%d %H:%M JST')} ===")
 
-    # 【2026-05-23】 daily-tweet 減量の補填として5月だけ ranking-check を 1.5倍 fire。
-    # cron は常時 JST 9,12,15,18,20,22 の 6 fire/日 だが、6月以降は 9時/15時 fire を
-    # スクリプト側で skip して原来の 4 fire/日 (12,18,20,22) に戻す。
-    # ※ 手動 dispatch (workflow_dispatch) や schedule = "Scheduled" は両方とも skip対象
-    EXTRA_FIRE_HOURS = {9, 15}  # 5月だけ有効な追加fire
-    if now.month != 5 and now.hour in EXTRA_FIRE_HOURS:
-        print(f"  通常月の追加fire時間外 ({now.hour}時) → スキップ")
-        return
-
+    # 2026-06-10: cron 自体を 3時刻/日(JST 12/18/21) に削減済（クレジット節約）。
+    # 旧「5月だけ1.5倍fire→6月以降 9/15時skip」ロジックは cron 削減により不要になり撤去。
     cache = load_cache()
     prev_names = set(cache.get("items", []))
     regular_index = cache.get("regular_index", 0)
     last_regular_date = cache.get("last_regular_date", "")
+    # 安全弁(クレジット節約): 急上昇ツイートは1日 RARE_DAILY_CAP 件まで（最大バーナーの明示cap）
+    RARE_DAILY_CAP = 2
+    rare_count = cache.get("rare_count", 0) if cache.get("rare_date") == today_str else 0
 
     # ① ランキング取得 → レアアイテム検出（失敗しても定期ツイートは続行）
     ranking_items = fetch_ranking()
@@ -953,11 +949,17 @@ def main():
                     print(f"  ℹ️ 全候補が cooldown 内 → fallback で元候補から選定")
 
                 # 売り切れ商品を紹介しても読者が失望するだけなので、在庫確認して最初の在庫ありを選ぶ
-                in_stock = pick_in_stock_item(pick_pool)
+                # 安全弁(クレジット節約): 急上昇が本日上限に達していたら投稿しない
+                if rare_count >= RARE_DAILY_CAP:
+                    print(f"  急上昇ツイートは本日上限({RARE_DAILY_CAP}件)到達 → スキップ（クレジット節約）")
+                in_stock = pick_in_stock_item(pick_pool) if rare_count < RARE_DAILY_CAP else None
                 if in_stock:
                     tweet = tweet_rare_item([in_stock])
                     print(f"\n投稿内容（レアアイテム・在庫あり）:\n{tweet}\n")
                     if post_tweet(tweet):
+                        rare_count += 1
+                        cache["rare_date"] = today_str
+                        cache["rare_count"] = rare_count
                         # 投稿成功した IP を記録して以降 IP_COOLDOWN_DAYS 日スキップ
                         picked_ip = detect_ip_hashtag(in_stock['name'])
                         if picked_ip:
@@ -982,7 +984,9 @@ def main():
     except Exception as e:
         print(f"  ⚠️ campaign_status.json 読み取り失敗: {e}", file=sys.stderr)
 
-    allowed_weekdays = [0, 1, 2, 3, 4, 5, 6] if marathon_active else [0, 1, 2, 3, 4, 5]
+    # クレジット節約(2026-06-10): 常連ツイートは平常時 週1(月曜)に削減（繰り返しfiller抑制）。
+    # マラソン期間中はお祭りで普段と違う商品がランクインしやすいので従来通り毎日投稿。
+    allowed_weekdays = [0, 1, 2, 3, 4, 5, 6] if marathon_active else [0]
 
     # プライムタイム・ゲート：人が楽天で買い物しつつXを見てる時間帯（17:00-22:59 JST）に集中投下する。
     # 深夜帯（0/3時）に定期ツイートが飛んでしまう問題の対策でもある。
