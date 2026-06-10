@@ -210,6 +210,9 @@ SCAN_PAGES = [
     "https://coupon.rakuten.co.jp/",                   # クーポンセンター
     "https://event.rakuten.co.jp/superdeal/",          # スーパーDEAL
     "https://event.rakuten.co.jp/campaign/sale/",      # セール特集
+    # ※スーパーSALEトップは SCAN_PAGES に入れない（2026-06-11 実測: 楽天の共通ヘッダに
+    #   「エントリーする」が入っており、キーワード判定では会場ページ28件が素通りして🆕枠が
+    #   汚染される）。SALE配下の参加型は detect_sale_minigames() の slug 決め打ちで拾う。
 ]
 
 # 既知URLのパターン（これに含まれるURLは「新規」扱いしない）
@@ -252,6 +255,14 @@ KNOWN_URL_PATTERNS = [c["url"] for c in CAMPAIGNS] + [
     "event.rakuten.co.jp/incentive/",
     "event.rakuten.co.jp/family/",
     "event.rakuten.co.jp/guide/",
+    # 2026-06-11: 大型セール(マラソン/スーパーSALE)の定番サブページは今楽がカード/ゲリラ枠で
+    # 管理しているため、🆕枠との二重掲載を防ぐ（token が変わっても slug で普遍的に判定）
+    "/multicoupon",
+    "/itemcoupon",
+    "/rankcoupon",
+    "/shopcoupon",
+    "/bigsale",
+    "/pointdouble",
 ]
 
 # 新キャンペーンとして検出する URL パターン（楽天エントリー系）
@@ -1042,6 +1053,7 @@ def detect_new_campaigns(existing_new: list) -> list:
     found = []
     seen_names_this_run = set()
     MAX_PER_RUN = 10  # 1回の実行で追加するキャンペーンの上限
+    scan_pages_clean = {s.split('?')[0].rstrip('/') for s in SCAN_PAGES}  # スキャンページ自身は候補にしない
 
     for scan_url in SCAN_PAGES:
         if len(found) >= MAX_PER_RUN:
@@ -1056,6 +1068,9 @@ def detect_new_campaigns(existing_new: list) -> list:
                 break
             # クリーン化（クエリ除去）
             url = url.split('?')[0].rstrip('/')
+            # ⓪ スキャンページ自身（SALEトップ等）は候補にしない（カード側で管理）
+            if url in scan_pages_clean:
+                continue
             # ① 既知パターン
             if is_known(url):
                 continue
@@ -1107,6 +1122,49 @@ def detect_new_campaigns(existing_new: list) -> list:
 
     if len(found) >= MAX_PER_RUN:
         print(f"  ⚠️ 上限{MAX_PER_RUN}件に到達したのでスキャン中断")
+    return found
+
+
+# スーパーSALEの参加型ミニゲーム（くじ/クイズ/たまご等）。slug は毎回同じで token だけ変わる。
+# ライトユーザーが見逃しやすい「参加するだけでポイント」系を🆕枠へタイムリーに載せる（相棒の要望）。
+SALE_MINIGAME_SLUGS = [
+    ("lottery",   "🎰 スーパーSALE ラッキーくじ"),
+    ("find-quiz", "🔍 スーパーSALE 探して当てようクイズ"),
+    ("tamago",    "🥚 スーパーSALE たまごキャンペーン"),
+    ("quiz",      "❓ スーパーSALE クイズ"),
+    ("stamp",     "📒 スーパーSALE スタンプラリー"),
+]
+
+
+def detect_sale_minigames(ss_token, existing_new: list) -> list:
+    """スーパーSALE開催中の参加型ミニゲームを slug 決め打ち probe で検出して返す。
+    keyword 判定は共通ヘッダの「エントリーする」で会場ページが素通りするため使わない
+    （2026-06-11 実測: 28件素通り＆本命の lottery/tamago はJSレンダーで弾かれた）。
+    probe 200 = 開催中のみ追加（終了ミニゲームは 404 で自然に弾かれる）。
+    追加分には sale_minigame タグを付け、SALE 終了時に main() 側で自動掃除する。"""
+    found = []
+    existing_urls = {c["url"] for c in existing_new}
+    base = "https://event.rakuten.co.jp/campaign/supersale/"
+    for slug, name in SALE_MINIGAME_SLUGS:
+        candidates = [f"{base}{ss_token}/{slug}/"] if ss_token else []
+        candidates.append(f"{base}{slug}/")  # tamago 等は token 無し形式の年もある
+        for cand in candidates:
+            url = cand.rstrip('/')
+            if url in existing_urls:
+                break
+            try:
+                probe = requests.get(cand, headers=HEADERS, timeout=10, allow_redirects=False)
+            except Exception:
+                continue
+            if probe.status_code == 200:
+                print(f"  🎯 SALE参加型ミニゲーム検出: {name} → {url}")
+                found.append({
+                    "name": name, "url": url, "point": "参加型",
+                    "detected_at": datetime.date.today().isoformat(),
+                    "sale_minigame": True,
+                })
+                existing_urls.add(url)
+                break
     return found
 
 
@@ -1394,6 +1452,20 @@ def main():
     # 3. 新キャンペーンの自動検出
     print("\n── 3. 新キャンペーン自動検出 ──")
     new_found = detect_new_campaigns(existing_new)
+
+    # 3-b. スーパーSALE 参加型ミニゲーム（くじ/クイズ/たまご等）
+    #      開催中: slug決め打ちprobeで🆕枠へタイムリー追加 / 終了時: タグ付き分を自動掃除
+    if results.get("supersale"):
+        ss_token = (dynamic_urls or {}).get("supersale_token")
+        minigames = detect_sale_minigames(ss_token, existing_new + new_found)
+        if minigames:
+            new_found.extend(minigames)
+            print(f"  ✅ SALE参加型ミニゲーム {len(minigames)} 件を🆕枠へ追加")
+    else:
+        before_mg = len(existing_new)
+        existing_new = [c for c in existing_new if not c.get("sale_minigame")]
+        if len(existing_new) != before_mg:
+            print(f"  🧹 SALE終了につき参加型ミニゲーム {before_mg - len(existing_new)} 件を🆕枠から削除")
 
     all_new = existing_new + new_found
     changed_new = save_json(NEW_JSON, all_new)
