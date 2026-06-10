@@ -65,7 +65,7 @@
         "emoji": "🍞",
         "genre_id": 100533,
         "filter_keywords": ["食パン", "パン", "ベーグル", "クロワッサン", "ロールパン"],
-        "name_must_not_contain_any": ["パンツ", "パンスト", "おむつ"],
+        "name_must_not_contain_any": ["パンツ", "パンスト", "おむつ", "パンパース", "フライパン", "シャンパン", "パンダ", "パンプス"],
         "tail_message": "冷凍パンはストックしておくと便利✨",
         "hashtags": ["core", "food", "poikatsu"]
       },

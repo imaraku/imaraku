@@ -21,6 +21,7 @@ import sys
 import time
 import json
 import datetime
+import unicodedata
 import requests
 from urllib.parse import quote
 from requests_oauthlib import OAuth1
@@ -310,15 +311,25 @@ def post_tweet(text: str) -> bool:
 
 
 # ── カテゴリゲーミング対策フィルタ ─────────────────────────────────
+def _norm(s: str) -> str:
+    """表記ゆれ吸収の正規化: NFKC + 小文字化 + カタカナ→ひらがな。
+    2026-06-10 の事故対策: 「パン」カテゴリで blacklist「おむつ」(ひらがな)が
+    商品名「パンパース オムツ」(カタカナ)に一致せず、🍞パン投稿でオムツを紹介してしまった。
+    比較は必ずこの関数を通した文字列同士で行うこと。"""
+    s = unicodedata.normalize("NFKC", s or "").lower()
+    return "".join(chr(ord(ch) - 0x60) if "ァ" <= ch <= "ヶ" else ch for ch in s)
+
+
 def filter_items(cat: dict, items: list) -> list:
     """商品名で2段フィルタしてカテゴリミスマッチを弾く。
     楽天は出店者が任意ジャンルでランキング登録できる（例: マッサージ器を
     「スイーツ」ジャンルに登録するショップが実在）。
       1. blacklist のいずれか1語でも商品名に含まれていれば除外（誤爆ストッパー）
       2. whitelist が指定されている場合、いずれか1語が商品名に含まれている必要あり
+    ※ 比較は _norm() 正規化済み同士（ひらがな/カタカナ/全半角の揺れを吸収）。
     """
-    name_whitelist = cat.get("filter_keywords") or cat.get("name_must_contain_any") or []
-    name_blacklist = cat.get("name_must_not_contain_any", []) or []
+    name_whitelist = [_norm(w) for w in (cat.get("filter_keywords") or cat.get("name_must_contain_any") or [])]
+    name_blacklist = [_norm(b) for b in (cat.get("name_must_not_contain_any", []) or [])]
     if not (name_blacklist or name_whitelist):
         return items
     before = len(items)
@@ -326,11 +337,12 @@ def filter_items(cat: dict, items: list) -> list:
     rejected_examples = []
     for it in items:
         nm = it.get("name", "")
-        if any(bw in nm for bw in name_blacklist):
+        nm_n = _norm(nm)
+        if any(bw in nm_n for bw in name_blacklist):
             if len(rejected_examples) < 3:
                 rejected_examples.append(f"NG(blacklist): {nm[:50]}")
             continue
-        if name_whitelist and not any(ww in nm for ww in name_whitelist):
+        if name_whitelist and not any(ww in nm_n for ww in name_whitelist):
             if len(rejected_examples) < 3:
                 rejected_examples.append(f"NG(not in whitelist): {nm[:50]}")
             continue

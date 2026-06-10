@@ -14,6 +14,7 @@ import os
 import re
 import sys
 import json
+import time
 import datetime
 import requests
 from requests_oauthlib import OAuth1
@@ -154,18 +155,36 @@ def weighted_length(text: str) -> int:
     return n
 
 
+_POST_UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+
+
 def post_tweet(text: str) -> bool:
+    """X 投稿。Cloudflare 403 / 429 / 5xx は最大3回リトライ（地雷#15）。"""
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-    resp = requests.post(
-        "https://api.twitter.com/2/tweets",
-        auth=auth,
-        json={"text": text},
-        headers={"Content-Type": "application/json"},
-    )
-    if resp.status_code == 201:
-        print(f"✅ 投稿成功: {resp.json()['data']['id']}")
-        return True
-    print(f"❌ 投稿失敗: {resp.status_code} {resp.text}", file=sys.stderr)
+    headers = {"Content-Type": "application/json", "User-Agent": _POST_UA}
+    for attempt in range(1, 4):
+        try:
+            resp = requests.post("https://api.twitter.com/2/tweets",
+                                 auth=auth, json={"text": text}, headers=headers, timeout=20)
+        except requests.RequestException as ex:
+            print(f"❌ 投稿例外(試行{attempt}/3): {ex}", file=sys.stderr)
+            if attempt < 3:
+                time.sleep(5 * attempt)
+                continue
+            return False
+        if resp.status_code == 201:
+            print(f"✅ 投稿成功: {resp.json()['data']['id']}")
+            return True
+        is_cf = resp.status_code == 403 and (
+            "Just a moment" in resp.text or "cloudflare" in resp.text.lower() or "cf_chl" in resp.text)
+        transient = is_cf or resp.status_code in (429, 500, 502, 503)
+        print(f"❌ 投稿失敗(試行{attempt}/3): {resp.status_code} "
+              f"{'Cloudflareチャレンジ' if is_cf else resp.text[:160]}", file=sys.stderr)
+        if attempt < 3 and transient:
+            time.sleep(5 * attempt)
+            continue
+        return False
     return False
 
 

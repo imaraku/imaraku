@@ -16,6 +16,7 @@ from urllib.parse import quote
 from requests_oauthlib import OAuth1
 
 from hashtag_helper import hashtags
+from link_guard import filter_alive  # リンク先の生存チェック（終了ページを投稿しない・地雷#19）
 
 # ── 認証情報 ──
 API_KEY             = os.environ["TWITTER_API_KEY"]
@@ -61,18 +62,36 @@ def weighted_length(text: str) -> int:
     return n
 
 
+UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
+
+
 def post_tweet(text: str) -> bool:
+    """X 投稿。Cloudflare 403 / 429 / 5xx は最大3回リトライ（地雷#15）。"""
     auth = OAuth1(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
-    resp = requests.post(
-        "https://api.twitter.com/2/tweets",
-        auth=auth,
-        json={"text": text},
-        headers={"Content-Type": "application/json"},
-    )
-    if resp.status_code == 201:
-        print(f"✅ 投稿成功: {resp.json()['data']['id']}")
-        return True
-    print(f"❌ 投稿失敗: {resp.status_code} {resp.text}", file=sys.stderr)
+    headers = {"Content-Type": "application/json", "User-Agent": UA}
+    for attempt in range(1, 4):
+        try:
+            resp = requests.post("https://api.twitter.com/2/tweets",
+                                 auth=auth, json={"text": text}, headers=headers, timeout=20)
+        except requests.RequestException as ex:
+            print(f"❌ 投稿例外(試行{attempt}/3): {ex}", file=sys.stderr)
+            if attempt < 3:
+                time.sleep(5 * attempt)
+                continue
+            return False
+        if resp.status_code == 201:
+            print(f"✅ 投稿成功: {resp.json()['data']['id']}")
+            return True
+        is_cf = resp.status_code == 403 and (
+            "Just a moment" in resp.text or "cloudflare" in resp.text.lower() or "cf_chl" in resp.text)
+        transient = is_cf or resp.status_code in (429, 500, 502, 503)
+        print(f"❌ 投稿失敗(試行{attempt}/3): {resp.status_code} "
+              f"{'Cloudflareチャレンジ' if is_cf else resp.text[:160]}", file=sys.stderr)
+        if attempt < 3 and transient:
+            time.sleep(5 * attempt)
+            continue
+        return False
     return False
 
 
@@ -88,40 +107,35 @@ def is_marathon_active() -> bool:
 
 
 def build_tweet(now: datetime.datetime, tweet_def: dict) -> str:
-    title = tweet_def.get("title", "楽天トラベル")
+    """value-first・リンク1本のツイートを作る。
+    旧形式（item毎に生アフィURLを羅列）は hb.afl... の長い文字列が並んでスパムに
+    見えるため廃止（2026-06-11 相棒指摘）。先頭キャンペーンだけリンクし、残りはテキスト紹介。
+    items は呼び出し側で link_guard 済み（生きているリンクのみ）の前提。"""
     items = tweet_def.get("items", [])
+    if not items:
+        return ""
     today_label = f"{now.month}/{now.day}"
+    featured = items[0]
+    others = [it.get("label", "") for it in items[1:] if it.get("label")]
 
-    header = f"✈️ {today_label}は楽天トラベルがお得！(0と5のつく日)\n\n"
-    body_lines = []
-    for it in items:
-        label = it.get("label", "")
-        url = aff(it.get("url", ""))
-        body_lines.append(label)
-        body_lines.append(url)
-        body_lines.append("")
-    footer = f"今楽でまとめチェック👇\n{SITE_URL}\n {hashtags(['core', 'travel', 'poikatsu'], max_tags=3)}"
-    tweet = header + "\n".join(body_lines).rstrip() + "\n\n" + footer
+    def compose(featured_label: str, include_others: bool) -> str:
+        lines = [
+            f"✈️ {today_label}は楽天トラベルがお得！（0と5のつく日）",
+            "",
+            featured_label,
+            "詳細・予約はこちら👇",
+            aff(featured.get("url", "")),
+        ]
+        if include_others and others:
+            lines += ["", "ほかにも👀 " + "／".join(others)]
+        lines += ["", f" {hashtags(['core', 'travel', 'poikatsu'], max_tags=3)}"]
+        return "\n".join(lines)
 
-    # 280字超過時は label を段階的に短縮
-    for limit in (24, 20, 16):
-        if weighted_length(tweet) <= 280:
-            break
-        body_lines = []
-        for it in items:
-            label = it.get("label", "")
-            if len(label) > limit:
-                label = label[:limit] + "…"
-            body_lines.append(label)
-            body_lines.append(aff(it.get("url", "")))
-            body_lines.append("")
-        tweet = header + "\n".join(body_lines).rstrip() + "\n\n" + footer
-
-    # それでも超過なら header を短縮
+    tweet = compose(featured.get("label", ""), True)
     if weighted_length(tweet) > 280:
-        header_short = f"✈️ {today_label}は楽天トラベル特集\n\n"
-        tweet = header_short + "\n".join(body_lines).rstrip() + "\n\n" + footer
-
+        tweet = compose(featured.get("label", ""), False)   # 「ほかにも」行を落とす
+    if weighted_length(tweet) > 280:
+        tweet = compose(featured.get("label", "")[:20] + "…", False)
     return tweet
 
 
@@ -160,10 +174,15 @@ def main():
 
     print(f"  対象ツイート定義: {len(tweet_defs)} 件")
 
-    # ツイート組み立て＆投稿
+    # ツイート組み立て＆投稿（リンク先の生存チェック→生きているものだけで構成）
     success_count = 0
     for i, td in enumerate(tweet_defs, start=1):
-        tweet = build_tweet(now, td)
+        print(f"\n[{i}] リンク先の生存チェック中…")
+        alive_items = filter_alive(td.get("items", []))
+        if not alive_items:
+            print(f"[{i}] 生きているリンクが1本も無い → このツイートはスキップ（終了ページを案内しない）")
+            continue
+        tweet = build_tweet(now, {**td, "items": alive_items})
         print(f"\n[{i}] ({weighted_length(tweet)}字):\n{tweet}\n")
         if post_tweet(tweet):
             success_count += 1

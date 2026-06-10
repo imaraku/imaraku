@@ -130,15 +130,17 @@ WEEKDAY_JP = ["月", "火", "水", "木", "金", "土", "日"]
 
 
 def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str:
-    """スロット別の挨拶を先頭に付けて、テキストを毎回ユニークにする。
-    日付＋曜日を含めることで、X の重複投稿検出を確実に回避する。
-    例: 🌃 5/9(土) 今夜の買い物前にエントリー
+    """スロット別の日付行を「末尾」に付けて、テキストを毎回ユニークにする。
+    日付＋曜日を含めることで、X の重複投稿検出を確実に回避する（位置は末尾でも効く）。
+
+    🔄 2026-06-11 価値ファースト化（相棒のフォロワー戦略改善③）:
+    以前は先頭に付けていたが、タイムラインで最初に見える1行目が
+    「📅 6/10(水) 夕方の買い物前にエントリー」ではスクロールが止まらない。
+    1行目=本文のベネフィット、日付・スロット文脈は末尾の締め行に移動。
 
     ⚠️ 二段ヘッダ防止: 大半のテンプレは本文先頭で daily_lead_in() の
-    「📅 M/D(曜) …チェック」ヘッダを既に持つ。本関数のヘッダと重なると
-    日付行が二段になり不自然なので、先頭の daily_lead_in 段落を剥がして
-    から付け直し、「日付＋曜日＋スロット文脈」を一段に集約する。
-    （kickoff だけは with_slot_intro を通さず daily_lead_in をそのまま使う）
+    「📅 M/D(曜) …チェック」ヘッダを持つので、先頭の段落を剥がしてから末尾に付ける。
+    （kickoff だけは with_slot_intro を通さず、テンプレ側で末尾に付与する）
     """
     pair = SLOT_TIME_PHRASES.get(slot)
     if not pair:
@@ -149,14 +151,14 @@ def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str
     weekday_jp = WEEKDAY_JP[now.weekday()]
     intro = f"{emoji} {now.month}/{now.day}({weekday_jp}) {phrase}"
     # 既に同じ intro が付いていれば二重付与しない
-    if tweet.startswith(intro):
+    if tweet.rstrip().endswith(intro):
         return tweet
-    # daily_lead_in() の「📅 …」ヘッダ段落が先頭にあれば剥がす（二段ヘッダ防止）
+    # daily_lead_in() の「📅 …」ヘッダ段落が先頭にあれば剥がす（1行目を価値ファーストに）
     if tweet.startswith("📅 "):
         parts = tweet.split("\n\n", 1)
         if len(parts) == 2:
             tweet = parts[1]
-    return f"{intro}\n\n{tweet}"
+    return f"{tweet}\n\n{intro}"
 
 
 # ── 時間帯スロット重複排除 ──────────────────────────────────────────────
@@ -476,9 +478,9 @@ def daily_lead_in() -> str:
 
 
 def tweet_marathon_kickoff() -> str:
-    """マラソン開始（ポイントアップ開始）直後のヨーイドン宣言ツイート。"""
+    """マラソン開始（ポイントアップ開始）直後のヨーイドン宣言ツイート。
+    日付行は価値ファースト化のため末尾（dedup用・月2回マラソンでも30日窓内のため必要）。"""
     return (
-        f"{daily_lead_in()}"
         "🏁 位置について、ヨーイ…\n"
         "\n"
         "🏃‍♂️ お買い物マラソン スタート！\n"
@@ -490,7 +492,9 @@ def tweet_marathon_kickoff() -> str:
         "\n"
         "今すぐ👇\n"
         f"{SITE_URL}\n"
-        f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}"
+        f" {hashtags(['core', 'marathon', 'poikatsu'], max_tags=3)}\n"
+        "\n"
+        f"{daily_lead_in().strip()}"
     )
 
 
