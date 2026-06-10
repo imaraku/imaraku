@@ -166,6 +166,11 @@ CAMPAIGNS = [
         "key": "guerrilla",
         "url": "https://event.rakuten.co.jp/campaign/point-up/marathon/",  # discover が動的差し替え、失敗時はマラソントップ
         "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
+        # 2026-06-11: スーパーSALE版ゲリラ(supersale/<token>/pointdouble/)は文言が
+        # 「エントリーでポイント2倍」でマラソン用語に一切マッチしない実測 → period_check 有効化。
+        # ページに明確な開催期間(例: 6/10 18:00〜6/11 01:59)があり期間判定が最も確実。
+        # キーワード false positive（前回解説文の残骸・上記 2026-05-23 注記）も期間優先で回避。
+        "period_check": True,
         "active_kw": ["ゲリラ", "全店＋1倍", "全店+1倍"],
         "default": False,
     },
