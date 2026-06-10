@@ -256,5 +256,12 @@
     "url": "https://event.rakuten.co.jp/fashion/kids",
     "point": "要確認",
     "detected_at": "2026-06-10"
+  },
+  {
+    "name": "🔍 スーパーSALE 探して当てようクイズ",
+    "url": "https://event.rakuten.co.jp/campaign/supersale/20260604frehf/find-quiz",
+    "point": "参加型",
+    "detected_at": "2026-06-10",
+    "sale_minigame": true
   }
 ]
