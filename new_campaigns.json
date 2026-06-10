@@ -250,5 +250,11 @@
     "url": "https://event.rakuten.co.jp/campaign/supersale",
     "point": "要確認",
     "detected_at": "2026-06-05"
+  },
+  {
+    "name": "キッズ・ベビーファッション",
+    "url": "https://event.rakuten.co.jp/fashion/kids",
+    "point": "要確認",
+    "detected_at": "2026-06-10"
   }
 ]
