@@ -786,54 +786,7 @@
       color: #FFF;
     }
 
-    /* ─── まとめて開くボタン ─── */
-    .bulk-bar {
-      padding: 10px 12px 4px;
-      text-align: center;
-    }
-
-    .bulk-open-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      background: linear-gradient(135deg, #D4A017 0%, #BF0000 100%);
-      color: white;
-      font-size: 0.95rem;
-      font-weight: 900;
-      padding: 14px 20px;
-      border-radius: 50px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 18px rgba(191,0,0,0.38);
-      transition: transform 0.15s, box-shadow 0.15s;
-      width: 100%;
-      max-width: 420px;
-      letter-spacing: 0.3px;
-    }
-
-    .bulk-open-btn:active {
-      transform: scale(0.96);
-      box-shadow: 0 2px 8px rgba(191,0,0,0.28);
-    }
-
-    .bulk-open-btn .bulk-count {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 700;
-      opacity: 0.9;
-      margin-top: 2px;
-    }
-
-    /* ─── チェックボックス選択 ─── */
-    .bulk-check {
-      width: 22px;
-      height: 22px;
-      accent-color: var(--rakuten-red);
-      cursor: pointer;
-      flex-shrink: 0;
-      margin: 0;
-    }
+    /* 「まとめて開く」一括機能は 2026-06-11 廃止（FAB「次の未エントリーを開く」に一本化） */
 
     .card-check-area {
       display: flex;
@@ -1303,7 +1256,6 @@
         }
       }
     });
-    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateSectionSubtitles();
     // 🆕セクション: 中身が全部 mode-hidden（おすすめモード等）なら見出しごと隠す
     var newSec = document.getElementById('newCampaignSection');
@@ -1374,24 +1326,6 @@
   // ─────────────────────────────────────────────
   //  全タブ一括で開く
   // ─────────────────────────────────────────────
-  // 複数URLを順番に開く（ポップアップブロック対策付き）
-  function openAllTabs(urls, label) {
-    if (!urls || urls.length === 0) return;
-    window.open(urls[0], '_blank', 'noopener');
-    for (var i = 1; i < urls.length; i++) {
-      (function(u, delay) {
-        setTimeout(function() {
-          window.open(u, '_blank', 'noopener');
-        }, delay);
-      })(urls[i], i * 420);
-    }
-    var toast = document.getElementById('bulkToast');
-    toast.textContent = '🚀 ' + urls.length + '個のタブを開きました！\n各タブでエントリーボタンを押してください ✅';
-    toast.classList.add('show');
-    setTimeout(function() { toast.classList.remove('show'); }, 5000);
-  }
-
-  // ─────────────────────────────────────────────
   //  期間外・対象外を非表示にする機能
   // ─────────────────────────────────────────────
   const DISMISSED_KEY = 'imaraku_dismissed_v1';
@@ -1412,13 +1346,8 @@
       dismissed.push(url);
       localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
     }
-    // 非表示にしてチェックも外す
+    // 非表示にする
     card.style.display = 'none';
-    card.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
-      cb.checked = false;
-    });
-    // カウント更新
-    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateResetBtn();
     // トースト
     var toast = document.getElementById('bulkToast');
@@ -1435,13 +1364,9 @@
       document.querySelectorAll('[data-entry-url]').forEach(function(el) {
         if (el.getAttribute('data-entry-url') === url) {
           el.style.display = 'none';
-          el.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
-            cb.checked = false;
-          });
         }
       });
     });
-    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateResetBtn();
   }
 
@@ -1450,11 +1375,7 @@
     localStorage.removeItem(DISMISSED_KEY);
     document.querySelectorAll('[data-entry-url]').forEach(function(el) {
       el.style.display = '';
-      el.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
-        cb.checked = true;
-      });
     });
-    ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateResetBtn();
   }
 
@@ -1551,7 +1472,8 @@
       if (c.classList.contains('mode-hidden') || c.style.display === 'none') return false;
       if (c.classList.contains('entry-done')) return false;
       // 「該当者のみ」(ママ割/学割/ペット割)は人によって対象が違うので自動巡回から除外
-      if (c.querySelector('.bulk-check-mama, .bulk-check-gaku, .bulk-check-pet')) return false;
+      var g = c.getAttribute('data-group');
+      if (g === 'mama' || g === 'gaku' || g === 'pet') return false;
       return true;
     });
   }
@@ -1592,37 +1514,9 @@
     }
   });
 
-  function openCheckedTabs(group, label) {
-    var urls = [];
-    document.querySelectorAll('.bulk-check-' + group + ':checked').forEach(function(cb) {
-      var card = cb.closest('[data-entry-url]');
-      if (card && card.style.display !== 'none' && !card.classList.contains('mode-hidden')) {
-        urls.push(cb.getAttribute('data-url'));
-        setCardDone(card, true);  // まとめて開いた分も「済」扱い（✅済バッジで戻せる）
-      }
-    });
-    if (urls.length === 0) {
-      var toast = document.getElementById('bulkToast');
-      toast.textContent = '⚠️ エントリーが1つも選択されていません\nチェックを入れてからもう一度タップ';
-      toast.classList.add('show');
-      setTimeout(function() { toast.classList.remove('show'); }, 3500);
-      return;
-    }
-    openAllTabs(urls, label);
-  }
-
-  // ボタンの「X/Y件」カウントを更新（非表示カードは除く）
-  function updateBulkCount(group) {
-    var total = 0, checked = 0;
-    document.querySelectorAll('.bulk-check-' + group).forEach(function(cb) {
-      var card = cb.closest('[data-entry-url]');
-      if (card && (card.style.display === 'none' || card.classList.contains('mode-hidden'))) return;
-      total++;
-      if (cb.checked) checked++;
-    });
-    var countEl = document.querySelector('.bulk-count-' + group);
-    if (countEl) countEl.textContent = checked + '/' + total + '件選択中';
-  }
+  // ※「選択したエントリーを開く」(一括オープン+チェックボックス)は 2026-06-11 廃止。
+  //   FAB「次の未エントリーを開く」に一本化（ポップアップブロッカーと相性が悪く、
+  //   アプリ遷移リンク混在時の挙動も不安定だったため。相棒の判断）。
 
   // ─────────────────────────────────────────────
   //  スムーススクロール（sticky header 分を考慮）
@@ -1634,21 +1528,6 @@
     var top = el.getBoundingClientRect().top + window.pageYOffset - HEADER_OFFSET;
     window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     setTimeout(function() { markDone(stepIdx); }, 500);
-  }
-
-  // セクション先頭に「まとめて開く」ボタンを差し込む（チェックボックス対応版）
-  function insertBulkBtn(beforeElementId, group, label) {
-    var target = document.getElementById(beforeElementId);
-    if (!target) return;
-    var bar = document.createElement('div');
-    bar.className = 'bulk-bar';
-    bar.id = 'bulkBar_' + group; // ← ステップタップ後のスクロール先
-    bar.innerHTML =
-      '<button class="bulk-open-btn" onclick=\'openCheckedTabs("' + group + '", "' + label + '")\'>' +
-      '🚀 選択した' + label + 'を開く' +
-      '<span class="bulk-count bulk-count-' + group + '">0/0件選択中</span>' +
-      '</button>';
-    target.parentNode.insertBefore(bar, target);
   }
 
   // ─────────────────────────────────────────────
@@ -1675,12 +1554,9 @@
     };
     const campaignBadge = c.campaignKey ? (campaignBadgeMap[c.campaignKey] || '') : '';
     return `
-      <div class="campaign-card" data-entry-url="${entryUrl}" data-entry-url-raw="${c.url}" data-essential="${isEssential}"${showDaysAttr}${showHoursAttr}${showDatesAttr}${campaignAttr}${demoteAttr}>
+      <div class="campaign-card" data-entry-url="${entryUrl}" data-entry-url-raw="${c.url}" data-essential="${isEssential}" data-group="${group}"${showDaysAttr}${showHoursAttr}${showDatesAttr}${campaignAttr}${demoteAttr}>
         <div class="card-body">
           <div class="card-check-area">
-            <input type="checkbox" class="bulk-check bulk-check-${group}"
-                   data-url="${entryUrl}" checked
-                   onchange="updateBulkCount('${group}')">
             <div>
               <div class="card-name">${c.name}${c.showOnDays ? dayBadge : ''}${c.showOnHours ? hourBadge : ''}${campaignBadge}</div>
               <div class="card-point">🎁 ${c.point}</div>
@@ -1703,9 +1579,9 @@
   const prioritySteps = [
     {
       name: "① エントリーする（定番 + 今日の限定）",
-      point: "↓ タップで「まとめて開く」ボタンへジャンプ！",
+      point: "↓ タップでエントリー一覧へ。下の「次の未エントリーを開く」でポチポチ進むだけ！",
       url: "#entries",
-      scrollTarget: "bulkBar_entries",
+      scrollTarget: "entries",
       gold: false,
       tag: "必須",
       isAnchor: true
@@ -1714,7 +1590,7 @@
       name: "② クーポンをゲット",
       point: "↓ タップで「クーポンまとめ」へジャンプ！",
       url: "#coupons",
-      scrollTarget: "bulkBar_coupons",
+      scrollTarget: "coupons",
       gold: false,
       tag: "推奨",
       isAnchor: true
@@ -1931,10 +1807,6 @@
   document.getElementById("genreEntries").innerHTML =
     genreEntries.map(c => createCard(c, 'entries')).join("");
 
-  // エントリーまとめ 先頭に「選択したエントリーを開く」ボタンを追加
-  insertBulkBtn("everydayEntries", "entries", "エントリー");
-  updateBulkCount("entries");
-
   // ─────────────────────────────────────────────
   //  セクション B: クーポンまとめ
   // ─────────────────────────────────────────────
@@ -1966,10 +1838,7 @@
     const badge = c.campaignKey ? (couponBadgeMap[c.campaignKey] || '') : '';
     return `
     <div class="compact-row" style="background:white;border-radius:10px;margin-bottom:6px;padding:10px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);"
-         data-entry-url="${aff(c.url)}" data-essential="${isEssential}"${campaignAttr}${showHoursAttr}${showDatesAttr}>
-      <input type="checkbox" class="bulk-check bulk-check-coupons"
-             data-url="${aff(c.url)}" checked
-             onchange="updateBulkCount('coupons')">
+         data-entry-url="${aff(c.url)}" data-essential="${isEssential}" data-group="coupons"${campaignAttr}${showHoursAttr}${showDatesAttr}>
       <div class="compact-info">
         <div class="compact-name">🎫 ${c.name}${badge}</div>
       </div>
@@ -1978,10 +1847,6 @@
     </div>
   `;
   }).join("");
-
-  // クーポンまとめ 先頭に「選択したクーポンを開く」ボタンを追加
-  insertBulkBtn("couponSection", "coupons", "クーポン");
-  updateBulkCount("coupons");
 
   // ─────────────────────────────────────────────
   //  セクション C: 該当者のみ
@@ -1998,12 +1863,8 @@
   ];
 
   document.getElementById("mamaWariSection").innerHTML =
-    '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("mama","ママ割")\'>🚀 選択したママ割を開く<span class="bulk-count bulk-count-mama">0/0件選択中</span></button></div>' +
     mamaWariEntries.map(c => `
-    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true">
-      <input type="checkbox" class="bulk-check bulk-check-mama"
-             data-url="${aff(c.url)}" checked
-             onchange="updateBulkCount('mama')">
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true" data-group="mama">
       <div class="compact-info">
         <div class="compact-name">${c.name}</div>
         <div class="compact-point">${c.point}</div>
@@ -2012,7 +1873,6 @@
       <button class="dismiss-btn" onclick="dismissEntry(this)" title="期間外・対象外のとき非表示にする">✕</button>
     </div>
   `).join("");
-  updateBulkCount("mama");
 
   // 学割（楽天学割）
   const gakuWariEntries = [
@@ -2025,17 +1885,13 @@
   ];
 
   document.getElementById("gakuWariSection").innerHTML =
-    '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("gaku","学割")\'>🚀 選択した学割を開く<span class="bulk-count bulk-count-gaku">0/0件選択中</span></button></div>' +
     gakuWariEntries.map(function(c) {
       var campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
       var badge = c.campaignKey === 'marathon'
         ? `<span style="font-size:0.62rem;background:#1A7F37;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">🏃 マラソン中</span>`
         : '';
       return `
-    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true"${campaignAttr}>
-      <input type="checkbox" class="bulk-check bulk-check-gaku"
-             data-url="${aff(c.url)}" checked
-             onchange="updateBulkCount('gaku')">
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true" data-group="gaku"${campaignAttr}>
       <div class="compact-info">
         <div class="compact-name">${c.name}${badge}</div>
         <div class="compact-point">${c.point}</div>
@@ -2045,7 +1901,6 @@
     </div>
   `;
     }).join("");
-  updateBulkCount("gaku");
 
   // ペット・マイカー割
   const petMycarEntries = [
@@ -2055,17 +1910,13 @@
   ];
 
   document.getElementById("petMycarSection").innerHTML =
-    '<div class="bulk-bar"><button class="bulk-open-btn" onclick=\'openCheckedTabs("pet","ペット・マイカー割")\'>🚀 選択したペット・マイカー割を開く<span class="bulk-count bulk-count-pet">0/0件選択中</span></button></div>' +
     petMycarEntries.map(function(c) {
       var campaignAttr = c.campaignKey ? ` data-campaign-key="${c.campaignKey}"` : '';
       var badge = c.campaignKey === 'marathon'
         ? `<span style="font-size:0.62rem;background:#1A7F37;color:white;padding:2px 6px;border-radius:4px;font-weight:700;margin-left:4px;">🏃 マラソン中</span>`
         : '';
       return `
-    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true"${campaignAttr}>
-      <input type="checkbox" class="bulk-check bulk-check-pet"
-             data-url="${aff(c.url)}" checked
-             onchange="updateBulkCount('pet')">
+    <div class="compact-row" data-entry-url="${aff(c.url)}" data-essential="true" data-group="pet"${campaignAttr}>
       <div class="compact-info">
         <div class="compact-name">${c.name}${badge}</div>
         <div class="compact-point">${c.point}</div>
@@ -2075,7 +1926,6 @@
     </div>
   `;
     }).join("");
-  updateBulkCount("pet");
 
   // ─────────────────────────────────────────────
   //  ページ初期化：まずデフォルト値で描画 → 直後にJSONで最新状態に更新
