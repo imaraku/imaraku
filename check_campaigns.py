@@ -1196,6 +1196,32 @@ def discover_dynamic_urls() -> dict:
     else:
         print("  ⚠️ marathon トップ取得失敗")
 
+    # スーパーSALE token の動的追従（ゲリラ pointdouble はマラソンだけでなく
+    # スーパーSALE 配下 campaign/supersale/<token>/pointdouble/ でも開催される。
+    # 2026-06-10 相棒検知: SALE中ゲリラを構造的に見逃していたバグの恒久修正）。
+    # マラソン側でゲリラが見つからなかった時のみ SALE 側を探す（同時開催は無い前提）。
+    if not discovered.get("guerrilla"):
+        ss_top = fetch("https://event.rakuten.co.jp/campaign/supersale/")
+        if ss_top:
+            ss_tokens = re.findall(r"/campaign/supersale/([0-9a-z]{8,})/", ss_top)
+            if ss_tokens:
+                from collections import Counter
+                ss_token = Counter(ss_tokens).most_common(1)[0][0]
+                discovered["supersale_token"] = ss_token
+                print(f"  🔗 supersale_token (今回SALE): {ss_token}")
+                ss_pd = f"https://event.rakuten.co.jp/campaign/supersale/{ss_token}/pointdouble/"
+                try:
+                    probe = requests.get(ss_pd, headers=HEADERS, timeout=10, allow_redirects=False)
+                    if probe.status_code == 200:
+                        discovered["guerrilla"] = ss_pd
+                        print(f"  🔗 guerrilla 最新URL (スーパーSALE側): {ss_pd}")
+                    elif "guerrilla" not in discovered:
+                        # マラソン側で "" 確定済みなら上書きしない。未設定時のみ確定未開催に。
+                        discovered["guerrilla"] = ""
+                        print(f"  ℹ️ guerrilla: 今回SALEでは未開催 (probe {probe.status_code})")
+                except Exception as e:
+                    print(f"  ⚠️ guerrilla(SALE側) URL probe 失敗: {e}")
+
     return discovered
 
 
@@ -1285,8 +1311,13 @@ def main():
           + (f"（{ss_range[0].strftime('%m/%d')}〜{ss_range[1].strftime('%m/%d')}）" if ss_range else ""))
 
     # 1-c. マラソン非開催時はマラソン内サブキャンペーンを強制 false
+    # ※ゲリラ(guerrilla)はスーパーSALE中も supersale/<token>/pointdouble/ で開催されるため、
+    #   supersale 開催中は強制falseの対象から外し、実ページ判定に任せる（2026-06-10）。
     if not results.get("marathon", False):
-        for k in ["repeat_purchase", "guerrilla", "superdeal_4h", "mobiledeal", "shop39"]:
+        sub_keys = ["repeat_purchase", "superdeal_4h", "mobiledeal", "shop39"]
+        if not results.get("supersale", False):
+            sub_keys.append("guerrilla")
+        for k in sub_keys:
             if results.get(k):
                 print(f"  [{k}] マラソン非開催のため false に補正")
                 results[k] = False
