@@ -958,6 +958,17 @@
     border-radius: 10px; margin-left: 4px; cursor: pointer; user-select: none;
   }
   #doneCounter { margin-left: 8px; font-weight: 700; color: var(--green); white-space: nowrap; }
+  /* 「次の未エントリーを開く」FAB: タップ→楽天でエントリー→戻る→タップ…のリズムで全消化できる動線 */
+  #nextEntryBtn {
+    position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+    z-index: 95; border: none; cursor: pointer;
+    background: #C62828; color: #fff; font-weight: 700; font-size: .95rem;
+    padding: 13px 22px; border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.3);
+    max-width: 92vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #nextEntryBtn:active { transform: translateX(-50%) scale(.96); }
+  #nextEntryBtn.fab-done { background: var(--green); }
 </style>
 <div class="mode-banner essential" id="modeBanner">
   <span id="modeDescription">⭐ おすすめモード：今日すべき基本エントリーのみ表示</span><span id="doneCounter"></span>
@@ -1294,6 +1305,14 @@
     });
     ['entries', 'coupons', 'mama', 'gaku', 'pet'].forEach(updateBulkCount);
     updateSectionSubtitles();
+    // 🆕セクション: 中身が全部 mode-hidden（おすすめモード等）なら見出しごと隠す
+    var newSec = document.getElementById('newCampaignSection');
+    var newTitle = document.getElementById('newCampaigns');
+    if (newSec && newTitle && newSec.children.length) {
+      var anyNew = newSec.querySelector('[data-entry-url]:not(.mode-hidden)');
+      newSec.style.display = anyNew ? 'block' : 'none';
+      newTitle.style.display = anyNew ? '' : 'none';
+    }
     // 表示が変わったので「✅済 X/Y」カウンタと済み表示を再反映
     if (typeof applyDoneStates === 'function') applyDoneStates();
   }
@@ -1326,7 +1345,7 @@
       var entryUrl = aff(c.url);
       return `
         <div class="compact-row" style="background:white;border-radius:10px;margin-bottom:6px;padding:10px 12px;box-shadow:0 1px 6px rgba(0,0,0,0.08);"
-             data-entry-url="${entryUrl}" data-essential="true">
+             data-entry-url="${entryUrl}" data-essential="${c.sale_minigame ? 'true' : 'false'}">
           <div class="compact-info" style="flex:1;">
             <div class="compact-name">
               🆕 ${c.name}
@@ -1341,6 +1360,9 @@
 
     section.style.display = 'block';
     title.style.display   = '';
+    // 🆕は基本「全部表示のみ」(参加型ミニゲームだけおすすめにも出す・2026-06-11 おすすめ簡素化)。
+    // 描画は campaign_status フィルタより後に走るため、ここでフィルタを再適用する。
+    if (typeof applyFilter === 'function') applyFilter(currentMode);
   }
 
   function toggleCollapsible(header) {
@@ -1519,6 +1541,39 @@
       if (card.classList.contains('entry-done')) doneN++;
     });
     el.textContent = total ? '✅ 済 ' + doneN + '/' + total : '';
+    updateNextEntryBtn();
+  }
+  // 「次の未エントリーを開く」FAB:
+  // 実利用（1個開いてエントリー→戻って次）の「次を探す手間」をゼロにする。
+  // タップ→開く＆✅済→楽天でエントリー→戻る→タップ…で表示中の未エントリーを上から順に消化。
+  function _fabTargets() {
+    return Array.prototype.filter.call(document.querySelectorAll('[data-entry-url]'), function(c) {
+      if (c.classList.contains('mode-hidden') || c.style.display === 'none') return false;
+      if (c.classList.contains('entry-done')) return false;
+      // 「該当者のみ」(ママ割/学割/ペット割)は人によって対象が違うので自動巡回から除外
+      if (c.querySelector('.bulk-check-mama, .bulk-check-gaku, .bulk-check-pet')) return false;
+      return true;
+    });
+  }
+  function updateNextEntryBtn() {
+    var btn = document.getElementById('nextEntryBtn');
+    if (!btn) return;
+    var n = _fabTargets().length;
+    if (n === 0) {
+      btn.textContent = '🎉 表示中のエントリーはぜんぶ完了！';
+      btn.classList.add('fab-done');
+    } else {
+      btn.textContent = '▶ 次の未エントリーを開く（残り ' + n + ' 件）';
+      btn.classList.remove('fab-done');
+    }
+  }
+  function openNextEntry() {
+    var targets = _fabTargets();
+    if (!targets.length) return;
+    var card = targets[0];
+    try { card.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {}
+    window.open(card.getAttribute('data-entry-url'), '_blank', 'noopener');
+    setCardDone(card, true);
   }
   // エントリー/取得ボタンを開いたら自動で「済」。✅済バッジのタップで「未」に戻す。
   document.addEventListener('click', function(e) {
@@ -1782,27 +1837,28 @@
     // URL は今回マラソン分 (20260509) を直接指定。次回マラソンで URL 末尾を差し替え。
     { name: "📱 楽天モバイル×スーパーDEAL +10%", point: "+10%", url: "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260509/", essential: true, campaignKey: "mobiledeal" },
     // ── 🏃 マラソン期間中のサブキャンペーン（条件達成型・クーポン型） ──
-    { name: "🚗 マイカー割×マラソン +4%", point: "+4%", url: "https://a.r10.to/h5WTY0", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "🎓 楽天学割×マラソン +1%", point: "+1%", url: "https://a.r10.to/hgzPvH", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "📚 楽天ブックス条件達成 +2%", point: "+2%", url: "https://a.r10.to/h8wmzM", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "🥤 水・ソフトドリンク +11%", point: "+11%", url: "https://a.r10.to/hR1FJz", essential: true, campaignKey: "marathon", noAffiliate: true },
+    // 2026-06-11 おすすめ簡素化: ジャンル特化/条件型/会員限定/少額クーポンは essential:false（全部表示のみ）
+    { name: "🚗 マイカー割×マラソン +4%", point: "+4%", url: "https://a.r10.to/h5WTY0", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "🎓 楽天学割×マラソン +1%", point: "+1%", url: "https://a.r10.to/hgzPvH", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "📚 楽天ブックス条件達成 +2%", point: "+2%", url: "https://a.r10.to/h8wmzM", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "🥤 水・ソフトドリンク +11%", point: "+11%", url: "https://a.r10.to/hR1FJz", essential: false, campaignKey: "marathon", noAffiliate: true },
     // 旧短縮URL (a.r10.to/h5LvOt) は 2026-04-24 マラソンの multicoupon ページを指していた。
     // 今後は marathon_token 動的置換で最新マラソンの multicoupon に自動追従する。
     { name: "🎟️ 何度でも使える 2,000円クーポン", point: "2,000円OFF", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260523rcdml/multicoupon/", essential: true, campaignKey: "marathon" },
     // 🍚 お米クーポン：URLが date-coded（毎マラソンで変わる）ため
     // 楽天が新URLを公開するまで非表示。新URL確認できたら追加する。
     // ── 5月マラソン追加（マイルドさんブログ参考） ──
-    { name: "💎 ダイヤモンド・プラチナ会員 777円クーポン", point: "777円OFF", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/rankcoupon/", essential: true, campaignKey: "marathon" },
+    { name: "💎 ダイヤモンド・プラチナ会員 777円クーポン", point: "777円OFF", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/rankcoupon/", essential: false, campaignKey: "marathon" },
     { name: "🏷️ マラソン 最大半額クーポン", point: "最大半額", url: "https://event.rakuten.co.jp/campaign/point-up/marathon/20260509fhqao/itemcoupon/", essential: true, campaignKey: "marathon" },
     // マラソン kickoff day（pointup_start の日）にのみ表示。今回は 2026-05-09 開始。
     { name: "⚡ 開始2時間限定 50%OFFクーポン", point: "50%OFF", url: "https://a.r10.to/h5isCx", essential: true, campaignKey: "marathon", noAffiliate: true, showOnDates: ["2026-05-09"], showOnHours: [20, 21] },
     { name: "⚡ 開始4時間DEAL +10%", point: "+10%", url: "https://a.r10.to/hNElpg", essential: true, campaignKey: "marathon", noAffiliate: true, showOnDates: ["2026-05-09"], showOnHours: [20, 21, 22, 23] },
-    { name: "💎 PREMIUM DAYS +8.5%", point: "+8.5%", url: "https://a.r10.to/h5KH7D", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "📚 本・雑誌 マラソン +9%", point: "+9%", url: "https://a.r10.to/hkANFr", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "💿 DVD・ブルーレイ +9%", point: "+9%", url: "https://a.r10.to/h5i3P6", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "📖 kobo 初回購入 +69%", point: "+69%", url: "https://a.r10.to/hkvyHm", essential: true, campaignKey: "marathon", noAffiliate: true },
-    { name: "🌷 母の日 100円クーポン", point: "100円OFF", url: "https://event.rakuten.co.jp/mother/coupon/5/", essential: true, campaignKey: "mother_day" },
-    { name: "👔 父の日 150円クーポン", point: "150円OFF", url: "https://event.rakuten.co.jp/father/coupon/05/", essential: true, campaignKey: "father_day" },
+    { name: "💎 PREMIUM DAYS +8.5%", point: "+8.5%", url: "https://a.r10.to/h5KH7D", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "📚 本・雑誌 マラソン +9%", point: "+9%", url: "https://a.r10.to/hkANFr", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "💿 DVD・ブルーレイ +9%", point: "+9%", url: "https://a.r10.to/h5i3P6", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "📖 kobo 初回購入 +69%", point: "+69%", url: "https://a.r10.to/hkvyHm", essential: false, campaignKey: "marathon", noAffiliate: true },
+    { name: "🌷 母の日 100円クーポン", point: "100円OFF", url: "https://event.rakuten.co.jp/mother/coupon/5/", essential: false, campaignKey: "mother_day" },
+    { name: "👔 父の日 150円クーポン", point: "150円OFF", url: "https://event.rakuten.co.jp/father/coupon/05/", essential: false, campaignKey: "father_day" },
     // ── 全部表示のみ（おすすめには出さない） ──
     { name: "楽天ウェブ検索", point: "+1%", url: "https://toolbar.rakuten.co.jp/?scid=af_pc_etc&sc2id=af_101_0_0", essential: false },
     { name: "楽天BIC MegaBIC", point: "ポイントUP", url: "https://biccamera.rakuten.co.jp/c/campaign/megabic/?scid=af_pc_etc&sc2id=af_101_0_0", essential: false, campaignKey: "biccamera" },
@@ -2155,6 +2211,9 @@
 
 <!-- 一括開くトースト -->
 <div id="bulkToast"></div>
+
+<!-- 次の未エントリーを開く（ポチポチ進むだけで全エントリーを消化できる動線） -->
+<button id="nextEntryBtn" onclick="openNextEntry()">▶ 次の未エントリーを開く</button>
 
 <!-- 非表示リセットボタン（非表示アイテムがあるときだけ出現） -->
 <button id="resetBtn" onclick="resetDismissed()">🔄 非表示(0件)を元に戻す</button>
