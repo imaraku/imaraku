@@ -11,7 +11,7 @@
   "nike": false,
   "mobilebonus": false,
   "repeat_purchase": false,
-  "guerrilla": true,
+  "guerrilla": false,
   "superdeal_4h": false,
   "shop39": false,
   "mobiledeal": false,
@@ -24,7 +24,5 @@
   "xmas": false,
   "valentine": false,
   "whiteday": false,
-  "supersale": true,
-  "supersale_start": "2026-06-03T20:00:00+09:00",
-  "supersale_end": "2026-06-11T01:59:00+09:00"
+  "supersale": false
 }
