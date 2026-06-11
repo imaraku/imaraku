@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-06-10T09:19:46.912863+09:00",
+  "audited_at": "2026-06-11T09:22:45.855715+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 42,
+      "count": 43,
       "issues": [
         "句読点始まり: '【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/contactlens",
         "句読点始まり: '【アンファー】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
@@ -48,7 +48,8 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/haircarecatalog",
         "非キャンペーンURL: https://event.rakuten.co.jp/mother/flower/sweets_set",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/gift",
-        "非キャンペーンURL: https://event.rakuten.co.jp/beauty/korea"
+        "非キャンペーンURL: https://event.rakuten.co.jp/beauty/korea",
+        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/kids"
       ]
     },
     {
@@ -72,12 +73,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-06-10: 欠スロット ['0', '20']",
         "2026-06-09: 投稿0件",
         "2026-06-08: 欠スロット ['0', '20']",
         "2026-06-07: 欠スロット ['0', '20']",
         "2026-06-06: 欠スロット ['0', '20']",
-        "2026-06-05: 欠スロット ['0', '12', '18']",
-        "2026-06-04: 欠スロット ['0', '12', '20']"
+        "2026-06-05: 欠スロット ['0', '12', '18']"
       ]
     },
     {
