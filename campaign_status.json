@@ -1,5 +1,5 @@
 {
-  "marathon": false,
+  "marathon": true,
   "marathon_pointup": false,
   "eagles": false,
   "vissel": false,
@@ -14,7 +14,7 @@
   "guerrilla": false,
   "superdeal_4h": false,
   "shop39": false,
-  "mobiledeal": false,
+  "mobiledeal": true,
   "pokemon_lottery": false,
   "mother_day": false,
   "father_day": true,
