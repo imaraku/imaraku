@@ -262,5 +262,65 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/pampers",
     "point": "要確認",
     "detected_at": "2026-06-12"
+  },
+  {
+    "name": "愛媛百貨店｜愛媛の愛と、出会う場所。",
+    "url": "https://event.rakuten.co.jp/area/ehime/product",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "松山市特集｜愛媛の愛と、出会う場所。",
+    "url": "https://event.rakuten.co.jp/area/matsuyamashi/exhibition",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "楽天ベストコスメ2026年 上半期",
+    "url": "https://event.rakuten.co.jp/beauty/bestcosme/firsthalf",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "[対象ショップ限定]エントリー＆10,000円(税込)以上のお買い物で300ポイントプレゼント",
+    "url": "https://event.rakuten.co.jp/beauty/brand/luxe/luxurybeauty/campaign",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "エントリー＆対象アイテムをカテゴリー買いまわりでポイント最大10倍",
+    "url": "https://event.rakuten.co.jp/brand/cross-genre",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "【毎週末開催】最強翌日配送キャンペーン！週末限定ポイント2倍",
+    "url": "https://event.rakuten.co.jp/campaign/point-up/saikyo-delivery",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "エントリーで全ショップポイント3倍！ワンダフルデー",
+    "url": "https://event.rakuten.co.jp/campaign/point-up/wonderfulday",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "エントリーで全ショップポイント3倍！ワンダフルデー | 最大15％OFFクーポン",
+    "url": "https://event.rakuten.co.jp/campaign/point-up/wonderfulday/brand",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "エントリーで全ショップポイント3倍！ワンダフルデー | 最大1,000円OFFクーポン",
+    "url": "https://event.rakuten.co.jp/campaign/point-up/wonderfulday/coupon",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "機能性ウェア＆インナー特集",
+    "url": "https://event.rakuten.co.jp/fashion/innerwear/recovery",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
   }
 ]
