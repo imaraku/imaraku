@@ -322,5 +322,47 @@
     "url": "https://event.rakuten.co.jp/fashion/innerwear/recovery",
     "point": "要確認",
     "detected_at": "2026-06-19"
+  },
+  {
+    "name": "6月通期クーポン（100円、150円OFF）｜父の日ギフト・プレゼント特集",
+    "url": "https://event.rakuten.co.jp/father/coupon/06",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "アクエリアス10%OFFクーポンキャンペーン",
+    "url": "https://event.rakuten.co.jp/mc/cocacola_gateway/special/aquarius",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "一緒に沸こうぜ。お得なクーポンキャンペーン実施中！",
+    "url": "https://event.rakuten.co.jp/mc/cocacola_gateway/special/cokefifa",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "ポイント最大10倍！コカ・コーラ製品スタンプラリー",
+    "url": "https://event.rakuten.co.jp/mc/cocacola_gateway/special/stampcard",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "対象ショップ限定！150円OFFクーポン｜夏ギフト・お中元特集2026",
+    "url": "https://event.rakuten.co.jp/ochugen/coupon",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "対象ショップ限定！200円OFFクーポン｜夏ギフト・お中元特集2026",
+    "url": "https://event.rakuten.co.jp/ochugen/coupon/shop/06",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
+  },
+  {
+    "name": "エントリー＆対象ショップで5,000円(税込)以上のお買い物で抽選100名様に10,000ポイントプ",
+    "url": "https://event.rakuten.co.jp/ochugen/special/point",
+    "point": "要確認",
+    "detected_at": "2026-06-19"
   }
 ]
