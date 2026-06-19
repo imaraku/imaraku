@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-06-18T09:20:51.685507+09:00",
+  "audited_at": "2026-06-19T10:47:08.820572+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 44,
+      "count": 61,
       "issues": [
         "句読点始まり: '【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/contactlens",
         "句読点始まり: '【アンファー】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
@@ -50,7 +50,19 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/gift",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/korea",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/kids",
-        "句読点始まり: '【パンパース】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/pampers"
+        "句読点始まり: '【パンパース】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/pampers",
+        "非キャンペーンURL: https://event.rakuten.co.jp/area/ehime/product",
+        "非キャンペーンURL: https://event.rakuten.co.jp/area/matsuyamashi/exhibition",
+        "非キャンペーンURL: https://event.rakuten.co.jp/beauty/bestcosme/firsthalf",
+        "非キャンペーンURL: https://event.rakuten.co.jp/beauty/brand/luxe/luxurybeauty/campaign",
+        "非キャンペーンURL: https://event.rakuten.co.jp/brand/cross-genre",
+        "句読点始まり: '【毎週末開催】最強翌日配送キャンペーン！週末限定ポイント2倍' → https://event.rakuten.co.jp/campaign/point-up/saikyo-delivery",
+        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/innerwear/recovery",
+        "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/aquarius",
+        "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/cokefifa",
+        "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/stampcard",
+        "非キャンペーンURL: https://event.rakuten.co.jp/ochugen/coupon",
+        "非キャンペーンURL: https://event.rakuten.co.jp/ochugen/special/point"
       ]
     },
     {
@@ -74,12 +86,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-06-18: 投稿0件",
         "2026-06-17: 欠スロット ['0', '20']",
         "2026-06-16: 欠スロット ['0', '12', '20']",
         "2026-06-15: 欠スロット ['0', '12', '20']",
         "2026-06-14: 欠スロット ['0', '20']",
-        "2026-06-13: 欠スロット ['0', '20']",
-        "2026-06-12: 欠スロット ['0', '20']"
+        "2026-06-13: 欠スロット ['0', '20']"
       ]
     },
     {
