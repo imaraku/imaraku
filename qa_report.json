@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-06-22T09:17:59.554441+09:00",
+  "audited_at": "2026-06-23T09:15:25.148107+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,15 +10,13 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 61,
+      "count": 57,
       "issues": [
         "句読点始まり: '【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/contactlens",
         "句読点始まり: '【アンファー】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
-        "非キャンペーンURL: https://event.rakuten.co.jp/father/special/point",
         "非キャンペーンURL: https://event.rakuten.co.jp/mc/pg/coupon",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
-        "非キャンペーンURL: https://event.rakuten.co.jp/father/food",
         "非キャンペーンURL: https://event.rakuten.co.jp/gift/scene/birthday",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/color_shindan",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/yukata",
@@ -36,7 +34,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/rainitem/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/brand/luxe/luxurybeauty",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/menscosme",
-        "非キャンペーンURL: https://event.rakuten.co.jp/father/shop",
         "非キャンペーンURL: https://event.rakuten.co.jp/marvel/popupstore",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/school",
         "非キャンペーンURL: https://event.rakuten.co.jp/brand/officialshop",
@@ -86,11 +83,11 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-06-22: 欠スロット ['0', '12', '20']",
         "2026-06-21: 欠スロット ['0', '20']",
         "2026-06-19: 欠スロット ['0', '20']",
         "2026-06-18: 投稿0件",
-        "2026-06-17: 欠スロット ['0', '20']",
-        "2026-06-16: 欠スロット ['0', '12', '20']"
+        "2026-06-17: 欠スロット ['0', '20']"
       ]
     },
     {
