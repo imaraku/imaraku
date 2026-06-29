@@ -340,5 +340,23 @@
     "url": "https://event.rakuten.co.jp/ochugen/special/point",
     "point": "要確認",
     "detected_at": "2026-06-19"
+  },
+  {
+    "name": "エアコン特集",
+    "url": "https://event.rakuten.co.jp/appliance/aircon",
+    "point": "要確認",
+    "detected_at": "2026-06-30"
+  },
+  {
+    "name": "育児の日キャンペーン｜エントリーでポイントアップ",
+    "url": "https://event.rakuten.co.jp/baby/192campaign",
+    "point": "要確認",
+    "detected_at": "2026-06-30"
+  },
+  {
+    "name": "楽夏。｜夏の準備は楽天市場で",
+    "url": "https://event.rakuten.co.jp/genre/rakunatsu",
+    "point": "要確認",
+    "detected_at": "2026-06-30"
   }
 ]
