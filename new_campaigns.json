@@ -358,5 +358,41 @@
     "url": "https://event.rakuten.co.jp/genre/rakunatsu",
     "point": "要確認",
     "detected_at": "2026-06-30"
+  },
+  {
+    "name": "全額ポイントバックキャンペーン｜Rakuten Fashion THE SALE(楽天ファッション・",
+    "url": "https://event.rakuten.co.jp/fashion/thesale/20260627xqzqq/allback",
+    "point": "要確認",
+    "detected_at": "2026-07-03"
+  },
+  {
+    "name": "最大1,500円OFFクーポン｜Rakuten Fashion THE SALE(楽天ファッション・",
+    "url": "https://event.rakuten.co.jp/fashion/thesale/20260627xqzqq/coupon",
+    "point": "要確認",
+    "detected_at": "2026-07-03"
+  },
+  {
+    "name": "食フェスクーポン｜楽天市場のグルメが最大2,000円OFF",
+    "url": "https://event.rakuten.co.jp/food/festival",
+    "point": "要確認",
+    "detected_at": "2026-07-03"
+  },
+  {
+    "name": "最大3,000円OFFクーポン｜楽天モバイルご契約者限定",
+    "url": "https://event.rakuten.co.jp/genre/campaign/mobile",
+    "point": "要確認",
+    "detected_at": "2026-07-03"
+  },
+  {
+    "name": "FLASH COUPON",
+    "url": "https://event.rakuten.co.jp/genre/timesale",
+    "point": "要確認",
+    "detected_at": "2026-07-03"
+  },
+  {
+    "name": "1日から開催！くらしにプラス＋",
+    "url": "https://event.rakuten.co.jp/household/coupon/plus",
+    "point": "要確認",
+    "detected_at": "2026-07-03"
   }
 ]
