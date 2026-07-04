@@ -394,5 +394,35 @@
     "url": "https://event.rakuten.co.jp/household/coupon/plus",
     "point": "要確認",
     "detected_at": "2026-07-03"
+  },
+  {
+    "name": "岡山県WEB物産展｜OKAYAMA晴れの国マーケット",
+    "url": "https://event.rakuten.co.jp/area/okayama/exhibition",
+    "point": "要確認",
+    "detected_at": "2026-07-04"
+  },
+  {
+    "name": "韓コス祭り｜20%OFFクーポン",
+    "url": "https://event.rakuten.co.jp/beauty/korea/campaign",
+    "point": "要確認",
+    "detected_at": "2026-07-04"
+  },
+  {
+    "name": "最大200円OFFクーポン!食品 菓子 水 酒で使える｜楽天市場",
+    "url": "https://event.rakuten.co.jp/food/coupon/marathon",
+    "point": "要確認",
+    "detected_at": "2026-07-04"
+  },
+  {
+    "name": "楽天市場｜ビール・チューハイ・発泡酒などお酒のクーポンキャンペーン実施中",
+    "url": "https://event.rakuten.co.jp/liquor/coupon",
+    "point": "要確認",
+    "detected_at": "2026-07-04"
+  },
+  {
+    "name": "対象ショップ限定！250円OFFクーポン｜夏ギフト・お中元特集2026",
+    "url": "https://event.rakuten.co.jp/ochugen/coupon/07/genre",
+    "point": "要確認",
+    "detected_at": "2026-07-04"
   }
 ]
