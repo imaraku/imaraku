@@ -114,6 +114,21 @@ def fetch_campaign_info(url: str) -> dict:
         print(f"  ⚠️ 取得失敗 → スキップ: {url} ({e})")
         return None
 
+    # 期限 datetime 判定（2026-07-05 監査で追加）:
+    # 楽天ペイ系は「終了文言」も「エントリーボタン」も両方HTMLに常駐しJSで切替表示するため、
+    # 「activeシグナルがあれば終了句を無視」のロジックだけでは真に終了したページを見抜けない
+    # （invoice-payment / familymart が終了後も POST対象と誤判定されるガード貫通を実測）。
+    # 終了ブロックの datetime 属性を読み、「全て過去」なら activeシグナルの有無に関わらず終了確定。
+    end_dts = []
+    for mdt in re.findall(r'datetime="(\d{4}-\d{2}-\d{2}T[\d:]+)"[^>]{0,200}?>\s*<p[^>]*term-info-txt', html):
+        try:
+            end_dts.append(datetime.datetime.fromisoformat(mdt).replace(tzinfo=JST))
+        except ValueError:
+            pass
+    if end_dts and all(dt <= datetime.datetime.now(JST) for dt in end_dts):
+        print(f"  🚫 終了確定(期限datetime={max(end_dts):%Y-%m-%d}) → スキップ: {url}")
+        return None
+
     # 終了確定チェック（active シグナルがあれば誤検出回避）
     has_end = any(p in html for p in STRICT_END_PHRASES)
     has_active = any(s in html for s in ACTIVE_SIGNALS)

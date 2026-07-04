@@ -180,8 +180,8 @@
         "name": "プロテイン",
         "emoji": "💪",
         "genre_id": 100938,
-        "filter_keywords": ["プロテイン", "WPC", "WPI", "ホエイ", "ソイ"],
-        "name_must_not_contain_any": [],
+        "filter_keywords": ["プロテイン", "WPC", "WPI", "ホエイ", "ソイプロテイン"],
+        "name_must_not_contain_any": ["日傘", "傘", "ソイジョイ", "ソイラテ", "ソイソース"],
         "tail_message": "週末に体調管理を整えよう🏃",
         "hashtags": ["core", "health", "poikatsu"]
       },
@@ -199,7 +199,7 @@
         "emoji": "⚖️",
         "genre_id": 100938,
         "filter_keywords": ["体重計", "体組成計", "ヘルスメーター", "タニタ", "オムロン"],
-        "name_must_not_contain_any": [],
+        "name_must_not_contain_any": ["血圧計", "体温計", "クッキングスケール", "タイマー", "電動歯ブラシ"],
         "tail_message": "毎日測ると意識が変わる✨",
         "hashtags": ["core", "health", "poikatsu"]
       }

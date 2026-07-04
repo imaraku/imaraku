@@ -2,10 +2,10 @@ name: セール文脈まとめツイート
 
 on:
   schedule:
-    # JST 14:00/14:30/15:00/15:30 (UTC 5:00-6:30) に試行（cron取りこぼし対策）。
-    # 大型セール開催中のみ・1日1回(sale_picks_posted.json で日次重複排除)。
-    # daily(昼12/夕18) の“間”の時間帯に置いて露出を分散する。
-    - cron: '0,30 5,6 * * *'
+    # JST 14:00-17:30 (UTC 5:00-8:30) に試行（cron取りこぼし対策）。
+    # 実測で cron が1-2.5h遅延し1日1本しか着地しないため、2026-07-05 に UTC7,8 を追加
+    # （スクリプト側の時間ガードは 13-19時JST。1日1回 dedup は sale_picks_posted.json）。
+    - cron: '0,30 5,6,7,8 * * *'
   # 手動テスト用（SALE_PICKS_FORCE=true で時間/重複ガードを無視）
   workflow_dispatch:
     inputs:

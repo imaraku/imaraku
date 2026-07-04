@@ -391,14 +391,46 @@ URL_INCLUDE_FROM = datetime.date(2026, 6, 1)
 def _strip_imaraku_url_lines(text: str) -> str:
     """imaraku.github.io を含む行を全部削除する。URL なし版本文を返す。"""
     kept = [line for line in text.split("\n") if "imaraku.github.io" not in line]
-    return "\n".join(kept).rstrip() + "\n" if kept else ""
+    return "\n".join(kept).rstrip() if kept else ""
 
 
 def _strip_all_url_lines(text: str) -> str:
     """http(s):// を含む行を全部削除する（403 フォールバック用・完全 URL なし版）。"""
     kept = [line for line in text.split("\n")
             if "http://" not in line and "https://" not in line]
-    return "\n".join(kept).rstrip() + "\n" if kept else ""
+    return "\n".join(kept).rstrip() if kept else ""
+
+
+def _weighted_len(text: str) -> int:
+    """X の加重文字数（URL=23字換算・CJK/絵文字=2・ASCII=1）。"""
+    t = re.sub(r'https?://\S+', 'X' * 23, text)
+    return sum(1 if ord(c) < 0x80 else 2 for c in t)
+
+
+def _fit_within_limit(text: str, limit: int = 280) -> str:
+    """280字超過を投稿前に必ず解消する保険。
+    2026-07-03〜04 に「エントリー促進テンプレが280字超過 → 403 → URL除去後もなお超過 →
+    再403」で daily が4連敗しスロット2枠を喪失した事故（監査で特定）の恒久対策。
+    削る順: ①ハッシュタグ行 → ②imaraku URL行 → ③末尾からのハード切り詰め。"""
+    if _weighted_len(text) <= limit:
+        return text
+    orig = _weighted_len(text)
+    # ① ハッシュタグ行を削除
+    t = "\n".join(l for l in text.split("\n") if not l.strip().startswith("#")).rstrip()
+    if _weighted_len(t) <= limit:
+        print(f"  [長さ保険] {orig}→{_weighted_len(t)}字: ハッシュタグ行を削除", file=sys.stderr)
+        return t
+    # ② imaraku URL 行を削除
+    t = _strip_imaraku_url_lines(t)
+    if _weighted_len(t) <= limit:
+        print(f"  [長さ保険] {orig}→{_weighted_len(t)}字: ハッシュタグ＋imaraku URL行を削除", file=sys.stderr)
+        return t
+    # ③ 末尾からハード切り詰め（最終手段。日付行が欠ける可能性はあるが「投稿されない」よりまし）
+    while t and _weighted_len(t + "…") > limit:
+        t = t[:-1]
+    t = t.rstrip() + "…"
+    print(f"  [長さ保険] {orig}→{_weighted_len(t)}字: 末尾切り詰め", file=sys.stderr)
+    return t
 
 
 def post_tweet(text: str) -> bool:
@@ -414,6 +446,9 @@ def post_tweet(text: str) -> bool:
     ※ 月末ポイントツイート等が point.rakuten.co.jp(hb.afl) を持つので、6/1前でも
       「URL付きで試す→ダメなら URL なしで通す」フォールバックで取りこぼしを防ぐ。
     """
+    # 🛡️ 280字保険: どのテンプレでも投稿前に必ず280字以内へ収める（7/3-7/4事故の恒久対策）
+    text = _fit_within_limit(text)
+
     today_jst = datetime.datetime.now(JST).date()
 
     if today_jst < URL_INCLUDE_FROM:
@@ -985,6 +1020,33 @@ def tweet_marathon_x_victory(w_victory: bool, team: str = "") -> str:
     )
 
 
+def tweet_marathon_victory_special(team: str, special_days: list, season_event: str = None) -> str:
+    """マラソン × 片チーム勝利 × 特別日(0と5/1日/18日) — 月イチ級の役満（2026-07-05 新設）。
+    従来は勝利分岐が特別日を上書きして「0と5」訴求が消えていた（監査所見）。
+    ピーク日は同分岐が1日3回(12/18/20時)出るため、スロット別に本文を変えて
+    重複403(地雷#12)と「同じ投稿3連発」の残念感も防ぐ。"""
+    events = season_event if season_event else "・".join(special_days)
+    mark = '⚾' if 'イーグルス' in team else '⚽'
+    tag_team = 'eagles' if 'イーグルス' in team else 'vissel'
+    slot_bodies = {
+        "12": "お昼のうちにエントリー確認📝\n夜の買いまわりが全部おトクに",
+        "18": "帰り道にエントリー完了🚃\n今夜が買いまわりのゴールデンタイム",
+        "20": "ラストスパート🏃\n寝る前にエントリー＆ポチっと買いまわり",
+    }
+    body = slot_bodies.get(_CURRENT_SLOT, slot_bodies["18"])
+    return (
+        f"{daily_lead_in()}"
+        "🎯 今日は役満級のお得日！\n"
+        f"マラソン × {events} × {team}勝利{mark}\n"
+        "\n"
+        f"{body}\n"
+        "\n"
+        "エントリーまとめ👇\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', 'marathon', tag_team], max_tags=3)}"
+    )
+
+
 def tweet_w_victory_x_special(special_days: list, season_event: str = None) -> str:
     """W勝利 × 特別日/季節イベント → レアな組み合わせ"""
     events = season_event if season_event else "・".join(special_days)
@@ -1222,6 +1284,11 @@ def main():
     elif marathon and marathon_pointup and w_victory:
         tweet = tweet_marathon_x_victory(w_victory=True)
         label = "マラソン×W勝利"
+
+    elif marathon and marathon_pointup and any_victory and has_special:
+        # 片チーム勝利×特別日(0と5等) → 役満テンプレ（スロット別バリアントで3連投も重複しない）
+        tweet = tweet_marathon_victory_special(victor_team, special_days, season_event)
+        label = f"マラソン×{victor_team}勝利×{'・'.join(special_days) if special_days else season_event}（役満）"
 
     elif marathon and marathon_pointup and any_victory:
         tweet = tweet_marathon_x_victory(w_victory=False, team=victor_team)

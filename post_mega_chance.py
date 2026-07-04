@@ -107,6 +107,12 @@ def is_mega_chance_today(now: datetime.datetime) -> bool:
     # → 「今日より前に既に0/5の日があった」なら False（最初の0/5日のみ最強）
     cur = p_start.date()
     today = now.date()
+    # 開始日は 07時run 時点でイベント未開始（マラソンは20:00開始が通例）のため、
+    # 「既に0/5日があった」のカウントから除外する。
+    # 2026-06マラソン(6/20 20:00開始)で 6/20 を数えてしまい 6/25 の最強日を
+    # 無発火にしたバグの修正（2026-07-05 監査で発見）。
+    if p_start.hour >= 7:
+        cur = p_start.date() + datetime.timedelta(days=1)
     while cur < today:
         if cur.day % 5 == 0:
             return False
@@ -136,7 +142,7 @@ def build_tweet(now: datetime.datetime, event_label: str) -> str:
         "\n"
         "今日のキャンペーン👇\n"
         f"{SITE_URL}\n"
-        f" {hashtags(['core', 'poikatsu', 'rakuten'], max_tags=3)}"
+        f" {hashtags(['core', 'zerogo', 'poikatsu'], max_tags=3)}"
     )
 
 

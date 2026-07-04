@@ -261,6 +261,12 @@ def is_pre_pointup_eve(now: datetime.datetime) -> bool:
             if now.date() != p_start.date():
                 print(f"  → 今日({now.date()}) ≠ pointup開始日({p_start.date()}) → 事前告知スキップ")
                 return False
+            # 時刻ガード: 開始時刻を過ぎていたら「今夜20:00 START!」は時系列逆転になる。
+            # 2026-07-04 に cron遅延(19:50→20:48着地)＋status更新ラグで、開始48分後に
+            # 事前告知を投稿した事故の恒久対策（フラグ鮮度に依存しない now との直接比較）。
+            if now >= p_start:
+                print(f"  → 既にポイントアップ開始時刻({p_start.strftime('%H:%M')})を過ぎている → 事前告知スキップ（時系列逆転防止）")
+                return False
             print(f"  → 今日はポイントアップ開始日({p_start.date()})！告知GO")
             return True
         except Exception:

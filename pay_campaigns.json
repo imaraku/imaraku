@@ -3,8 +3,6 @@
   "_maintenance": "毎月初のメンテで以下を確認: ①終わったキャンペーンURLを削除 ②新しいキャンペーンURLを追加。スクリプトが終了検出すれば自動スキップなので、削除忘れても投稿には影響しない。",
   "campaigns": [
     "https://pay.rakuten.co.jp/campaign/pay-5and0day/",
-    "https://pay.rakuten.co.jp/campaign/2026/0416-invoice-payment/",
-    "https://pay.rakuten.co.jp/campaign/pay-mobile/",
-    "https://pointcard.rakuten.co.jp/campaign/familymart/20260501/"
+    "https://pay.rakuten.co.jp/campaign/pay-mobile/"
   ]
 }

@@ -31,7 +31,7 @@ STATUS_FILE   = "campaign_status.json"
 POSTED_FILE   = "sale_picks_posted.json"
 SITE_URL_BASE = "https://imaraku.github.io/imaraku/imaraku.html"
 GENERAL_GENRE = 0     # 総合ランキング
-MAX_PICKS = 3
+MAX_PICKS = 2   # 2026-07-05: リンク原則（1投稿1-2本＋サイト）に合わせ 3→2 に削減
 MIN_PICKS = 2
 NUM_MARKS = "①②③④⑤"
 
@@ -82,7 +82,9 @@ def sale_context(status: dict):
 def build_tweet(sale_name: str, picks: list, now: datetime.datetime):
     """280字に収まる範囲で 3→2 点入れたまとめツイートを作る。収まらなければ None。"""
     site = f"{SITE_URL_BASE}?d={now.strftime('%Y%m%d')}"
-    tags = hashtags(['core', 'supersale', 'ranking'], now=now, max_tags=3)
+    # 2026-07-05: タグをセール種別に連動（マラソン中に #楽天スーパーセール が付く不整合の修正）
+    sale_tag = 'supersale' if 'スーパー' in sale_name else 'marathon'
+    tags = hashtags(['core', sale_tag, 'ranking'], now=now, max_tags=3)
     for n in range(min(MAX_PICKS, len(picks)), MIN_PICKS - 1, -1):
         head = f"🛒{sale_name}で今売れてるのはコレ👇\n\n"
         body = "".join(
@@ -100,8 +102,8 @@ def main():
     now = datetime.datetime.now(JST)
     force = os.environ.get("SALE_PICKS_FORCE", "").lower() in ("1", "true", "yes")
 
-    # 時間ガード: 14-15時JST想定。cron遅延の余裕で 13-17時台まで許容。窓外は何もしない。
-    if not force and not (13 <= now.hour <= 17):
+    # 時間ガード: 14-15時JST想定。cron遅延（実測1-2.5h・地雷#5）の余裕で 13-19時台まで許容。
+    if not force and not (13 <= now.hour <= 19):
         print(f"時間窓外({now.hour}時JST) → 何もしない")
         return
 
