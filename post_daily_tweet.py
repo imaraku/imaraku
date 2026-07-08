@@ -24,6 +24,7 @@ post_daily_tweet.py
 """
 
 import os
+import re
 import sys
 import time
 import json
