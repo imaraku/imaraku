@@ -494,6 +494,39 @@ def generate_post_image(item: dict) -> "str | None":
 
 # ── メール組み立て & 送信 ──────────────────────────────────────────────────────
 
+CAMPAIGN_STATUS_FILE = "campaign_status.json"
+
+
+def get_campaign_boost() -> tuple:
+    """imaraku が2時間ごとに更新している campaign_status.json から、
+    今日の投稿に載せるブースト文（コピペ用）とハッシュタグを返す。
+
+    ふるさと納税の寄付はマラソン買いまわりの1店舗にカウントされるため、
+    マラソン開催中はROOM経由で購入する動機が年間で最も強くなる。
+    優先度: マラソン買いまわり中 > 5と0のつく日 > なし
+    """
+    status = {}
+    if os.path.exists(CAMPAIGN_STATUS_FILE):
+        try:
+            with open(CAMPAIGN_STATUS_FILE, encoding="utf-8") as f:
+                status = json.load(f)
+        except Exception as e:
+            print(f"  ⚠️ campaign_status.json 読み込み失敗: {e}", file=sys.stderr)
+
+    today = datetime.datetime.now(JST)
+    if status.get("marathon_pointup"):
+        note = "＼お買い物マラソン開催中／\nふるさと納税も買いまわり1店舗にカウント🏃"
+        tags = " #お買い物マラソン #買いまわり"
+        label = "マラソン買いまわり中🏃"
+    elif today.day % 5 == 0:
+        note = "今日は5と0のつく日✨ 楽天カードならポイントアップのチャンス"
+        tags = " #5と0のつく日"
+        label = "5と0のつく日"
+    else:
+        return "", "", ""
+    return note, tags, label
+
+
 def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = None) -> tuple[str, str]:
     clean_name = strip_name_prefix(item["name"])
     short_name = clean_name[:50]
@@ -507,12 +540,18 @@ def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = N
         season_tag = ""
         season_note = ""
 
+    boost_note, boost_tags, boost_label = get_campaign_boost()
+    if boost_label:
+        subject = subject.replace("】", f"/{boost_label}】", 1)
+    boost_info = f"🔥 {boost_label} — 買う動機が強い日。投稿効果が高いぜ\n\n" if boost_label else ""
+    boost_block = f"\n{boost_note}\n" if boost_note else ""
+
     body_name = clean_name[:80]
-    tags = f"#楽天ROOM #ふるさと納税 #楽天ふるさと納税 #節税 #お得{season_tag}"
+    tags = f"#楽天ROOM #ふるさと納税 #楽天ふるさと納税 #節税 #お得{season_tag}{boost_tags}"
 
     body = f"""━━━ 今日の楽天ROOM投稿候補 ━━━
 
-{season_note}📮 {body_name}
+{boost_info}{season_note}📮 {body_name}
 💰 寄付額 {item['price']:,}円
 🏪 {item['shop']}
 🔗 {aff_url}
@@ -521,7 +560,7 @@ def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = N
 【投稿文コピペ用 ↓ここから↓】
 
 {appeal}
-
+{boost_block}
 🔗 {aff_url}
 
 {tags}
