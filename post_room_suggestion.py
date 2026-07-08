@@ -494,37 +494,20 @@ def generate_post_image(item: dict) -> "str | None":
 
 # ── メール組み立て & 送信 ──────────────────────────────────────────────────────
 
-CAMPAIGN_STATUS_FILE = "campaign_status.json"
-
-
 def get_campaign_boost() -> tuple:
-    """imaraku が2時間ごとに更新している campaign_status.json から、
-    今日の投稿に載せるブースト文（コピペ用）とハッシュタグを返す。
+    """今日の投稿に載せるブースト文（コピペ用）とハッシュタグを返す。
 
-    ふるさと納税の寄付はマラソン買いまわりの1店舗にカウントされるため、
-    マラソン開催中はROOM経由で購入する動機が年間で最も強くなる。
-    優先度: マラソン買いまわり中 > 5と0のつく日 > なし
+    ※ 2026年からお買い物マラソンの買いまわりはふるさと納税が対象外に
+      なったため、マラソン連動ブーストは廃止（誤情報防止）。
+      現在は「5と0のつく日」のみ。
     """
-    status = {}
-    if os.path.exists(CAMPAIGN_STATUS_FILE):
-        try:
-            with open(CAMPAIGN_STATUS_FILE, encoding="utf-8") as f:
-                status = json.load(f)
-        except Exception as e:
-            print(f"  ⚠️ campaign_status.json 読み込み失敗: {e}", file=sys.stderr)
-
     today = datetime.datetime.now(JST)
-    if status.get("marathon_pointup"):
-        note = "＼お買い物マラソン開催中／\nふるさと納税も買いまわり1店舗にカウント🏃"
-        tags = " #お買い物マラソン #買いまわり"
-        label = "マラソン買いまわり中🏃"
-    elif today.day % 5 == 0:
+    if today.day % 5 == 0:
         note = "今日は5と0のつく日✨ 楽天カードならポイントアップのチャンス"
         tags = " #5と0のつく日"
         label = "5と0のつく日"
-    else:
-        return "", "", ""
-    return note, tags, label
+        return note, tags, label
+    return "", "", ""
 
 
 def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = None) -> tuple[str, str]:
