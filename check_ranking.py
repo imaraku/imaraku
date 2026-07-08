@@ -63,12 +63,10 @@ RARE_KEYWORDS = [
     # 推し活・コレクター人気
     "たまごっち", "Tamagotchi", "サンリオ", "ちいかわ",
     "ドロップシール", "プチドロップ", "ぷくキラ", "ぬいぐるみ ぬいば",
-    # 音楽・アイドル（リリース日にランキング急上昇する人気アクト）
-    "Snow Man", "SnowMan", "なにわ男子", "King & Prince", "SixTONES",
-    "Travis Japan", "Aぇ! group", "Number_i", "timelesz",
-    "BTS", "NewJeans", "TWICE", "SEVENTEEN", "Stray Kids",
-    "YOASOBI", "Mrs. GREEN APPLE", "King Gnu", "Ado", "米津玄師",
-    "Official髭男dism", "back number",
+    # ※音楽・アイドル枠（Snow Man/なにわ男子/K-POP/J-POP 21アクト）は 2026-07-09 廃止。
+    #   相棒の判断: ファン向けCD積み需要は今楽のブランド（楽天お得情報）と不一致で、
+    #   インプレッションは取れても（実測: StrayKids 64view=平均超）フォロー転換しない
+    #   off-brandトラフィック。フィードの一貫性を優先（掘り起こすなら相棒に確認）。
     # マラソン期に急上昇しがちな注目ショップ（相棒お気に入り）
     "DRIP COFFEE FACTORY",
     # コーヒー（相棒の趣味枠 + マラソン期に上位入りで ポイントUP チャンスのサイン）
@@ -327,29 +325,7 @@ IP_HASHTAGS = [
     (["プチドロップ"],                          "#プチドロップ"),
     (["ぷくキラ"],                              "#ぷくキラ"),
 
-    # ── 邦楽・アイドル（個別） ──
-    (["Snow Man", "SnowMan"],                   "#SnowMan"),
-    (["なにわ男子"],                            "#なにわ男子"),
-    (["King & Prince", "キンプリ"],             "#KingAndPrince"),
-    (["SixTONES"],                              "#SixTONES"),
-    (["Travis Japan"],                          "#TravisJapan"),
-    (["Aぇ! group", "Aぇ!group"],                "#Aぇgroup"),
-    (["Number_i"],                              "#Number_i"),
-    (["timelesz"],                              "#timelesz"),
-    (["YOASOBI"],                               "#YOASOBI"),
-    (["Mrs. GREEN APPLE", "ミセス"],            "#ミセス"),
-    (["King Gnu"],                              "#KingGnu"),
-    (["Ado"],                                   "#Ado"),
-    (["米津玄師"],                              "#米津玄師"),
-    (["Official髭男dism", "ヒゲダン"],          "#Official髭男dism"),
-    (["back number"],                           "#backnumber"),
-
-    # ── K-POP（個別） ──
-    (["BTS"],                                   "#BTS"),
-    (["NewJeans"],                              "#NewJeans"),
-    (["TWICE"],                                 "#TWICE"),
-    (["SEVENTEEN"],                             "#SEVENTEEN"),
-    (["Stray Kids"],                            "#StrayKids"),
+    # ※邦楽・アイドル/K-POP のIPマップは 2026-07-09 に RARE_KEYWORDS ごと廃止（上記コメント参照）
 
     # ── ハードウェア／ブランド（catch-all、上の franchise IP に拾われなかった分） ──
     (["ポケットモンスター", "ポケモン"],        "#ポケモン"),
@@ -647,13 +623,13 @@ def fetch_ranking_via_api(pages: list = None, period: str = "realtime") -> list[
     #
     # 【ジャンル選定の狙い】
     # 総合 TOP30 は楽天全体のトラフィックが集中して "上位=即売り切れ" になりやすい。
-    # カテゴリ別ランキングは細分化されてるので、ポケカ/Snow Man/ONE PIECE 系の
+    # カテゴリ別ランキングは細分化されてるので、ポケカ/ONE PIECE 系の
     # ヒット商品が「ジャンル内 TOP10-30」に来た段階で = まだ在庫がある段階で
     # 拾える期待値が高い（在庫切れツイートで読者を失望させないため）。
     axes = [
         ("総合",        {"genreId": 0}),       # 楽天市場全体
         ("おもちゃ",    {"genreId": 562637}),  # ポケカ・たまごっち・ドロップシール・キャラグッズ
-        ("CD/DVD",      {"genreId": 101240}),  # Snow Man/アイドル/邦楽
+        ("CD/DVD",      {"genreId": 101240}),  # アニメBD/サントラ等（アイドル枠は2026-07-09廃止）
         ("本雑誌",      {"genreId": 101266}),  # ONE PIECE magazine / 漫画 / アイドル写真集 等（200163は誤り→パソコン関連だった）
         ("テレビ家電",  {"genreId": 200162}),  # Switch ソフト・新作ガジェット
         ("食品",        {"genreId": 100533}),  # 限定スイーツ・コラボ食品
