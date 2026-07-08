@@ -250,6 +250,33 @@ def load_seasonal_keywords(month: int) -> list[str]:
         return []
 
 
+def load_necessity_keywords() -> list[str]:
+    """日曜『日用品の日』用キーワード配列を返す。失敗時は空リスト。"""
+    if not os.path.exists(SEASONAL_FILE):
+        return []
+    try:
+        with open(SEASONAL_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("sunday_necessities", [])
+    except Exception as e:
+        print(f"  ⚠️ 日用品キーワード読み込み失敗: {e}", file=sys.stderr)
+        return []
+
+
+def pick_by_keywords(items: list[dict], sent_urls: list[str], keywords: list[str]) -> tuple:
+    """キーワードに一致する未送信の上位アイテムを返す。無ければ (None, None)。"""
+    sent_set = set(sent_urls)
+    for it in items:
+        base_url = it["url"].split("?")[0]
+        if base_url in sent_set:
+            continue
+        name = it.get("name", "")
+        for kw in keywords or []:
+            if kw in name:
+                return it, kw
+    return None, None
+
+
 def pick_item(items: list[dict], sent_urls: list[str], seasonal_keywords: list[str] = None) -> tuple:
     """未送信アイテムを選出。返値は (item, matched_keyword_or_None)。
 
@@ -258,21 +285,14 @@ def pick_item(items: list[dict], sent_urls: list[str], seasonal_keywords: list[s
       2. 一致が無い、もしくはキーワード未指定 → ランキング順の最上位未送信
       3. 全て送信済み → (None, None)
     """
-    sent_set = set(sent_urls)
-    keywords = seasonal_keywords or []
-
     # Phase 1: 季節キーワード一致 を優先
-    if keywords:
-        for it in items:
-            base_url = it["url"].split("?")[0]
-            if base_url in sent_set:
-                continue
-            name = it.get("name", "")
-            for kw in keywords:
-                if kw in name:
-                    return it, kw
+    if seasonal_keywords:
+        it, kw = pick_by_keywords(items, sent_urls, seasonal_keywords)
+        if it is not None:
+            return it, kw
 
     # Phase 2: ランキング順フォールバック
+    sent_set = set(sent_urls)
     for it in items:
         base_url = it["url"].split("?")[0]
         if base_url not in sent_set:
@@ -284,11 +304,14 @@ def pick_item(items: list[dict], sent_urls: list[str], seasonal_keywords: list[s
 
 # ── アピール文生成 ─────────────────────────────────────────────────────────────
 
-def generate_appeal(item: dict, seasonal_keyword: str = None) -> str:
+def generate_appeal(item: dict, seasonal_keyword: str = None, necessity_keyword: str = None) -> str:
     """Claude Haiku にアピール文を生成させる。失敗時はフォールバック文を返す。
-    seasonal_keyword が指定されていれば「旬の先取り」軸を訴求に追加。
+    seasonal_keyword: 「旬の先取り」軸を訴求に追加。
+    necessity_keyword: 「日用品=実質生活費削減」軸を訴求に追加（日曜の日用品の日）。
     """
-    if seasonal_keyword:
+    if necessity_keyword:
+        fallback = f"ふるさと納税で{necessity_keyword}！どうせ使う日用品だから実質生活費の節約になるよ。"
+    elif seasonal_keyword:
         fallback = f"これからが旬の{seasonal_keyword}！ふるさと納税で今から予約しておこう。"
     else:
         fallback = "人気ランキングから厳選！ふるさと納税でお得に手に入れるチャンスだよ。"
@@ -305,7 +328,15 @@ def generate_appeal(item: dict, seasonal_keyword: str = None) -> str:
     client = Anthropic(api_key=ANTHROPIC_API_KEY)
 
     seasonal_hint = ""
-    if seasonal_keyword:
+    if necessity_keyword:
+        seasonal_hint = f"""
+
+# 特記事項（重要）
+- この商品は「日用品」枠です（キーワード: {necessity_keyword}）
+- ふるさと納税で日用品をもらう = 必ず使うものなので実質的な生活費削減、という節約訴求を軸に
+- 「どうせ使うもの」「置き場所いらずの配送月選択」「家計の味方」等、実用的で堅実なトーンで
+- 食品のような「美味しそう」訴求は不要。賢い選択・堅実さを褒めるトーンが刺さる層です"""
+    elif seasonal_keyword:
         seasonal_hint = f"""
 
 # 特記事項（重要）
@@ -510,11 +541,16 @@ def get_campaign_boost() -> tuple:
     return "", "", ""
 
 
-def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = None) -> tuple[str, str]:
+def build_email(item: dict, appeal: str, aff_url: str, seasonal_keyword: str = None,
+                necessity_keyword: str = None) -> tuple[str, str]:
     clean_name = strip_name_prefix(item["name"])
     short_name = clean_name[:50]
 
-    if seasonal_keyword:
+    if necessity_keyword:
+        subject = f"【今日のROOM投稿/日用品の日🧻】{short_name}"
+        season_tag = f" #{necessity_keyword} #日用品 #節約術"
+        season_note = f"🧻 日曜は日用品の日！『{necessity_keyword}』は節約層のど定番。実用訴求でいくぜ\n\n"
+    elif seasonal_keyword:
         subject = f"【今日のROOM投稿/旬先取り🌱】{short_name}"
         season_tag = f" #{seasonal_keyword}"
         season_note = f"🌱 今日は『{seasonal_keyword}』の旬先取りピックだぜ！需要が立ち上がる前に投稿しとくと第一想起取れる\n\n"
@@ -619,13 +655,25 @@ def main() -> int:
         return 1
 
     cache = load_cache()
-    # 季節先取りキーワードを取得（現在の月）
-    current_month = datetime.datetime.now(JST).month
-    seasonal_keywords = load_seasonal_keywords(current_month)
-    if seasonal_keywords:
-        print(f"  🌱 {current_month}月の旬先取りキーワード: {seasonal_keywords}")
+    now = datetime.datetime.now(JST)
 
-    item, matched_kw = pick_item(items, cache.get("sent_urls", []), seasonal_keywords)
+    # 日曜は「日用品の日」: 日用品キーワード一致を最優先（節約層のど定番戦略）
+    item, matched_kw, necessity_kw = None, None, None
+    if now.weekday() == 6:
+        necessities = load_necessity_keywords()
+        if necessities:
+            item, necessity_kw = pick_by_keywords(items, cache.get("sent_urls", []), necessities)
+            if necessity_kw:
+                print(f"  🧻 日曜・日用品の日ピック！ キーワード『{necessity_kw}』一致")
+            else:
+                print("  🧻 日曜だが日用品の未送信一致なし → 通常ロジックへ")
+
+    # 通常ロジック: 季節先取り → ランキング順
+    if item is None:
+        seasonal_keywords = load_seasonal_keywords(now.month)
+        if seasonal_keywords:
+            print(f"  🌱 {now.month}月の旬先取りキーワード: {seasonal_keywords}")
+        item, matched_kw = pick_item(items, cache.get("sent_urls", []), seasonal_keywords)
 
     if item is None:
         # 全件投稿済み → 「お休み通知」だけ送ってキャッシュは触らない
@@ -646,7 +694,7 @@ def main() -> int:
     print(f"  寄付額: {item['price']:,}円")
 
     aff_url = add_affiliate(item["url"])
-    appeal = generate_appeal(item, seasonal_keyword=matched_kw)
+    appeal = generate_appeal(item, seasonal_keyword=matched_kw, necessity_keyword=necessity_kw)
     print(f"  アピール文: {appeal}")
 
     # オリジナル画像生成は一旦停止（ROOM上の「オリジナル写真」の趣旨と合わないため）
@@ -654,7 +702,8 @@ def main() -> int:
     # image_path = generate_post_image(item)
     image_path = None
 
-    subject, body = build_email(item, appeal, aff_url, seasonal_keyword=matched_kw)
+    subject, body = build_email(item, appeal, aff_url, seasonal_keyword=matched_kw,
+                                necessity_keyword=necessity_kw)
 
     if os.environ.get("DRY_RUN") == "1":
         print("── DRY RUN (メール送信スキップ) ──")
