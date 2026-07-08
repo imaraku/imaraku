@@ -58,6 +58,7 @@ ACCESS_TOKEN_SECRET = os.environ["TWITTER_ACCESS_TOKEN_SECRET"]
 
 CAMPAIGN_STATUS_FILE   = "campaign_status.json"
 MARATHON_SCHEDULE_FILE = "marathon_schedule.json"
+SEASONAL_MOMENTS_FILE  = "seasonal_moments.json"
 
 # ── URL 定義 ────────────────────────────────────────────────────────────
 SITE_URL_BASE = "https://imaraku.github.io/imaraku/imaraku.html"   # 自サイト（ラップ不要）
@@ -128,6 +129,73 @@ SLOT_TIME_PHRASES = {
 }
 
 WEEKDAY_JP = ["月", "火", "水", "木", "金", "土", "日"]
+
+
+def _load_seasonal_moments() -> list:
+    try:
+        with open(SEASONAL_MOMENTS_FILE, encoding="utf-8") as f:
+            return json.load(f).get("moments", [])
+    except Exception:
+        return []
+
+
+def get_active_moment(now: datetime.datetime):
+    """今日が期間内の季節モーメント（夏休み/花火/お盆等）を返す。無ければ None。
+    from/to は MM-DD 形式（毎年自動で再利用・年跨ぎ期間は非対応）。
+    複数モーメントが重なる日は「終了が近いもの」= 今言わないと間に合わない方を優先。"""
+    def md(s):
+        m, d = s.split("-")
+        return (int(m), int(d))
+    today = (now.month, now.day)
+    active = []
+    for mo in _load_seasonal_moments():
+        try:
+            if md(mo["from"]) <= today <= md(mo["to"]):
+                active.append(mo)
+        except Exception:
+            continue
+    if not active:
+        return None
+    return min(active, key=lambda mo: md(mo["to"]))
+
+
+def tweet_seasonal_moment(moment: dict, now: datetime.datetime) -> str:
+    """季節モーメント投稿（2026-07-09 相棒発案）。
+    ライトユーザーの生活イベント（夏休みの虫取り・花火の浴衣・お盆の手土産等）に
+    「買う前にエントリー」を届ける。通常日のfiller枠を置き換えるため投稿数・
+    クレジット消費は増えない。items は日替わり1件ローテーション（重複403対策も兼ねる）。"""
+    items = moment.get("items", [])
+    # ローテーションは「年内通算日×2＋スロット」ベース。
+    # ・now.day % len だと len=5 のとき index0 が「0と5のつく日」(非発火日)に固定され永遠に出ない
+    # ・ydayだけでも月内では day と同期して特定itemが窓内に一度も出ないことがある（sim実測）
+    # ・スロットを混ぜると昼と夕で別itemになり、1日2品×窓内で全item網羅＋読者の既視感も解消
+    pick = ""
+    if items:
+        slot_off = 1 if _CURRENT_SLOT in ("18", "20") else 0
+        pick = items[(now.timetuple().tm_yday * 2 + slot_off) % len(items)]
+    # 次のマラソンが近ければセール連携の一言（イベント需要×セールカレンダーが今楽らしさ）
+    sale_line = ""
+    sched = load_marathon_schedule()
+    try:
+        p_start = datetime.datetime.fromisoformat(sched.get("pointup_start") or "")
+        if p_start.tzinfo is None:
+            p_start = p_start.replace(tzinfo=JST)
+        delta_days = (p_start - now).days
+        if 0 <= delta_days <= 10:
+            sale_line = f"⏳ {p_start.month}/{p_start.day}〜はマラソンで更にお得！\n"
+    except (ValueError, TypeError):
+        pass
+    return (
+        f"{daily_lead_in()}"
+        f"{moment.get('hook', '')}\n"
+        "\n"
+        f"{pick}\n"
+        "\n"
+        f"{sale_line}"
+        "買う前に30秒エントリー💡\n"
+        f"{SITE_URL}\n"
+        f" {hashtags(['core', moment.get('tag_pool', 'poikatsu'), 'poikatsu'], max_tags=3)}"
+    )
 
 
 def with_slot_intro(tweet: str, slot: str, now: datetime.datetime = None) -> str:
@@ -1401,8 +1469,14 @@ def main():
         label = "NIKE特集（日曜）"
 
     else:
-        tweet = tweet_normal()
-        label = "通常日"
+        # 通常日: 季節モーメント（夏休み/花火/お盆等）の期間内なら filler の代わりに発火
+        moment = get_active_moment(now)
+        if moment:
+            tweet = tweet_seasonal_moment(moment, now)
+            label = f"季節モーメント（{moment['name']}）"
+        else:
+            tweet = tweet_normal()
+            label = "通常日"
 
     print(f"  種別: {label}")
 
