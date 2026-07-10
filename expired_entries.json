@@ -1,5 +1,5 @@
 {
-  "https://event.rakuten.co.jp/genre/school/mamawari/": {
+  "https://event.rakuten.co.jp/drink/point/": {
     "ended_at": "2026-07-10",
     "matched_keyword": "期間終了(日付判定)"
   },
@@ -7,7 +7,7 @@
     "ended_at": "2026-07-10",
     "matched_keyword": "STRICT終了句検出"
   },
-  "https://event.rakuten.co.jp/drink/point/": {
+  "https://event.rakuten.co.jp/genre/school/mamawari/": {
     "ended_at": "2026-07-10",
     "matched_keyword": "期間終了(日付判定)"
   },
