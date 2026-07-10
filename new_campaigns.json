@@ -424,5 +424,11 @@
     "url": "https://event.rakuten.co.jp/ochugen/coupon/07/genre",
     "point": "要確認",
     "detected_at": "2026-07-04"
+  },
+  {
+    "name": "エントリー＆条件達成で",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/lastcall",
+    "point": "要確認",
+    "detected_at": "2026-07-10"
   }
 ]
