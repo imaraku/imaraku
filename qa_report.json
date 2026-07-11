@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-07-10T09:12:08.352884+09:00",
+  "audited_at": "2026-07-11T09:04:24.334820+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 71,
+      "count": 72,
       "issues": [
         "句読点始まり: '【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/contactlens",
         "句読点始まり: '【アンファー】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
@@ -97,8 +97,7 @@
         "2026-07-08: 投稿0件",
         "2026-07-07: 投稿0件",
         "2026-07-06: 投稿0件",
-        "2026-07-05: 投稿0件",
-        "2026-07-04: 欠スロット ['0', '12', '20']"
+        "2026-07-05: 投稿0件"
       ]
     },
     {
