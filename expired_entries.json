@@ -1,11 +1,11 @@
 {
-  "https://event.rakuten.co.jp/drink/point/": {
-    "ended_at": "2026-07-14",
-    "matched_keyword": "期間終了(日付判定)"
-  },
   "https://event.rakuten.co.jp/season/newlife/campaign/": {
     "ended_at": "2026-07-14",
     "matched_keyword": "STRICT終了句検出"
+  },
+  "https://event.rakuten.co.jp/drink/point/": {
+    "ended_at": "2026-07-14",
+    "matched_keyword": "期間終了(日付判定)"
   },
   "https://event.rakuten.co.jp/genre/school/mamawari/": {
     "ended_at": "2026-07-14",
