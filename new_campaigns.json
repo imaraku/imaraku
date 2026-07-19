@@ -430,5 +430,11 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/koreacosme",
     "point": "要確認",
     "detected_at": "2026-07-17"
+  },
+  {
+    "name": "楽天市場｜ビール・チューハイなどお酒のクーポンキャンペーン実施中",
+    "url": "https://event.rakuten.co.jp/liquor/point",
+    "point": "要確認",
+    "detected_at": "2026-07-19"
   }
 ]
