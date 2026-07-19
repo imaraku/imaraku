@@ -1,7 +1,7 @@
 {
   "marathon": true,
   "marathon_pointup": true,
-  "eagles": true,
+  "eagles": false,
   "vissel": false,
   "biccamera": false,
   "superdeal": false,
@@ -12,7 +12,7 @@
   "mobilebonus": false,
   "repeat_purchase": false,
   "guerrilla": false,
-  "superdeal_4h": true,
+  "superdeal_4h": false,
   "shop39": false,
   "mobiledeal": true,
   "pokemon_lottery": false,
