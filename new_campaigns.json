@@ -448,5 +448,11 @@
     "url": "https://event.rakuten.co.jp/ochugen/coupon/08",
     "point": "要確認",
     "detected_at": "2026-08-03"
+  },
+  {
+    "name": "【楽天モバイル】エントリー＆スーパー",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/yunth",
+    "point": "要確認",
+    "detected_at": "2026-08-04"
   }
 ]
