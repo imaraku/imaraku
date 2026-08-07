@@ -1,7 +1,7 @@
 {
   "marathon": true,
   "marathon_pointup": true,
-  "eagles": false,
+  "eagles": true,
   "vissel": false,
   "biccamera": false,
   "superdeal": false,
