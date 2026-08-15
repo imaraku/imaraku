@@ -5,7 +5,7 @@
   "vissel": false,
   "biccamera": false,
   "superdeal": false,
-  "returnpurchaser": true,
+  "returnpurchaser": false,
   "newpurchaser": false,
   "adidas": false,
   "nike": false,
