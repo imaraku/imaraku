@@ -424,5 +424,11 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/yunth",
     "point": "要確認",
     "detected_at": "2026-08-04"
+  },
+  {
+    "name": "敬老の日プレゼント・ギフト特集2026対象ショップ限定！最大150円OFFクーポン",
+    "url": "https://event.rakuten.co.jp/keirou/coupon",
+    "point": "要確認",
+    "detected_at": "2026-08-23"
   }
 ]
