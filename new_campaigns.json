@@ -442,5 +442,11 @@
     "url": "https://event.rakuten.co.jp/toshikoshi/pre/coupon",
     "point": "要確認",
     "detected_at": "2026-08-24"
+  },
+  {
+    "name": "PREMIUM BEAUTY SPECIAL│最大1,000円OFFクーポン",
+    "url": "https://event.rakuten.co.jp/beauty/campaign/premiumbeautyspecialcoupon",
+    "point": "要確認",
+    "detected_at": "2026-08-31"
   }
 ]
