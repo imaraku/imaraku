@@ -454,5 +454,12 @@
     "url": "https://event.rakuten.co.jp/fashion/collection/bag-wallet/men",
     "point": "要確認",
     "detected_at": "2026-08-31"
+  },
+  {
+    "name": "🔍 スーパーSALE 探して当てようクイズ",
+    "url": "https://event.rakuten.co.jp/campaign/supersale/20260904kahkt/find-quiz",
+    "point": "参加型",
+    "detected_at": "2026-09-03",
+    "sale_minigame": true
   }
 ]
