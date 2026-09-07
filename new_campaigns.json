@@ -461,5 +461,11 @@
     "point": "参加型",
     "detected_at": "2026-09-03",
     "sale_minigame": true
+  },
+  {
+    "name": "日用品まとめ買い特集",
+    "url": "https://event.rakuten.co.jp/campaign/supersale/20260904kahkt/bulk",
+    "point": "要確認",
+    "detected_at": "2026-09-07"
   }
 ]
