@@ -1,45 +1,9 @@
 [
   {
-    "name": "ペット割新規登録＆エントリー＆スーパー",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/petwari",
-    "point": "要確認",
-    "detected_at": "2026-04-28"
-  },
-  {
-    "name": "対象新作アイテムをご購入で",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/fashion/newarrival",
-    "point": "要確認",
-    "detected_at": "2026-05-01"
-  },
-  {
     "name": "対象シューズ・バッグ商品を",
     "url": "https://event.rakuten.co.jp/superdeal/campaign/fashion",
     "point": "要確認",
     "detected_at": "2026-05-08"
-  },
-  {
-    "name": "【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/contactlens",
-    "point": "要確認",
-    "detected_at": "2026-05-23"
-  },
-  {
-    "name": "対象キッズ商品を",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/fashionkids",
-    "point": "要確認",
-    "detected_at": "2026-05-28"
-  },
-  {
-    "name": "【アンファー】エントリー＋スーパー",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
-    "point": "要確認",
-    "detected_at": "2026-05-29"
-  },
-  {
-    "name": "P&G まとめ買い 最大1,500円OFFクーポン",
-    "url": "https://event.rakuten.co.jp/mc/pg/coupon",
-    "point": "要確認",
-    "detected_at": "2026-05-30"
   },
   {
     "name": "雨の日も快適に過ごせるアイテムが勢ぞろい",
@@ -68,12 +32,6 @@
   {
     "name": "高コスパのトレンドトップスをご紹介",
     "url": "https://event.rakuten.co.jp/fashion/yukata",
-    "point": "要確認",
-    "detected_at": "2026-05-30"
-  },
-  {
-    "name": "この夏を彩るゆかたに出会おう",
-    "url": "https://event.rakuten.co.jp/fashion/newarrival",
     "point": "要確認",
     "detected_at": "2026-05-30"
   },
@@ -342,70 +300,10 @@
     "detected_at": "2026-06-30"
   },
   {
-    "name": "全額ポイントバックキャンペーン｜Rakuten Fashion THE SALE(楽天ファッション・",
-    "url": "https://event.rakuten.co.jp/fashion/thesale/20260627xqzqq/allback",
-    "point": "要確認",
-    "detected_at": "2026-07-03"
-  },
-  {
-    "name": "最大1,500円OFFクーポン｜Rakuten Fashion THE SALE(楽天ファッション・",
-    "url": "https://event.rakuten.co.jp/fashion/thesale/20260627xqzqq/coupon",
-    "point": "要確認",
-    "detected_at": "2026-07-03"
-  },
-  {
-    "name": "食フェスクーポン｜楽天市場のグルメが最大2,000円OFF",
-    "url": "https://event.rakuten.co.jp/food/festival",
-    "point": "要確認",
-    "detected_at": "2026-07-03"
-  },
-  {
-    "name": "最大3,000円OFFクーポン｜楽天モバイルご契約者限定",
-    "url": "https://event.rakuten.co.jp/genre/campaign/mobile",
-    "point": "要確認",
-    "detected_at": "2026-07-03"
-  },
-  {
-    "name": "FLASH COUPON",
-    "url": "https://event.rakuten.co.jp/genre/timesale",
-    "point": "要確認",
-    "detected_at": "2026-07-03"
-  },
-  {
-    "name": "1日から開催！くらしにプラス＋",
-    "url": "https://event.rakuten.co.jp/household/coupon/plus",
-    "point": "要確認",
-    "detected_at": "2026-07-03"
-  },
-  {
     "name": "岡山県WEB物産展｜OKAYAMA晴れの国マーケット",
     "url": "https://event.rakuten.co.jp/area/okayama/exhibition",
     "point": "要確認",
     "detected_at": "2026-07-04"
-  },
-  {
-    "name": "最大200円OFFクーポン!食品 菓子 水 酒で使える｜楽天市場",
-    "url": "https://event.rakuten.co.jp/food/coupon/marathon",
-    "point": "要確認",
-    "detected_at": "2026-07-04"
-  },
-  {
-    "name": "楽天市場｜ビール・チューハイ・発泡酒などお酒のクーポンキャンペーン実施中",
-    "url": "https://event.rakuten.co.jp/liquor/coupon",
-    "point": "要確認",
-    "detected_at": "2026-07-04"
-  },
-  {
-    "name": "エントリー＆条件達成で",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/lastcall",
-    "point": "要確認",
-    "detected_at": "2026-07-10"
-  },
-  {
-    "name": "ファッション公式ブランド特集",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/koreacosme",
-    "point": "要確認",
-    "detected_at": "2026-07-17"
   },
   {
     "name": "楽天市場｜ビール・チューハイなどお酒のクーポンキャンペーン実施中",
@@ -420,22 +318,10 @@
     "detected_at": "2026-08-03"
   },
   {
-    "name": "【楽天モバイル】エントリー＆スーパー",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/yunth",
-    "point": "要確認",
-    "detected_at": "2026-08-04"
-  },
-  {
     "name": "敬老の日プレゼント・ギフト特集2026対象ショップ限定！最大150円OFFクーポン",
     "url": "https://event.rakuten.co.jp/keirou/coupon",
     "point": "要確認",
     "detected_at": "2026-08-23"
-  },
-  {
-    "name": "ReD夏のリカバリー特集",
-    "url": "https://event.rakuten.co.jp/fashion/tieup/red-jpn",
-    "point": "要確認",
-    "detected_at": "2026-08-24"
   },
   {
     "name": "おせち特集2027 | 対象ショップ限定！最大2,027円OFFクーポン",
@@ -456,9 +342,21 @@
     "detected_at": "2026-08-31"
   },
   {
-    "name": "日用品まとめ買い特集",
-    "url": "https://event.rakuten.co.jp/campaign/supersale/20260904kahkt/bulk",
-    "point": "要確認",
-    "detected_at": "2026-09-07"
+    "name": "🍂 秋のふるさと納税 エントリー＆抽選で最大3万pt",
+    "url": "https://event.rakuten.co.jp/furusato/special/point-campaign/",
+    "point": "抽選",
+    "detected_at": "2026-09-18"
+  },
+  {
+    "name": "💎 スーパーDEAL 抽選で最大5万pt 全額ポイントバック",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/megadeal/",
+    "point": "抽選",
+    "detected_at": "2026-09-18"
+  },
+  {
+    "name": "🆕 スーパーDEAL 初めて/久しぶりのお買い物で200pt",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/newpurchaser/",
+    "point": "200pt",
+    "detected_at": "2026-09-18"
   }
 ]

@@ -36,6 +36,17 @@
       ]
     },
     {
+      "key": "keirou",
+      "name": "敬老の日",
+      "url": "https://event.rakuten.co.jp/keirou/",
+      "verify_keywords": ["敬老の日"],
+      "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
+      "active_periods": [
+        { "start": "2026-08-03T00:00:00+09:00", "end": "2026-09-22T09:59:59+09:00" },
+        { "start": "2027-08-01T00:00:00+09:00", "end": "2027-09-21T09:59:59+09:00" }
+      ]
+    },
+    {
       "key": "oseibo",
       "name": "お歳暮",
       "url": "https://event.rakuten.co.jp/oseibo/",
@@ -49,12 +60,12 @@
     {
       "key": "osechi",
       "name": "おせち",
-      "url": "https://event.rakuten.co.jp/osechi/",
+      "url": "https://event.rakuten.co.jp/toshikoshi/pre/",
       "verify_keywords": ["おせち"],
       "end_keywords": ["特集は終了", "ページが見つかりません", "お探しのページは"],
       "active_periods": [
-        { "start": "2026-10-01T00:00:00+09:00", "end": "2026-12-31T23:59:59+09:00" },
-        { "start": "2027-10-01T00:00:00+09:00", "end": "2027-12-31T23:59:59+09:00" }
+        { "start": "2026-08-19T00:00:00+09:00", "end": "2026-12-31T23:59:59+09:00" },
+        { "start": "2027-08-19T00:00:00+09:00", "end": "2027-12-31T23:59:59+09:00" }
       ]
     },
     {

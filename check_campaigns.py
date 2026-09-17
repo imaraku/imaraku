@@ -107,18 +107,23 @@ CAMPAIGNS = [
         "period_check": True,
     },
     {
+        # ⚠️ 2026-09-18 監査: 単独「終了しました」がクーポンボタンの状態ラベル（取得済/終了 等の
+        # 全状態テンプレがHTMLに常駐）に誤マッチし、2026-04 から約5ヶ月ずっと false（カード非表示）だった。
+        # → STRICT 句のみ＋ページ明記の開催期間で判定（period_check）。地雷#1 と同根。
         "key": "returnpurchaser",
         "url": "https://event.rakuten.co.jp/campaign/returnpurchaser/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
+        "end_kw":    ["本キャンペーンは終了", "このキャンペーンは終了", "受付は終了"],
         "active_kw": ["エントリーする", "クーポン", "久しぶり"],
         "default": True,
+        "period_check": True,
     },
     {
         "key": "newpurchaser",
         "url": "https://event.rakuten.co.jp/campaign/newpurchaser/",
-        "end_kw":    ["終了しました", "キャンペーンは終了", "受付終了"],
+        "end_kw":    ["本キャンペーンは終了", "このキャンペーンは終了", "受付は終了"],
         "active_kw": ["エントリーする", "クーポン", "はじめて"],
         "default": True,
+        "period_check": True,
     },
     {
         # SALE/セール等のキーワードはページに常時残ることが多いため、
@@ -197,10 +202,12 @@ CAMPAIGNS = [
         # 楽天モバイル×スーパーDEAL +10%（マラソン全期間有効。4時間限定ではない）
         # URL は最新マラソンの日付付きパスへ更新。古いURLだと404扱いで誤って終了判定される可能性あり
         "key": "mobiledeal",
-        "url": "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260509/",
+        "url": "https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/20260919/",
         "end_kw":    ["期間が終了しております", "終了しました", "キャンペーンは終了", "受付終了", "ページが見つかりません"],
         "active_kw": ["エントリーする", "エントリー受付中", "モバイル", "+10%", "10%"],
         "default": False,
+        # 2026-09-18: 旧回のページは終了文言なしで残り続ける（サイレント旧ページ）ため期間判定を有効化
+        "period_check": True,
     },
 ]
 
@@ -899,6 +906,13 @@ def purge_ended_campaigns(existing_new: list) -> tuple[list, int]:
         if not url:
             active.append(c)
             continue
+        # 2026-09-18 監査: 終了文言が無いまま「開催期間が全て過去」のページが 19 件も🆕枠に
+        # 残留していた。ページ明記の期間で先に判定する（period_status は expired の時だけ確定）。
+        html = fetch(url)
+        if html and period_status(html) == "expired":
+            print(f"  🗑️  期間終了(日付判定)を削除: {c.get('name', url)}")
+            removed += 1
+            continue
         if is_campaign_active(url):
             active.append(c)
         else:
@@ -1241,6 +1255,16 @@ def discover_dynamic_urls() -> dict:
             current_token = Counter(tokens).most_common(1)[0][0]
             discovered["marathon_token"] = current_token
             print(f"  🔗 marathon_token (今回マラソン): {current_token}")
+            # 2026-09-18 監査: superdeal トップに mobiledeal/<日付>/ のリンクが載らない回があり
+            # （実測: 9/17 時点でリンク0件）、サイトのカードが5月の旧URLに誘導し続けていた。
+            # フォールバック: marathon_token の先頭8桁(=ポイントアップ開始日) で mobiledeal を直接 probe。
+            if "mobiledeal" not in discovered and re.fullmatch(r"\d{8}[0-9a-z]*", current_token):
+                cand = f"https://event.rakuten.co.jp/superdeal/campaign/mobiledeal/{current_token[:8]}/"
+                if fetch(cand):
+                    discovered["mobiledeal"] = cand
+                    print(f"  🔗 mobiledeal (token日付で probe 成功): {cand}")
+                else:
+                    print(f"  ⚠️ mobiledeal probe 失敗: {cand}")
 
             # guerrilla (pointdouble) URL の存在チェック
             pointdouble = f"https://event.rakuten.co.jp/campaign/point-up/marathon/{current_token}/pointdouble/"
