@@ -358,5 +358,35 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/newpurchaser/",
     "point": "200pt",
     "detected_at": "2026-09-18"
+  },
+  {
+    "name": "カナダフェア",
+    "url": "https://event.rakuten.co.jp/area/global/canada",
+    "point": "要確認",
+    "detected_at": "2026-09-18"
+  },
+  {
+    "name": "今治市特集｜愛媛の愛と、出会う場所。",
+    "url": "https://event.rakuten.co.jp/area/imabarishi/exhibition",
+    "point": "要確認",
+    "detected_at": "2026-09-18"
+  },
+  {
+    "name": "まち楽　「薩摩國」大物産展 | グルメ王国・鹿児島からの贈り物",
+    "url": "https://event.rakuten.co.jp/area/satsumasendaishi/exhibition",
+    "point": "要確認",
+    "detected_at": "2026-09-18"
+  },
+  {
+    "name": "楽天スーパーSALE",
+    "url": "https://event.rakuten.co.jp/campaign/supersale/20260904kahkt/brandcosme",
+    "point": "要確認",
+    "detected_at": "2026-09-18"
+  },
+  {
+    "name": "敬老の日プレゼント・ギフト特集2026対象ショップ限定！最大200円OFFクーポン",
+    "url": "https://event.rakuten.co.jp/keirou/coupon/09",
+    "point": "要確認",
+    "detected_at": "2026-09-18"
   }
 ]
