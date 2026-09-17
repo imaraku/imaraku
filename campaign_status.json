@@ -2,7 +2,7 @@
   "marathon": true,
   "marathon_pointup": false,
   "eagles": true,
-  "vissel": false,
+  "vissel": true,
   "biccamera": false,
   "superdeal": false,
   "returnpurchaser": false,
