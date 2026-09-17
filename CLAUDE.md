@@ -335,6 +335,16 @@ X API は**投稿のたびにクレジットを消費する従量課金**で、�
   403=Cloudflare or 重複。地雷#11/#15 と同根）。新しい投稿経路を増やす時は
   「クレジット消費が増える」コストを必ず意識する。
 
+🔁 **2026-09-12 再発（5日間の無言停止）**: 6/10 の補充分が ~3ヶ月で枯渇し、9/12〜17 に
+  全チャンネルが同時停止。**誰も気づけなかった**のが本当の問題（相棒は子育て中でTLを見られない）。
+  - 罠: ranking/category 等は失敗しても `exit 1` しないため workflow は「success」に見える。
+    conclusion では見抜けず、**dedupファイル（category_posted / posted_ip_history）の鮮度**で判定する
+  - 症状: 失敗stepが「1秒」で終わる（1リクエスト即拒否・リトライなし）。0秒ならコード即死（地雷#21）
+  - ✅ 恒久対策: `health_check.py` + `health-check.yml`（毎晩23:30 JST）。今日の日次投稿0本／
+    failure集計／他チャンネルの停滞(3日超)を点検し、**異常時のみ Gmail 通知**（正常時は沈黙）。
+    複数チャンネル同時停止なら「402 → console.x.com Billing」を本文で案内。監視自体は常に exit 0
+  - 目安: 現在のケイデンスでクレジットは **約3ヶ月**もつ。補充後は次スロットから自動再開（コード変更不要）
+
 ### ⚠️ 18. 楽天の共通ヘッダに「エントリーする」が入っている — キーワードでエントリーページ判別は不可
 2026-06-11 に「SALE配下のエントリー型サブページを🆕に拾う」設計を dry-run したところ、
 **会場ページ（半額/ジャンル/訳あり等）28件が「エントリーする」キーワードを含んで素通り**した。
@@ -561,7 +571,8 @@ imaraku/                        ← リポジトリルート
         ├── marathon-preannounce.yml / supersale-alert.yml / sale-picks.yml
         ├── ranking-check.yml / category-ranking.yml / travel-campaign.yml
         ├── monthly-pay.yml / point-usage.yml / room-daily.yml
-        └── post-pokemon-lottery.yml / mild-diff.yml / qa-audit.yml
+        ├── post-pokemon-lottery.yml / mild-diff.yml / qa-audit.yml
+        └── health-check.yml            ← 🩺 投稿停止の監視（異常時のみGmail通知・2026-09-17）
 ```
 
 ---
@@ -707,6 +718,7 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 | room-daily | `0 16 * * *` | 翌01:00（📧メール・X非投稿） |
 | mild-diff | `0 14 * * *` / `10 14 * * *` | 23:00/23:10（サイト更新のみ） |
 | qa-audit | `0 23 * * *` | 08:00（カナの監視） |
+| health-check | `30 14 * * *` | 23:30（🩺 投稿停止の監視・異常時のみ📧） |
 
 **重要**: daily-tweet は cron 取りこぼし(地雷#5)対策で毎時2回試行する設計。
 スクリプト側で `current_slot()` がスロット判定（昼12/夕18、最強日は夜20）し、
@@ -765,6 +777,7 @@ function aff(url) { ... }  // 楽天アフィリエイトIDを付与
 
 **X 投稿ではない自動化（二重投稿の心配なし）:**
 - `room-daily.yml` → `post_room_suggestion.py`: 📧 **Gmailで自分宛**（楽天ROOM用ふるさと納税提案・毎日01:00）。X投稿ではない。
+- `health-check.yml` → `health_check.py`: 🩺 **投稿系の沈黙検知**（毎晩23:30・異常時のみGmail通知）。X投稿ではない。地雷#17参照。
 - `check-campaigns.yml` / `mild-diff.yml`: サイト更新のみ（campaign_status / new_campaigns）。
 - `qa-audit.yml` → `qa_audit.py`: カナの監視（commit報告のみ）。
 
