@@ -713,16 +713,30 @@ def tweet_marathon_normal() -> str:
     now = datetime.datetime.now(JST)
     variant = now.timetuple().tm_yday % 3
     if variant == 0:
-        body = (
-            "🏃 お買い物マラソン開催中！\n"
-            "\n"
-            "買いたいものがなくても買いまわりOK✨\n"
-            "📦 楽券(eギフト)→コンビニ・コメダ等\n"
-            "🍎 Appleギフトカードも対象\n"
-            "\n"
-            "👇 今楽でまとめてエントリー\n"
-            f"{SITE_URL}"
-        )
+        if now.month == 12:
+            # 12月限定: Apple初売り(毎年1/2頃〜)への二段構え（2026-07-09 相棒発案）。
+            # 12月マラソンでAppleギフトを買いまわり対象で買う→ポイントget→初売りで使う。
+            body = (
+                "🍎 1月のApple初売りに備えるなら今\n"
+                "\n"
+                "12月マラソンでAppleギフトカードを\n"
+                "買いまわりに入れてポイントget→\n"
+                "初売りはそのギフトで支払い✨\n"
+                "\n"
+                "二段構えでお得👇\n"
+                f"{SITE_URL}"
+            )
+        else:
+            body = (
+                "🏃 お買い物マラソン開催中！\n"
+                "\n"
+                "買いたいものがなくても買いまわりOK✨\n"
+                "📦 楽券(eギフト)→コンビニ・コメダ等\n"
+                "🍎 Appleギフトカードも対象\n"
+                "\n"
+                "👇 今楽でまとめてエントリー\n"
+                f"{SITE_URL}"
+            )
     elif variant == 1:
         body = (
             "🛒 マラソン中の買い回りテク\n"

@@ -1,0 +1,41 @@
+name: 今楽 健康監視（投稿停止をメール通知）
+
+on:
+  schedule:
+    # 23:30 JST（14:30 UTC）。日次の最終スロット窓（22時/ピーク日23時）が閉じた後に点検。
+    # 2026-09-12〜17 の「クレジット枯渇で5日間無言停止」の再発防止（誰も気づけなかった）。
+    - cron: '30 14 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'メール送信せず本文を表示 (1=DRY RUN)'
+        required: false
+        default: '0'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存パッケージをインストール
+        run: pip install requests
+
+      - name: 投稿系の健康点検（異常時のみメール）
+        env:
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_USER:         mochiki.kengo@gmail.com
+          MAIL_TO:            mochiki.kengo@gmail.com
+          DRY_RUN:            ${{ github.event.inputs.dry_run }}
+        run: python health_check.py
