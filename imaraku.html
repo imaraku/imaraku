@@ -1729,7 +1729,8 @@
     { name: "📚 楽天ブックス×マラソン 条件達成でポイントUP", point: "+2%", url: "https://books.rakuten.co.jp/event/marathon/", essential: false, campaignKey: "marathon_pointup" },
     // マラソン連動（2026-09-18 監査で発掘）
     { name: "🛍️ ラクマ 買いまわり特典 最大11倍", point: "最大11倍", url: "https://rakuma.rakuten.co.jp/info/campaign/buy/kaimawari/", essential: false, campaignKey: "marathon" },
-    { name: "👗 Rakuten Fashion×マラソン 最大2,000円OFF", point: "クーポン", url: "https://brandavenue.rakuten.co.jp/contents/marathon/", essential: false, campaignKey: "marathon" },
+    // Rakuten Fashion×マラソン (brandavenue.rakuten.co.jp/contents/marathon/) は 9/18 時点で
+    // タイトルが「【終了しました】」＝前回分のまま更新されておらず、掲載を見送り（ポイントアップ開始後に再確認）
     // 2026-07-05 監査: a.r10.to 短縮のままだと expired_entries 照合が効かず終了ページへ誘導していた
     // → 展開先の生URLに変更（drink/point は check_campaigns の生存判定で自動 表示/非表示）
     { name: "🥤 水・ソフトドリンク +11%", point: "+11%", url: "https://event.rakuten.co.jp/drink/point/", essential: false, campaignKey: "marathon" },
