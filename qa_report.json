@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-09-17T10:14:58.721027+09:00",
+  "audited_at": "2026-09-18T10:10:28.562566+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,17 +10,13 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 77,
+      "count": 64,
       "issues": [
-        "句読点始まり: '【コンタクトレンズ・カラコン特集企画】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/contactlens",
-        "句読点始まり: '【アンファー】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/angfa",
-        "非キャンペーンURL: https://event.rakuten.co.jp/mc/pg/coupon",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
         "非キャンペーンURL: https://event.rakuten.co.jp/gift/scene/birthday",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/color_shindan",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/yukata",
-        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/newarrival",
         "非キャンペーンURL: https://event.rakuten.co.jp/pet/petwari",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/genre/appliance/smartphone",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/tops-women",
@@ -61,19 +57,15 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/appliance/aircon",
         "非キャンペーンURL: https://event.rakuten.co.jp/baby/192campaign",
         "非キャンペーンURL: https://event.rakuten.co.jp/genre/rakunatsu",
-        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/thesale/20260627xqzqq/allback",
-        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/thesale/20260627xqzqq/coupon",
-        "非キャンペーンURL: https://event.rakuten.co.jp/food/festival",
-        "非キャンペーンURL: https://event.rakuten.co.jp/genre/timesale",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/okayama/exhibition",
-        "非キャンペーンURL: https://event.rakuten.co.jp/liquor/coupon",
         "非キャンペーンURL: https://event.rakuten.co.jp/liquor/point",
-        "非キャンペーンURL: https://event.rakuten.co.jp/area/global/topthai",
-        "句読点始まり: '【楽天モバイル】エントリー＆スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/yunth",
         "非キャンペーンURL: https://event.rakuten.co.jp/keirou/coupon",
-        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/tieup/red-jpn",
         "非キャンペーンURL: https://event.rakuten.co.jp/toshikoshi/pre/coupon",
-        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/bag-wallet/men"
+        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/bag-wallet/men",
+        "非キャンペーンURL: https://event.rakuten.co.jp/furusato/special/point-campaign/",
+        "非キャンペーンURL: https://event.rakuten.co.jp/area/global/canada",
+        "非キャンペーンURL: https://event.rakuten.co.jp/area/imabarishi/exhibition",
+        "非キャンペーンURL: https://event.rakuten.co.jp/area/satsumasendaishi/exhibition"
       ]
     },
     {
@@ -97,18 +89,18 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-09-17: 投稿0件",
         "2026-09-16: 投稿0件",
         "2026-09-15: 投稿0件",
         "2026-09-14: 投稿0件",
         "2026-09-13: 投稿0件",
-        "2026-09-12: 欠スロット ['0', '18', '20']",
-        "2026-09-11: 欠スロット ['0', '20']"
+        "2026-09-12: 欠スロット ['0', '18', '20']"
       ]
     },
     {
       "name": "seasonal_events 期間カバレッジ",
       "status": "PASS",
-      "count": 8,
+      "count": 9,
       "issues": []
     }
   ]
