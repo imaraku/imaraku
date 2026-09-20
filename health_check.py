@@ -160,6 +160,10 @@ def main() -> None:
     # 2026-09-19 23:30 の点検が 9/20 0時過ぎに着地し「今日(9/20)は0本」と誤報した事故の対策。
     today = (now - datetime.timedelta(hours=6)).date()
     print(f"=== 今楽 健康監視 {now.strftime('%Y-%m-%d %H:%M JST')}（点検対象日: {today}）===")
+    # 日中（6〜22時）に手動実行されると「まだ投稿前」を異常と誤判定するため、判定しない
+    if 6 <= now.hour < 23 and not DRY_RUN:
+        print("  → 日中の実行（定刻の23:30〜翌朝が判定対象）→ 判定スキップ")
+        return
     slots = daily_posted_today(today)
     failures = today_failures(today)
     stale = stale_channels(today)
