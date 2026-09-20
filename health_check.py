@@ -109,8 +109,9 @@ def stale_channels(today: datetime.date, max_age_days: int = 3) -> list:
 def build_mail(today: datetime.date, slots: list, failures: dict, stale: list) -> tuple:
     multi = len(failures) >= 2 or (not slots and stale)
     subject = f"【今楽】X投稿が止まっています（{today.month}/{today.day}）"
+    checked_at = datetime.datetime.now(JST).strftime("%m/%d %H:%M")
     lines = [
-        f"今楽の自動投稿に異常があります（{today.isoformat()} 23:30 JST 時点の点検）。",
+        f"今楽の自動投稿に異常があります（点検対象日 {today.isoformat()} / 点検実行 {checked_at} JST）。",
         "",
         f"■ 今日の日次ツイート: {len(slots)}本" + ("（posted_slots に記録なし）" if not slots else f" {slots}"),
     ]
@@ -155,8 +156,10 @@ def send_mail(subject: str, body: str) -> None:
 
 def main() -> None:
     now = datetime.datetime.now(JST)
-    today = now.date()
-    print(f"=== 今楽 健康監視 {now.strftime('%Y-%m-%d %H:%M JST')} ===")
+    # 点検対象日 = 「23:30 の点検が cron 遅延で日付を跨いでも前日を見る」ため 6時間戻した日付。
+    # 2026-09-19 23:30 の点検が 9/20 0時過ぎに着地し「今日(9/20)は0本」と誤報した事故の対策。
+    today = (now - datetime.timedelta(hours=6)).date()
+    print(f"=== 今楽 健康監視 {now.strftime('%Y-%m-%d %H:%M JST')}（点検対象日: {today}）===")
     slots = daily_posted_today(today)
     failures = today_failures(today)
     stale = stale_channels(today)

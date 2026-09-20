@@ -121,8 +121,11 @@ def is_mega_chance_today(now: datetime.datetime) -> bool:
     return True
 
 
-def build_tweet(now: datetime.datetime, event_label: str) -> str:
-    """最強日アナウンスツイート（アクティブイベントに応じて文言を切替）"""
+def build_tweet(now: datetime.datetime, event_label: str, first_in_month: bool = True) -> str:
+    """最強日アナウンスツイート（アクティブイベントに応じて文言を切替）。
+    first_in_month=False は「同じ月に既に最強日を出した」場合（例: 9/5 スーパーSALE×0と5 の後の
+    9/20 マラソン×0と5）。「月一」と二度言うのは不正確（2026-09-20 相棒の指摘）なので
+    「今回{イベント}の最強日」と言い分ける。"""
     # イベント別 emoji
     emoji_map = {
         "お買い物マラソン": "🏃",
@@ -131,8 +134,10 @@ def build_tweet(now: datetime.datetime, event_label: str) -> str:
         "楽天大感謝祭": "🎊",
     }
     ev_emoji = emoji_map.get(event_label, "🎯")
+    headline = (f"💎 {now.month}/{now.day} は月一の最強日🔥" if first_in_month
+                else f"💎 {now.month}/{now.day} は今回{event_label}の最強日🔥")
     return (
-        f"💎 {now.month}/{now.day} は月一の最強日🔥\n"
+        f"{headline}\n"
         "\n"
         f"{ev_emoji} {event_label}開催中\n"
         "🎯 0と5のつく日 +1%\n"
@@ -188,8 +193,11 @@ def main():
         print(f"  → 今日({today_str})は既に投稿済 → スキップ")
         return
 
-    tweet = build_tweet(now, event_label)
-    print(f"\n投稿内容 ({weighted_length(tweet)}字):\n{tweet}\n")
+    # 同じ月に既に最強日を告知済みなら「月一」を避ける（9/5 SALE → 9/20 マラソンのようなケース）
+    last = str(posted.get("last_posted_date") or "")
+    first_in_month = not last.startswith(now.strftime("%Y-%m"))
+    tweet = build_tweet(now, event_label, first_in_month=first_in_month)
+    print(f"\n投稿内容 ({weighted_length(tweet)}字・{'月一' if first_in_month else '今月2回目'}):\n{tweet}\n")
 
     if post_tweet(tweet):
         posted["last_posted_date"] = today_str
