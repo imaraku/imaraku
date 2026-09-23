@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-09-22T10:32:19.376920+09:00",
+  "audited_at": "2026-09-23T10:22:15.132416+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 64,
+      "count": 62,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -59,7 +59,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/genre/rakunatsu",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/okayama/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/liquor/point",
-        "非キャンペーンURL: https://event.rakuten.co.jp/keirou/coupon",
         "非キャンペーンURL: https://event.rakuten.co.jp/toshikoshi/pre/coupon",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/bag-wallet/men",
         "非キャンペーンURL: https://event.rakuten.co.jp/furusato/special/point-campaign/",
@@ -89,12 +88,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-09-22: 欠スロット ['0', '20']",
         "2026-09-21: 欠スロット ['0', '12', '20']",
         "2026-09-20: 欠スロット ['0', '12']",
         "2026-09-19: 欠スロット ['0', '20']",
         "2026-09-18: 欠スロット ['0', '20']",
-        "2026-09-17: 投稿0件",
-        "2026-09-16: 投稿0件"
+        "2026-09-17: 投稿0件"
       ]
     },
     {
