@@ -4,7 +4,7 @@
   "eagles": true,
   "vissel": false,
   "biccamera": false,
-  "superdeal": false,
+  "superdeal": true,
   "returnpurchaser": true,
   "newpurchaser": true,
   "adidas": false,
