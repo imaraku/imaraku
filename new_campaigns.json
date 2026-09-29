@@ -370,5 +370,23 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/newpurchaser",
     "point": "要確認",
     "detected_at": "2026-09-24"
+  },
+  {
+    "name": "おいしい秋田大物産展　千彩万食",
+    "url": "https://event.rakuten.co.jp/area/akita/exhibition",
+    "point": "要確認",
+    "detected_at": "2026-09-30"
+  },
+  {
+    "name": "楽天食いしんぼう祭",
+    "url": "https://event.rakuten.co.jp/food/event",
+    "point": "要確認",
+    "detected_at": "2026-09-30"
+  },
+  {
+    "name": "最大1,000円OFFクーポン",
+    "url": "https://event.rakuten.co.jp/food/event/coupon/20260911",
+    "point": "要確認",
+    "detected_at": "2026-09-30"
   }
 ]
