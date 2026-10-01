@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-09-30T10:56:57.481948+09:00",
+  "audited_at": "2026-10-01T10:57:20.138690+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 65,
+      "count": 64,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -43,7 +43,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/gift",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/korea",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/kids",
-        "句読点始まり: '【パンパース】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/pampers",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/ehime/product",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/matsuyamashi/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/bestcosme/firsthalf",
@@ -91,12 +90,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-09-30: 欠スロット ['0', '12', '20']",
         "2026-09-29: 欠スロット ['0', '12', '20']",
         "2026-09-28: 欠スロット ['0', '12', '20']",
         "2026-09-27: 欠スロット ['0', '12', '20']",
         "2026-09-26: 欠スロット ['0', '20']",
-        "2026-09-25: 欠スロット ['0', '20']",
-        "2026-09-24: 欠スロット ['0', '20']"
+        "2026-09-25: 欠スロット ['0', '20']"
       ]
     },
     {
