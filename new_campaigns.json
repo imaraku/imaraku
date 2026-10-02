@@ -382,5 +382,35 @@
     "url": "https://event.rakuten.co.jp/food/event/coupon/20260911",
     "point": "要確認",
     "detected_at": "2026-09-30"
+  },
+  {
+    "name": "LUXURY BEAUTY Autumn Fes | 最大2,000円OFFクーポン＆抽選で100名",
+    "url": "https://event.rakuten.co.jp/beauty/brand/luxe/luxurybeauty/autumnfes",
+    "point": "要確認",
+    "detected_at": "2026-10-03"
+  },
+  {
+    "name": "食フェスクーポン｜楽天市場のグルメが最大2,000円OFF",
+    "url": "https://event.rakuten.co.jp/food/festival",
+    "point": "要確認",
+    "detected_at": "2026-10-03"
+  },
+  {
+    "name": "FLASH COUPON",
+    "url": "https://event.rakuten.co.jp/genre/timesale",
+    "point": "要確認",
+    "detected_at": "2026-10-03"
+  },
+  {
+    "name": "1日から開催！くらしにプラス＋",
+    "url": "https://event.rakuten.co.jp/household/coupon/plus",
+    "point": "要確認",
+    "detected_at": "2026-10-03"
+  },
+  {
+    "name": "秋冬くらしアップデート｜インテリア、寝具、防寒グッズ等",
+    "url": "https://event.rakuten.co.jp/interior/season/awlife",
+    "point": "要確認",
+    "detected_at": "2026-10-03"
   }
 ]
