@@ -216,12 +216,6 @@
     "detected_at": "2026-06-19"
   },
   {
-    "name": "エントリー＆対象アイテムをカテゴリー買いまわりでポイント最大10倍",
-    "url": "https://event.rakuten.co.jp/brand/cross-genre",
-    "point": "要確認",
-    "detected_at": "2026-06-19"
-  },
-  {
     "name": "【毎週末開催】最強翌日配送キャンペーン！週末限定ポイント2倍",
     "url": "https://event.rakuten.co.jp/campaign/point-up/saikyo-delivery",
     "point": "要確認",
@@ -318,12 +312,6 @@
     "detected_at": "2026-09-18"
   },
   {
-    "name": "🆕 スーパーDEAL 初めて/久しぶりのお買い物で200pt",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/newpurchaser/",
-    "point": "200pt",
-    "detected_at": "2026-09-18"
-  },
-  {
     "name": "カナダフェア",
     "url": "https://event.rakuten.co.jp/area/global/canada",
     "point": "要確認",
@@ -356,12 +344,6 @@
   {
     "name": "ペット割新規登録＆エントリー＆スーパー",
     "url": "https://event.rakuten.co.jp/superdeal/campaign/petwari",
-    "point": "要確認",
-    "detected_at": "2026-09-24"
-  },
-  {
-    "name": "】エントリー＋スーパー",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/newpurchaser",
     "point": "要確認",
     "detected_at": "2026-09-24"
   },
