@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-10-03T10:50:42.989456+09:00",
+  "audited_at": "2026-10-04T11:29:34.529571+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 69,
+      "count": 65,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -47,7 +47,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/area/matsuyamashi/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/bestcosme/firsthalf",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/brand/luxe/luxurybeauty/campaign",
-        "非キャンペーンURL: https://event.rakuten.co.jp/brand/cross-genre",
         "句読点始まり: '【毎週末開催】最強翌日配送キャンペーン！週末限定ポイント2倍' → https://event.rakuten.co.jp/campaign/point-up/saikyo-delivery",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/innerwear/recovery",
         "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/aquarius",
@@ -59,7 +58,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/area/okayama/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/toshikoshi/pre/coupon",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/bag-wallet/men",
-        "非キャンペーンURL: https://event.rakuten.co.jp/furusato/special/point-campaign/",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/global/canada",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/imabarishi/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/satsumasendaishi/exhibition",
@@ -76,7 +74,7 @@
     {
       "name": "expired_entries 鮮度",
       "status": "PASS",
-      "count": 4,
+      "count": 5,
       "issues": []
     },
     {
@@ -94,12 +92,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-10-03: 欠スロット ['0', '12', '20']",
         "2026-10-02: 欠スロット ['0', '12', '20']",
         "2026-10-01: 欠スロット ['0', '12', '20']",
         "2026-09-30: 欠スロット ['0', '12', '20']",
         "2026-09-29: 欠スロット ['0', '12', '20']",
-        "2026-09-28: 欠スロット ['0', '12', '20']",
-        "2026-09-27: 欠スロット ['0', '12', '20']"
+        "2026-09-28: 欠スロット ['0', '12', '20']"
       ]
     },
     {
