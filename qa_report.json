@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-10-06T11:50:59.701116+09:00",
+  "audited_at": "2026-10-07T11:11:56.080017+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 65,
+      "count": 62,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -65,8 +65,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/brand/officialshop/interior",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/akita/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/food/event",
-        "非キャンペーンURL: https://event.rakuten.co.jp/food/festival",
-        "非キャンペーンURL: https://event.rakuten.co.jp/genre/timesale",
         "非キャンペーンURL: https://event.rakuten.co.jp/interior/season/awlife"
       ]
     },
@@ -91,12 +89,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-10-06: 欠スロット ['0', '12', '20']",
         "2026-10-05: 欠スロット ['0', '12', '20']",
         "2026-10-04: 欠スロット ['0', '12', '20']",
         "2026-10-03: 欠スロット ['0', '12', '20']",
         "2026-10-02: 欠スロット ['0', '12', '20']",
-        "2026-10-01: 欠スロット ['0', '12', '20']",
-        "2026-09-30: 欠スロット ['0', '12', '20']"
+        "2026-10-01: 欠スロット ['0', '12', '20']"
       ]
     },
     {
