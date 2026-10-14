@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-10-13T12:27:15.517830+09:00",
+  "audited_at": "2026-10-14T10:45:16.990048+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 63,
+      "count": 66,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -66,7 +66,10 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/area/akita/exhibition",
         "非キャンペーンURL: https://event.rakuten.co.jp/food/event",
         "非キャンペーンURL: https://event.rakuten.co.jp/interior/season/awlife",
-        "非キャンペーンURL: https://event.rakuten.co.jp/toshikoshi/coupon"
+        "非キャンペーンURL: https://event.rakuten.co.jp/toshikoshi/coupon",
+        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/outerwear/men",
+        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/outerwear/women",
+        "句読点始まり: '【タマゴ基地】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/tamago-kichi"
       ]
     },
     {
@@ -90,12 +93,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-10-13: 欠スロット ['0', '12', '20']",
         "2026-10-12: 欠スロット ['0', '12', '20']",
         "2026-10-11: 欠スロット ['0', '12', '20']",
         "2026-10-10: 欠スロット ['0', '12', '20']",
         "2026-10-09: 欠スロット ['0', '12', '20']",
-        "2026-10-08: 欠スロット ['0', '12', '20']",
-        "2026-10-07: 欠スロット ['0', '12', '20']"
+        "2026-10-08: 欠スロット ['0', '12', '20']"
       ]
     },
     {
