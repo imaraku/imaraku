@@ -376,5 +376,23 @@
     "url": "https://event.rakuten.co.jp/toshikoshi/coupon",
     "point": "要確認",
     "detected_at": "2026-10-13"
+  },
+  {
+    "name": "秋のトレンドアウター",
+    "url": "https://event.rakuten.co.jp/fashion/collection/outerwear/men",
+    "point": "要確認",
+    "detected_at": "2026-10-14"
+  },
+  {
+    "name": "秋アウター",
+    "url": "https://event.rakuten.co.jp/fashion/collection/outerwear/women",
+    "point": "要確認",
+    "detected_at": "2026-10-14"
+  },
+  {
+    "name": "【タマゴ基地】エントリー＋スーパー",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/brand/tamago-kichi",
+    "point": "要確認",
+    "detected_at": "2026-10-14"
   }
 ]
