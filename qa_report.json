@@ -1,8 +1,8 @@
 {
-  "audited_at": "2026-10-17T10:12:39.326401+09:00",
+  "audited_at": "2026-10-18T09:47:52.228722+09:00",
   "auditor": "カナ",
   "summary": {
-    "fail": 1,
+    "fail": 0,
     "warn": 2,
     "total_checks": 6
   },
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 67,
+      "count": 66,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -48,7 +48,6 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/bestcosme/firsthalf",
         "非キャンペーンURL: https://event.rakuten.co.jp/beauty/brand/luxe/luxurybeauty/campaign",
         "句読点始まり: '【毎週末開催】最強翌日配送キャンペーン！週末限定ポイント2倍' → https://event.rakuten.co.jp/campaign/point-up/saikyo-delivery",
-        "非キャンペーンURL: https://event.rakuten.co.jp/fashion/innerwear/recovery",
         "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/aquarius",
         "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/cokefifa",
         "非キャンペーンURL: https://event.rakuten.co.jp/mc/cocacola_gateway/special/stampcard",
@@ -80,10 +79,8 @@
     },
     {
       "name": "marathon 整合性",
-      "status": "FAIL",
-      "issues": [
-        "marathon=true だが既に期間外: pointup_end=2026-10-17T09:59:00+09:00"
-      ]
+      "status": "PASS",
+      "issues": []
     },
     {
       "name": "pay_campaigns URL生存",
@@ -95,12 +92,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-10-17: 欠スロット ['0', '20']",
         "2026-10-16: 欠スロット ['0', '20']",
         "2026-10-15: 欠スロット ['0', '18']",
         "2026-10-14: 欠スロット ['0', '20']",
         "2026-10-13: 欠スロット ['0', '12', '20']",
-        "2026-10-12: 欠スロット ['0', '12', '20']",
-        "2026-10-11: 欠スロット ['0', '12', '20']"
+        "2026-10-12: 欠スロット ['0', '12', '20']"
       ]
     },
     {
