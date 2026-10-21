@@ -376,5 +376,11 @@
     "url": "https://event.rakuten.co.jp/superdeal/campaign/koreacosme",
     "point": "要確認",
     "detected_at": "2026-10-16"
+  },
+  {
+    "name": "冬のトレンドトップス",
+    "url": "https://event.rakuten.co.jp/fashion/collection/tops-men",
+    "point": "要確認",
+    "detected_at": "2026-10-21"
   }
 ]
