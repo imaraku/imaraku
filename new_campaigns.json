@@ -382,5 +382,11 @@
     "url": "https://event.rakuten.co.jp/fashion/collection/tops-men",
     "point": "要確認",
     "detected_at": "2026-10-21"
+  },
+  {
+    "name": "アメリカンチーズフェア",
+    "url": "https://event.rakuten.co.jp/area/global/usdairy",
+    "point": "要確認",
+    "detected_at": "2026-10-23"
   }
 ]
