@@ -388,5 +388,17 @@
     "url": "https://event.rakuten.co.jp/area/global/usdairy",
     "point": "要確認",
     "detected_at": "2026-10-23"
+  },
+  {
+    "name": "お買いものパンダをみつけてエントリー＆抽選で最大",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/quiz-mission",
+    "point": "要確認",
+    "detected_at": "2026-10-24"
+  },
+  {
+    "name": "mkdhi",
+    "url": "https://event.rakuten.co.jp/superdeal/campaign/quiz-mission/mkdhi",
+    "point": "要確認",
+    "detected_at": "2026-10-24"
   }
 ]
