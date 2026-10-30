@@ -294,12 +294,6 @@
     "detected_at": "2026-08-31"
   },
   {
-    "name": "💎 スーパーDEAL 抽選で最大5万pt 全額ポイントバック",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/megadeal/",
-    "point": "抽選",
-    "detected_at": "2026-09-18"
-  },
-  {
     "name": "カナダフェア",
     "url": "https://event.rakuten.co.jp/area/global/canada",
     "point": "要確認",
@@ -342,12 +336,6 @@
     "detected_at": "2026-10-03"
   },
   {
-    "name": "最大3,000円OFFクーポン｜楽天モバイルご利用者限定",
-    "url": "https://event.rakuten.co.jp/genre/campaign/mobile",
-    "point": "要確認",
-    "detected_at": "2026-10-13"
-  },
-  {
     "name": "おせち特集2027 | 対象ショップ限定最大350円OFFクーポン",
     "url": "https://event.rakuten.co.jp/toshikoshi/coupon",
     "point": "要確認",
@@ -388,17 +376,5 @@
     "url": "https://event.rakuten.co.jp/area/global/usdairy",
     "point": "要確認",
     "detected_at": "2026-10-23"
-  },
-  {
-    "name": "お買いものパンダをみつけてエントリー＆抽選で最大",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/quiz-mission",
-    "point": "要確認",
-    "detected_at": "2026-10-24"
-  },
-  {
-    "name": "mkdhi",
-    "url": "https://event.rakuten.co.jp/superdeal/campaign/quiz-mission/mkdhi",
-    "point": "要確認",
-    "detected_at": "2026-10-24"
   }
 ]
