@@ -20,7 +20,7 @@
   "father_day": false,
   "ochugen": false,
   "keirou": false,
-  "oseibo": false,
+  "oseibo": true,
   "osechi": true,
   "xmas": false,
   "valentine": false,
