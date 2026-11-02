@@ -7,7 +7,11 @@
     "ended_at": "2026-11-02",
     "matched_keyword": "期間終了(日付判定)"
   },
-  "https://event.rakuten.co.jp/superdeal/campaign/overseas/": {
+  "https://event.rakuten.co.jp/young/rgw_benefit/": {
+    "ended_at": "2026-11-02",
+    "matched_keyword": "期間終了(日付判定)"
+  },
+  "https://event.rakuten.co.jp/young/tieup/rakuma/": {
     "ended_at": "2026-11-02",
     "matched_keyword": "期間終了(日付判定)"
   },
@@ -15,7 +19,11 @@
     "ended_at": "2026-11-02",
     "matched_keyword": "期間終了(日付判定)"
   },
-  "https://event.rakuten.co.jp/young/tieup/rakuma/": {
+  "https://event.rakuten.co.jp/young/campaign/newpurchaser/": {
+    "ended_at": "2026-11-02",
+    "matched_keyword": "期間終了(日付判定)"
+  },
+  "https://event.rakuten.co.jp/superdeal/campaign/overseas/": {
     "ended_at": "2026-11-02",
     "matched_keyword": "期間終了(日付判定)"
   }
