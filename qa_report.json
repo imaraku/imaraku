@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-11-02T11:15:57.996720+09:00",
+  "audited_at": "2026-11-03T12:52:57.816245+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 62,
+      "count": 65,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -68,7 +68,9 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/outerwear/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/tops-men",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/global/usdairy",
-        "非キャンペーンURL: https://event.rakuten.co.jp/food/kitagunifair"
+        "非キャンペーンURL: https://event.rakuten.co.jp/food/kitagunifair",
+        "非キャンペーンURL: https://event.rakuten.co.jp/food/festival",
+        "非キャンペーンURL: https://event.rakuten.co.jp/genre/timesale"
       ]
     },
     {
@@ -92,12 +94,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-11-02: 投稿0件",
         "2026-11-01: 投稿0件",
         "2026-10-31: 投稿0件",
         "2026-10-30: 投稿0件",
         "2026-10-29: 投稿0件",
-        "2026-10-28: 投稿0件",
-        "2026-10-27: 投稿0件"
+        "2026-10-28: 投稿0件"
       ]
     },
     {
