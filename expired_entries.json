@@ -1,9 +1,9 @@
 {
-  "https://event.rakuten.co.jp/drink/point/": {
+  "https://event.rakuten.co.jp/season/newlife/campaign/": {
     "ended_at": "2026-11-09",
-    "matched_keyword": "期間終了(日付判定)"
+    "matched_keyword": "STRICT終了句検出"
   },
-  "https://event.rakuten.co.jp/young/campaign/newpurchaser/": {
+  "https://event.rakuten.co.jp/drink/point/": {
     "ended_at": "2026-11-09",
     "matched_keyword": "期間終了(日付判定)"
   },
@@ -11,12 +11,12 @@
     "ended_at": "2026-11-09",
     "matched_keyword": "期間終了(日付判定)"
   },
-  "https://event.rakuten.co.jp/young/tieup/rakuma/": {
+  "https://event.rakuten.co.jp/young/campaign/newpurchaser/": {
     "ended_at": "2026-11-09",
     "matched_keyword": "期間終了(日付判定)"
   },
-  "https://event.rakuten.co.jp/season/newlife/campaign/": {
+  "https://event.rakuten.co.jp/young/tieup/rakuma/": {
     "ended_at": "2026-11-09",
-    "matched_keyword": "STRICT終了句検出"
+    "matched_keyword": "期間終了(日付判定)"
   }
 }
