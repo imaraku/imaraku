@@ -1,5 +1,5 @@
 {
-  "audited_at": "2026-11-11T11:39:24.989009+09:00",
+  "audited_at": "2026-11-12T12:42:37.317638+09:00",
   "auditor": "カナ",
   "summary": {
     "fail": 0,
@@ -10,7 +10,7 @@
     {
       "name": "new_campaigns ノイズチェック",
       "status": "WARN",
-      "count": 60,
+      "count": 61,
       "issues": [
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/shoes/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/disney/special/raingoods",
@@ -67,7 +67,8 @@
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/outerwear/women",
         "非キャンペーンURL: https://event.rakuten.co.jp/fashion/collection/tops-men",
         "非キャンペーンURL: https://event.rakuten.co.jp/area/global/usdairy",
-        "非キャンペーンURL: https://event.rakuten.co.jp/food/kitagunifair"
+        "非キャンペーンURL: https://event.rakuten.co.jp/food/kitagunifair",
+        "句読点始まり: '【タマゴ基地】エントリー＋スーパー' → https://event.rakuten.co.jp/superdeal/campaign/brand/tamago-kichi"
       ]
     },
     {
@@ -91,12 +92,12 @@
       "name": "posted_slots カバレッジ",
       "status": "WARN",
       "issues": [
+        "2026-11-11: 投稿0件",
         "2026-11-10: 投稿0件",
         "2026-11-09: 投稿0件",
         "2026-11-08: 投稿0件",
         "2026-11-07: 投稿0件",
-        "2026-11-06: 投稿0件",
-        "2026-11-05: 投稿0件"
+        "2026-11-06: 投稿0件"
       ]
     },
     {
