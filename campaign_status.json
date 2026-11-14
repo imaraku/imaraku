@@ -22,7 +22,7 @@
   "keirou": false,
   "oseibo": true,
   "osechi": true,
-  "xmas": false,
+  "xmas": true,
   "valentine": false,
   "whiteday": false,
   "supersale": false
